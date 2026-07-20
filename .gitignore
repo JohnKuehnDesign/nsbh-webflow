@@ -1,0 +1,14 @@
+# Client data — never publish. CMS exports contain full shop address lists.
+*.csv
+*.numbers
+*.xlsx
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Node (only if tooling is ever added here)
+node_modules/

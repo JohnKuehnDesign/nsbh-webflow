@@ -1,0 +1,91 @@
+/* NSBH CMS Map — minimal stylesheet.
+ *
+ * Scope rule for this file: it only styles things Webflow Designer cannot reach —
+ * the marker button and popup shell that MapLibre injects into the DOM at runtime.
+ *
+ * Everything else (map container size, border radius, list item active state,
+ * search status typography, responsive behavior) belongs on Webflow classes so
+ * you can control it in Designer. See webflow/head-code.html for the handful of
+ * variables you can override there.
+ *
+ * Load order matters: MapLibre's own stylesheet must come before this file.
+ */
+
+/* ---- Tunable variables ----
+ * Override any of these on [data-map-element="viewport"] via a Webflow class,
+ * or globally in Site Settings head code. */
+
+[data-map-element="viewport"] {
+  --map-marker-size: 2rem;
+  --map-marker-image: url("https://cdn.prod.website-files.com/68b4a46bb22ee95bf92540a0/69ead1e714f98dd2030bbd22_75932a3cd3bf3a72c13d10f5043c86ee_PhMapPinFill.svg");
+  --map-marker-color: var(--_primitives---colors--h-redwood, currentColor);
+  --map-marker-active-scale: 1.15;
+  --map-popup-radius: 12px;
+  --map-popup-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  --map-popup-padding: 12px 14px;
+
+  position: relative; /* MapLibre requires a positioned container */
+}
+
+/* ---- Markers ---- */
+
+.cms-map-marker {
+  width: var(--map-marker-size);
+  height: var(--map-marker-size);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: block;
+  transform-origin: bottom center;
+  background-image: var(--map-marker-image);
+  background-size: contain;
+  background-repeat: no-repeat;
+  color: var(--map-marker-color);
+}
+
+/* Transition is suppressed while the map is animating (.is-moving is toggled by
+   map movestart/moveend in map-embed.js) to prevent the pins dragging visually. */
+[data-map-element="viewport"]:not(.is-moving) .cms-map-marker {
+  transition: transform 120ms ease;
+}
+
+.cms-map-marker:hover,
+.cms-map-marker:focus-visible,
+.cms-map-marker.is-active {
+  transform: scale(var(--map-marker-active-scale));
+  outline: none;
+}
+
+/* ---- Popup shell ----
+   MapLibre injects .maplibregl-popup-content; the card inside it is a clone of
+   your Webflow list item, so it inherits whatever you styled in Designer. */
+
+.maplibregl-popup-content {
+  padding: 0;
+  border-radius: var(--map-popup-radius);
+  box-shadow: var(--map-popup-shadow);
+  overflow: hidden;
+}
+
+.cms-map-popup-card {
+  display: block;
+  padding: var(--map-popup-padding);
+  font: inherit;
+  color: inherit;
+}
+
+.cms-map-popup-card img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ---- Radius filtering ----
+   Only applied when data-map-filter-mode="filter". In the default "highlight"
+   mode nothing ever receives this class. */
+
+.cms-map-marker.is-hidden,
+[data-map-element="item"].is-hidden {
+  display: none;
+}

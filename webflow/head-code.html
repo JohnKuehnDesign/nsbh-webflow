@@ -1,0 +1,73 @@
+<!-- ============================================================================
+     NSBH CMS Map — BLOCK 1
+     Paste into: Page Settings → /map → Custom Code → Inside <head> tag
+     (Site Settings → Head Code also works, but page-level keeps it off every
+     other page. Must be in <head>, never a body Embed — load-order matters.)
+     ============================================================================ -->
+
+<!-- 1. MapLibre's own stylesheet. Must load before ours. -->
+<link rel="stylesheet" href="https://esm.sh/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+
+<!-- 2. The map component's stylesheet, from GitHub via jsDelivr.
+        Pinned to a release tag — bump the version to pick up changes. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@v1.0.0/src/map/map-embed.css" />
+
+<!-- 3. Optional config fallback.
+        Anything set here applies unless overridden by a data-map-* attribute on
+        the map div in Designer. Delete this block entirely if you only use
+        attributes. Full key list is in the repo README.
+<script>
+  window.NSBH_MAP_CONFIG = {
+    center: [-70.95, 42.55],
+    zoom: 9,
+    searchRadius: 25,
+  };
+</script>
+-->
+
+<!-- 4. Site-side styles.
+        These live here (not in the repo) because they're yours to change without
+        a release. Each rule is a candidate to move onto a real Webflow class as
+        you rebuild the section in Designer — delete it here once you do.
+
+        Keep the .map-viewport sizing rules until the Designer class handles it:
+        a map container with no height renders as an invisible zero-height box. -->
+<style>
+  /* Map container — replace with Designer sizing on the map div's class. */
+  [data-map-element="viewport"] {
+    min-height: 420px;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  @media (max-width: 640px) {
+    [data-map-element="viewport"] { min-height: 320px; }
+    .cms-map-popup-card { max-width: 220px; }
+  }
+
+  /* Popup card — the clone of your Collection Item. Style the item in Designer
+     and most of this becomes unnecessary. */
+  .maplibregl-popup-content { font-weight: bold; }
+
+  .cms-map-popup-card { max-width: 280px; }
+  .cms-map-popup-card img { margin-bottom: 8px; border-radius: 8px; }
+  .cms-map-popup-card a { text-decoration: none; color: inherit; }
+  .cms-map-popup-card .map-item_address { display: block; }
+
+  /* Active list item — JS toggles .is-active on both the marker and the list
+     item. Best long-term home for this is a Webflow combo class. */
+  [data-map-element="item"].is-active {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
+    border-radius: 8px;
+  }
+
+  /* Search status line. */
+  [data-map-element="search-status"] {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    min-height: 1.4em;
+    opacity: 0.8;
+  }
+</style>
