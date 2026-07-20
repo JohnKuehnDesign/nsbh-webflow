@@ -139,12 +139,16 @@ in Designer works in both the list and the popup.
 
 1. Edit the file in `src/map/`.
 2. Commit and push to `main`.
-3. Tag a release: `git tag v1.1.0 && git push --tags`.
+3. Tag a release: `git tag v1.1.0 && git push origin v1.1.0`.
 4. In Webflow, update the version in **both** `head-code.html` and
    `footer-code.html` blocks — they must match.
 5. Publish to staging (`nsbh.webflow.io`) and test before the custom domain.
 
 Pushing to `main` alone changes nothing on the live site. Only step 4 deploys.
+
+**The URL drops the `v`.** The git tag is `v1.1.0`, but jsDelivr strips the
+leading `v` from semver tags, so the CDN path is `@1.1.0`. Using `@v1.1.0`
+returns a 404. A new tag can take a few minutes to become available on the CDN.
 
 ### Testing checklist
 

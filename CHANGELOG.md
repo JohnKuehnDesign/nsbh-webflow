@@ -3,6 +3,20 @@
 Versions are jsDelivr release tags. The live site only moves when the version in
 the Webflow custom code is updated by hand.
 
+Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
+at `@1.0.1`.
+
+## v1.0.1 — 2026-07-20
+
+No code change. `v1.0.0` is unusable: files were requested from the CDN within
+seconds of the tag being pushed, before jsDelivr had built its file index for
+that version, and the resulting 404s were negative-cached. `map-embed.js`
+resolved but `map-embed.css` and `README.md` did not. Re-tagged to get a clean
+version namespace.
+
+Lesson for future releases: after pushing a tag, wait a minute or two before
+requesting any URL at that version. A premature request poisons the cache.
+
 ## v1.0.0 — 2026-07-20
 
 First GitHub-hosted release. Behavior on the page is unchanged from the Webflow
