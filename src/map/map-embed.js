@@ -56,6 +56,29 @@ const CONFIG_SCHEMA = {
   'searching-text':   { key: 'searchingText',   parse: asString, default: 'Searching…' },
   'empty-text':       { key: 'emptyText',       parse: asString, default: 'No Beefs here. 😞' },
   'item-noun':        { key: 'itemNoun',        parse: asString, default: 'shop' },
+
+  // Marker appearance. These are written to the viewport as CSS custom
+  // properties, so the stylesheet stays the single source of truth for how they
+  // are used — see map-embed.css.
+  'marker-image':        { key: 'markerImage',       parse: asString, default: null },
+  'marker-size':         { key: 'markerSize',        parse: asString, default: null },
+  'marker-color':        { key: 'markerColor',       parse: asString, default: null },
+  'marker-active-scale': { key: 'markerActiveScale', parse: asString, default: null },
+
+  // Popup content.
+  'popup-omit':       { key: 'popupOmit',       parse: asString, default: '.map_town-name' },
+  'popup-actions':    { key: 'popupActions',    parse: asBool,   default: true },
+  'directions-label': { key: 'directionsLabel', parse: asString, default: 'Directions' },
+  'order-label':      { key: 'orderLabel',      parse: asString, default: 'Order Now' },
+};
+
+// CSS custom properties driven by config, so a Designer attribute can restyle
+// the marker without touching this file.
+const MARKER_STYLE_VARS = {
+  markerImage:       '--map-marker-image',
+  markerSize:        '--map-marker-size',
+  markerColor:       '--map-marker-color',
+  markerActiveScale: '--map-marker-active-scale',
 };
 
 function asString(raw) { return raw; }
@@ -91,7 +114,10 @@ function readConfig(mapEl) {
     const attr = mapEl.getAttribute(`data-map-${suffix}`);
     let value;
 
-    if (attr !== null && attr.trim() !== '') {
+    // A present-but-empty attribute is deliberate: blanking data-map-popup-omit
+    // in Designer means "omit nothing", not "use the default". Parsers that
+    // can't make sense of an empty string return undefined and fall through.
+    if (attr !== null) {
       value = spec.parse(attr.trim());
       if (value === undefined) {
         console.warn(`[cms-map] ignoring unparseable data-map-${suffix}="${attr}"`);
@@ -128,6 +154,7 @@ function boot() {
   if (!mapEl) return;
 
   const config = readConfig(mapEl);
+  applyMarkerStyles(mapEl, config);
 
   const items = collectItems();
   if (!items.length) {
@@ -156,6 +183,24 @@ function boot() {
     wireGeoSearch(items, markers, map, config);
     if (items.length && config.fitOnLoad) fitToMarkers(map, items, config);
   });
+}
+
+// MapLibre appends markers and popups inside the viewport element, so custom
+// properties set here are inherited by both.
+function applyMarkerStyles(mapEl, config) {
+  for (const [key, cssVar] of Object.entries(MARKER_STYLE_VARS)) {
+    const value = config[key];
+    if (value === null || value === undefined || value === '') continue;
+    mapEl.style.setProperty(cssVar, key === 'markerImage' ? asCssImage(value) : value);
+  }
+}
+
+// Accepts either a bare image URL or a ready-made CSS value (url(...),
+// linear-gradient(...), none). Bare URLs get wrapped and quoted.
+function asCssImage(value) {
+  const v = value.trim();
+  if (/^(url\(|none$|linear-gradient\(|radial-gradient\()/i.test(v)) return v;
+  return `url("${v.replace(/"/g, '\\"')}")`;
 }
 
 function collectItems() {
@@ -197,7 +242,7 @@ function addMarkers(map, items, config) {
       offset: config.popupOffset,
       closeButton: true,
       maxWidth: config.popupMaxWidth,
-    }).setHTML(buildPopupHtml(it.el));
+    }).setHTML(buildPopupHtml(it.el, config));
 
     const marker = new maplibregl.Marker({ element: markerEl, anchor: 'bottom' })
       .setLngLat([it.lng, it.lat])
@@ -226,13 +271,93 @@ function openExclusive(markers, targetMarker) {
   if (!isAlreadyOpen) targetMarker.togglePopup();
 }
 
-function buildPopupHtml(listItemEl) {
+// The popup is a clone of the list item, so a card designed once in Webflow
+// works in both places. Two things differ in the popup: some elements are
+// dropped (the town name, which the address already contains), and the action
+// links are appended.
+function buildPopupHtml(listItemEl, config) {
   const clone = listItemEl.cloneNode(true);
   clone.classList.add('cms-map-popup-card');
+
   // Strip webflow-only wrapper artifacts so the card reads cleanly in the popup.
   clone.removeAttribute('role');
   clone.removeAttribute('data-id');
+  for (const attr of LINK_ATTRS) clone.removeAttribute(attr.attribute);
+
+  removeOmitted(clone, config.popupOmit);
+
+  if (config.popupActions) {
+    const actions = buildActions(listItemEl, config);
+    if (actions) clone.appendChild(actions);
+  }
+
   return clone.outerHTML;
+}
+
+// Elements can be excluded from the popup two ways: a CSS selector in
+// data-map-popup-omit, or data-map-omit="popup" on the element itself. The
+// attribute survives class renames, so prefer it for anything long-lived.
+function removeOmitted(clone, selector) {
+  const selectors = ['[data-map-omit="popup"]'];
+  if (selector && selector.trim()) selectors.push(selector.trim());
+
+  for (const sel of selectors) {
+    let matches;
+    try {
+      matches = clone.querySelectorAll(sel);
+    } catch {
+      console.warn(`[cms-map] data-map-popup-omit is not a valid CSS selector: "${sel}"`);
+      continue;
+    }
+    for (const el of matches) el.remove();
+  }
+}
+
+// Where each action's URL comes from, in priority order. Bound to CMS fields as
+// data attributes on the Collection Item in Designer.
+const LINK_ATTRS = [
+  { attribute: 'data-google-map-link', dataset: 'googleMapLink' },
+  { attribute: 'data-directions-link', dataset: 'directionsLink' },
+  { attribute: 'data-website',         dataset: 'website' },
+];
+
+// Only http(s) links are allowed through — CMS fields are free text, and a
+// javascript: URL in a popup would run on click.
+function safeUrl(raw) {
+  if (!raw) return null;
+  const url = String(raw).trim();
+  if (!url) return null;
+  if (!/^https?:\/\//i.test(url)) {
+    console.warn(`[cms-map] ignoring non-http(s) link: "${url.slice(0, 60)}"`);
+    return null;
+  }
+  return url;
+}
+
+function buildActions(listItemEl, config) {
+  const d = listItemEl.dataset;
+  // Google Business listing wins; the plain directions link is the fallback.
+  const directionsHref = safeUrl(d.googleMapLink) || safeUrl(d.directionsLink);
+  const orderHref = safeUrl(d.website);
+  if (!directionsHref && !orderHref) return null;
+
+  const wrap = listItemEl.ownerDocument.createElement('div');
+  wrap.className = 'cms-map-popup-actions';
+
+  if (directionsHref) wrap.appendChild(buildAction(listItemEl, directionsHref, config.directionsLabel, 'is-directions'));
+  if (orderHref) wrap.appendChild(buildAction(listItemEl, orderHref, config.orderLabel, 'is-order'));
+
+  return wrap;
+}
+
+function buildAction(listItemEl, href, label, modifier) {
+  const a = listItemEl.ownerDocument.createElement('a');
+  a.className = `cms-map-popup-action ${modifier}`;
+  a.href = href;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.textContent = label;
+  return a;
 }
 
 function setActive({ items, markers, activeId, scrollList }) {

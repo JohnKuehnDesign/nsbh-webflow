@@ -50,6 +50,9 @@ these, so no IDs or classes are load-bearing.
 | `data-map-element="viewport"` | The map div | Yes |
 | `data-map-element="item"` | Each Collection Item | Yes |
 | `data-id` / `data-lat` / `data-lng` | Each Collection Item, bound to Slug / Latitude / Longitude | Yes |
+| `data-google-map-link` | Each Collection Item, bound to **Google Business Map Link** | Optional |
+| `data-directions-link` | Each Collection Item, bound to **Directions Link** | Optional |
+| `data-website` | Each Collection Item, bound to **Website** | Optional |
 | `data-map-element="search-input"` | Address / zip text input | Optional |
 | `data-map-element="search-radius"` | `<select>` of miles (5/10/25/50/100) | Optional |
 | `data-map-element="search-submit"` | Search button | Optional |
@@ -95,6 +98,14 @@ Every value below can be set three ways. First match wins:
 | `data-map-searching-text` | `searchingText` | `Searching…` | Status while geocoding |
 | `data-map-empty-text` | `emptyText` | `No Beefs here. 😞` | Status when nothing is in range |
 | `data-map-item-noun` | `itemNoun` | `shop` | Noun in the result count. Pluralized with `s` |
+| `data-map-marker-image` | `markerImage` | stylesheet default | Marker icon. A bare URL, or any CSS image value |
+| `data-map-marker-size` | `markerSize` | `2rem` | Marker width and height |
+| `data-map-marker-color` | `markerColor` | `--_primitives---colors--h-redwood` | Marker `color` |
+| `data-map-marker-active-scale` | `markerActiveScale` | `1.15` | Scale on hover / active |
+| `data-map-popup-omit` | `popupOmit` | `.map_town-name` | CSS selector for elements to drop from the popup |
+| `data-map-popup-actions` | `popupActions` | `true` | Render the Directions / Order Now links |
+| `data-map-directions-label` | `directionsLabel` | `Directions` | Directions link text |
+| `data-map-order-label` | `orderLabel` | `Order Now` | Order link text |
 
 An unparseable attribute logs a warning and falls through to the next source
 rather than breaking the map.
@@ -107,6 +118,38 @@ visible. Setting `filter` hides the non-matching ones outright (via an
 `.is-hidden` class), which is what most people expect a radius filter to do.
 Switch by adding `data-map-filter-mode="filter"` to the map div.
 
+### The popup
+
+The popup is a clone of the Collection Item, so a card designed once in Webflow
+works in both the list and the map. Two things differ in the popup.
+
+**Omitted elements.** The town name is dropped, because the address below it
+already contains the town. Controlled by `data-map-popup-omit`, which takes a
+CSS selector and defaults to `.map_town-name`. Set it to something else to drop
+different elements, or blank it to drop nothing. A blank attribute is honored as
+written — it is not treated as unset.
+
+For anything long-lived, prefer tagging the element itself with
+`data-map-omit="popup"` in Designer. That survives class renames; the selector
+does not.
+
+**Action links.** Two links are appended to the popup, built from CMS fields
+bound as data attributes on the Collection Item:
+
+| Link | Source | Fallback |
+|---|---|---|
+| Directions | `data-google-map-link` (Google Business Map Link) | `data-directions-link` (Directions Link) |
+| Order Now | `data-website` (Website) | none |
+
+Both open in a new tab with `rel="noopener noreferrer"`. A link is omitted
+entirely when its field is empty, and the whole action bar is omitted when both
+are. Only `http://` and `https://` URLs are accepted — CMS fields are free text,
+and a `javascript:` URL in a popup would execute on click. Rejected values are
+logged as a warning.
+
+Label text is set with `data-map-directions-label` and `data-map-order-label`.
+Set `data-map-popup-actions="false"` to turn the whole feature off.
+
 ### Styling
 
 Split deliberately:
@@ -117,8 +160,7 @@ Split deliberately:
   of here so you can change them without cutting a release, and each rule is a
   candidate to move onto a real Webflow class as the section gets rebuilt.
 
-Marker appearance is driven by CSS variables on the viewport element, so you can
-override them from a Webflow class:
+Marker and popup appearance is driven by CSS variables on the viewport element:
 
 | Variable | Default |
 |---|---|
@@ -129,6 +171,26 @@ override them from a Webflow class:
 | `--map-popup-radius` | `12px` |
 | `--map-popup-shadow` | `0 10px 30px rgba(0,0,0,.18)` |
 | `--map-popup-padding` | `12px 14px` |
+| `--map-action-gap` | `8px` |
+| `--map-action-margin-top` | `12px` |
+| `--map-action-padding` | `8px 12px` |
+| `--map-action-radius` | `8px` |
+| `--map-action-font-size` | `0.875rem` |
+| `--map-action-font-weight` | `700` |
+| `--map-action-directions-bg` / `-color` | redwood / `#fff` |
+| `--map-action-order-bg` / `-color` / `-border` | transparent / redwood / `1px solid currentColor` |
+
+The four marker variables also have `data-map-marker-*` attribute equivalents,
+because Webflow's style panel has no field for setting a custom property. Set
+the pin icon in Designer with:
+
+```
+data-map-marker-image = https://your-asset-url/pin.svg
+```
+
+The attribute writes the variable inline on the map div, so it wins over the
+stylesheet. A bare URL is wrapped in `url("…")` for you; a full CSS value
+(`url(…)`, `none`, a gradient) is passed through untouched.
 
 Popup content is a clone of the Collection Item's own HTML, so a card styled once
 in Designer works in both the list and the popup.

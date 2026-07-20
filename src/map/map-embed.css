@@ -17,12 +17,25 @@
 
 [data-map-element="viewport"] {
   --map-marker-size: 2rem;
-  --map-marker-image: url("https://cdn.prod.website-files.com/68b4a46bb22ee95bf92540a0/69ead1e714f98dd2030bbd22_75932a3cd3bf3a72c13d10f5043c86ee_PhMapPinFill.svg");
+  --map-marker-image: url("https://cdn.prod.website-files.com/68b4a46bb22ee95bf92540a0/69ead1e714f98dd2030bbd22_9a16b1b139e96b274ed784173e4dc91c_PhMapPinFill.svg");
   --map-marker-color: var(--_primitives---colors--h-redwood, currentColor);
   --map-marker-active-scale: 1.15;
   --map-popup-radius: 12px;
   --map-popup-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
   --map-popup-padding: 12px 14px;
+
+  /* Popup action links */
+  --map-action-gap: 8px;
+  --map-action-margin-top: 12px;
+  --map-action-padding: 8px 12px;
+  --map-action-radius: 8px;
+  --map-action-font-size: 0.875rem;
+  --map-action-font-weight: 700;
+  --map-action-directions-bg: var(--_primitives---colors--h-redwood, #7a2e2e);
+  --map-action-directions-color: #fff;
+  --map-action-order-bg: transparent;
+  --map-action-order-color: var(--_primitives---colors--h-redwood, #7a2e2e);
+  --map-action-order-border: 1px solid currentColor;
 
   position: relative; /* MapLibre requires a positioned container */
 }
@@ -79,6 +92,46 @@
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+/* ---- Popup action links ----
+   Built by JS (Directions / Order Now), so Designer can't reach them — restyle
+   by overriding the --map-action-* variables above, from a Webflow class on the
+   map div or from page head code. */
+
+.cms-map-popup-actions {
+  display: flex;
+  gap: var(--map-action-gap);
+  margin-top: var(--map-action-margin-top);
+}
+
+.cms-map-popup-action {
+  flex: 1 1 0;
+  text-align: center;
+  padding: var(--map-action-padding);
+  border-radius: var(--map-action-radius);
+  font-size: var(--map-action-font-size);
+  font-weight: var(--map-action-font-weight);
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+
+.cms-map-popup-action:hover {
+  opacity: 0.85;
+  text-decoration: none;
+}
+
+.cms-map-popup-action.is-directions {
+  background: var(--map-action-directions-bg);
+  color: var(--map-action-directions-color);
+}
+
+.cms-map-popup-action.is-order {
+  background: var(--map-action-order-bg);
+  color: var(--map-action-order-color);
+  border: var(--map-action-order-border);
 }
 
 /* ---- Radius filtering ----

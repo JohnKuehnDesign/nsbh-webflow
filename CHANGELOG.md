@@ -6,6 +6,38 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.1.0 — 2026-07-20
+
+### Added
+
+- **Marker styling as attributes.** `data-map-marker-image`, `-size`, `-color`
+  and `-active-scale` on the map div write the matching CSS custom properties
+  inline. Webflow's style panel has no field for setting a custom property, so
+  the variables alone weren't reachable from Designer. A bare URL is wrapped in
+  `url("…")`; a complete CSS value is passed through.
+- **Directions and Order Now links in the popup.** Built from CMS fields bound
+  as data attributes on the Collection Item: `data-google-map-link` with
+  `data-directions-link` as the fallback, and `data-website` for Order Now. Both
+  open in a new tab with `rel="noopener noreferrer"`. A link is dropped when its
+  field is empty; the whole bar is dropped when both are.
+  Only `http(s)` URLs are accepted — CMS fields are free text and a
+  `javascript:` URL would execute on click. Rejected values log a warning.
+- **Popup omissions.** `data-map-popup-omit` takes a CSS selector, defaulting to
+  `.map_town-name` so the town no longer repeats above the address that already
+  contains it. Elements can also be tagged `data-map-omit="popup"` directly,
+  which survives class renames. An invalid selector warns instead of throwing.
+- `data-map-popup-actions="false"`, `data-map-directions-label` and
+  `data-map-order-label`.
+
+### Changed
+
+- A present-but-empty config attribute is now honored as written rather than
+  treated as unset, so blanking `data-map-popup-omit` in Designer omits nothing
+  instead of silently reverting to the default.
+- Corrected the marker icon URL in the stylesheet. It pointed at an older
+  upload of `PhMapPinFill.svg` copied from a stale local snippet; it now matches
+  the asset the live page uses.
+
 ## v1.0.1 — 2026-07-20
 
 No code change. `v1.0.0` is unusable: files were requested from the CDN within
