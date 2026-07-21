@@ -6,6 +6,42 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.0 — 2026-07-21
+
+Popup presentation fixes, all three visible in the card.
+
+### Fixed
+
+- **No focus ring on the Directions link when a popup opens.** MapLibre's
+  `focusAfterOpen` is on by default and moves focus to the first focusable
+  element, which is the first link in the card. Now off. Verified against a
+  control: with it on, `document.activeElement` is the Directions anchor; with it
+  off, focus stays on `body`.
+
+  This is a mild accessibility trade — keyboard users are no longer moved into
+  the popup on open. Set `data-map-popup-focus="true"` to restore it.
+
+- **No more double edge around the card.** The popup shell drew its own white
+  background, 12px radius and drop shadow, and the cloned card drew its own on
+  top — two nested boxes. The shell is now chrome-less by default
+  (`--map-popup-bg: transparent`, radius `0`, shadow `none`, padding `0`), so the
+  card's Designer styling is the only edge. `overflow` on the shell also changed
+  from `hidden` to `visible`, which was clipping the card's own drop shadow.
+
+  Restore a styled shell by setting the `--map-popup-*` variables if a card ever
+  has no styling of its own.
+
+- **Bigger close button, sitting inside the card.** Was 16px in a 21×26px box at
+  the very corner — which was out in the shell padding that no longer exists.
+  Now 24px in a 32×32px target, inset 4px, with a hover background. Driven by
+  `--map-popup-close-*` variables.
+
+### Head-code block (re-paste required)
+
+- Adds inner padding on the popup card (`.cms-map-popup-card .map-item_wrapper`),
+  since the shell no longer supplies any. Scoped to the clone, so list rows keep
+  their tighter spacing.
+
 ## v1.5.0 — 2026-07-21
 
 Stops the component fighting the card styling set in Webflow. The popup is a

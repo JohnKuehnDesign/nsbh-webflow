@@ -72,6 +72,10 @@ const CONFIG_SCHEMA = {
   // Popup content.
   'popup-omit':       { key: 'popupOmit',       parse: asString, default: '.map_town-name' },
   'popup-actions':    { key: 'popupActions',    parse: asBool,   default: true },
+  // MapLibre moves focus into the popup on open, which lands on the first link
+  // and paints a focus ring on it for mouse users. Off by default; set true to
+  // restore the keyboard-friendly behaviour.
+  'popup-focus':      { key: 'popupFocus',      parse: asBool,   default: false },
   'directions-label': { key: 'directionsLabel', parse: asString, default: 'Directions' },
   'order-label':      { key: 'orderLabel',      parse: asString, default: 'Order Now' },
 };
@@ -282,6 +286,7 @@ function addMarkers(map, items, config) {
       offset: config.popupOffset,
       closeButton: true,
       maxWidth: config.popupMaxWidth,
+      focusAfterOpen: config.popupFocus,
     }).setHTML(buildPopupHtml(it.el, config));
 
     const marker = new maplibregl.Marker({ element: markerEl, anchor: 'bottom' })

@@ -107,6 +107,7 @@ Every value below can be set three ways. First match wins:
 | `data-map-marker-active-scale` | `markerActiveScale` | `1.15` | Scale on hover / active |
 | `data-map-popup-omit` | `popupOmit` | `.map_town-name` | CSS selector for elements to drop from the popup |
 | `data-map-popup-actions` | `popupActions` | `true` | Render the Directions / Order Now links |
+| `data-map-popup-focus` | `popupFocus` | `false` | Move focus into the popup on open. Off, because it lands a focus ring on the first link; `true` restores the keyboard behaviour |
 | `data-map-directions-label` | `directionsLabel` | `Directions` | Directions link text |
 | `data-map-order-label` | `orderLabel` | `Order Now` | Order link text |
 
@@ -234,9 +235,19 @@ Marker and popup appearance is driven by CSS variables on the viewport element:
 | `--map-marker-image` | The Webflow-hosted `PhMapPinFill.svg` asset |
 | `--map-marker-color` | `--_primitives---colors--h-redwood` |
 | `--map-marker-active-scale` | `1.15` |
-| `--map-popup-radius` | `12px` |
-| `--map-popup-shadow` | `0 10px 30px rgba(0,0,0,.18)` |
-| `--map-popup-padding` | `12px 14px` |
+| `--map-popup-bg` | `transparent` |
+| `--map-popup-radius` | `0` |
+| `--map-popup-shadow` | `none` |
+| `--map-popup-padding` | `0` |
+| `--map-popup-close-size` | `32px` |
+| `--map-popup-close-font-size` | `24px` |
+| `--map-popup-close-inset` | `4px` |
+| `--map-popup-close-hover-bg` | `rgba(0,0,0,.06)` |
+
+The popup shell is deliberately chrome-less: the card inside is a clone of your
+Collection Item and already has a background, radius and shadow from Designer, so
+a styled shell reads as a second edge around it. Set the `--map-popup-*` values
+above if a card ever has no styling of its own.
 | `--map-action-gap` | `8px` |
 | `--map-action-margin-top` | `12px` |
 | `--map-action-padding` | `8px 12px` |

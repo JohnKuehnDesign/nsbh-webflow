@@ -67,7 +67,7 @@
 
 <!-- 2. The map component's stylesheet, from GitHub via jsDelivr.
         Pinned to a release tag — bump the version to pick up changes. -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.5.0/src/map/map-embed.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.6.0/src/map/map-embed.css" />
 
 <!-- 3. Optional config fallback.
         Anything set here applies unless overridden by a data-map-* attribute on
@@ -125,6 +125,14 @@
      so :not() leaves the popup completely untouched — no override to undo. */
   [data-map-element="item"]:not(.cms-map-popup-card) .map-item_show-modal {
     display: none;
+  }
+
+  /* Inner padding for the popup card.
+     The popup shell is chrome-less, so .map-item_wrapper is the only visible
+     edge — its contents need room inside it. Scoped to the clone, so list rows
+     keep their tighter spacing. Adjust to taste. */
+  .cms-map-popup-card .map-item_wrapper {
+    padding: 16px 18px;
   }
 
   /* Pin icon — swap by pointing this at any asset URL. */
