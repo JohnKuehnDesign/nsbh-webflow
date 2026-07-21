@@ -11,16 +11,21 @@
      Full option list: github.com/JohnKuehnDesign/nsbh-webflow
 
      MAP DIV .............................. data-map-element="viewport"     REQUIRED
-       Optional settings, same element (data-map-* — see README for all ~28):
-         data-map-scroll-zoom="false"       wheel won't zoom the map
+       ALL data-map-* SETTINGS GO HERE — never on the Collection Item. Put one on
+       the item and it is silently ignored. Full list (~29) in the README.
          data-map-cooperative-gestures="true"  two-finger / ctrl to zoom (mobile)
          data-map-center="-70.95,42.55"     lng,lat
          data-map-zoom="9"
          data-map-focus-offset="70"         drops the focused pin below centre
                                             so the popup card has room above
          data-map-popup-actions="false"     off when using native links in the card
-         data-map-popup-omit=".map_town-name"   selector dropped from the popup
-         data-map-marker-image="https://…"  pin icon (or use the Image element below)
+         data-map-popup-omit="<selector>"   CSS selector dropped from the popup.
+                                            Defaults to .map_town-name, a class
+                                            this site no longer uses, so it
+                                            currently matches nothing. Prefer the
+                                            per-element attribute below.
+       Do NOT add data-map-scroll-zoom alongside cooperative-gestures — gestures
+       win and the component logs a warning every load.
 
      COLLECTION ITEM ...................... data-map-element="item"         REQUIRED
        Bind these three to CMS fields on the SAME element:
@@ -39,8 +44,9 @@
        Clear button ....................... data-map-element="search-clear"
        Result text block .................. data-map-element="search-status"
 
-     PIN ICON (optional) .................. data-map-element="marker-image"
-       A hidden Image element; its src becomes the pin. Set Display: None.
+     PIN ICON .............................. set --map-marker-image in the CSS
+       below. That is the reliable route. (There is also a
+       data-map-element="marker-image" hidden Image element, unverified here.)
 
      POPUP-ONLY CONTENT (inside the Collection Item)
        .map-item_show-modal ............... wrapper for pin-only fields (address
@@ -49,8 +55,20 @@
                                             Display: None. The rule below hides
                                             it in the list only, so the popup
                                             keeps your Designer styling.
-       data-map-omit="popup" .............. put on any element to drop it from
-                                            the popup (survives class renames)
+
+     DROPPING SOMETHING FROM THE POPUP ONLY
+       data-map-omit="popup" .............. put this ON THE ELEMENT ITSELF, in
+                                            Designer's settings panel. It shows
+                                            in the list and is stripped from the
+                                            popup clone. Used here on the town
+                                            name (.map-item_town), which the
+                                            address underneath already contains.
+
+       Two similarly-named attributes, easy to mix up:
+         data-map-omit="popup" ......... ON THE ELEMENT to remove. No selector.
+                                         Survives class renames — preferred.
+         data-map-popup-omit="<sel>" ... ON THE MAP DIV. A CSS selector. Breaks
+                                         silently if you rename that class.
 
      STYLING THE CARD
        The popup card is a clone of the Collection Item and carries your Webflow
