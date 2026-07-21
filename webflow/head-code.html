@@ -53,6 +53,25 @@
   .cms-map-popup-card { max-width: 280px; }
   .cms-map-popup-card img { margin-bottom: 8px; border-radius: 8px; }
   .cms-map-popup-card a { text-decoration: none; color: inherit; }
+
+  /* ---- Popup-only content ----
+     The popup is a clone of the Collection Item, and the clone (only the clone)
+     gets the .cms-map-popup-card class. So anything you hide in the list with
+     Display: None shows up in the popup by scoping a reveal rule to that class.
+
+     .map-item_show-modal is your wrapper for pin-only fields (address + the
+     Directions / Order Now links). It's Display: None in Designer, so it stays
+     out of the side list; this rule brings it back just inside the popup.
+     Two classes here beat Webflow's single-class display:none — it wins. */
+  .cms-map-popup-card .map-item_show-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  /* Insurance: if the address itself is also Display: None in Designer, reveal
+     it in the popup too. Harmless if it isn't. */
   .cms-map-popup-card .map-item_address { display: block; }
 
   /* Active list item — JS toggles .is-active on both the marker and the list

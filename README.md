@@ -154,8 +154,24 @@ For anything long-lived, prefer tagging the element itself with
 `data-map-omit="popup"` in Designer. That survives class renames; the selector
 does not.
 
-**Action links.** Two links are appended to the popup, built from CMS fields
-bound as data attributes on the Collection Item:
+**Popup-only content.** The clone (and only the clone) gets the
+`.cms-map-popup-card` class, so anything hidden in the list with Display: None
+can be revealed just in the popup by scoping a CSS rule to that class. The site
+uses a `.map-item_show-modal` wrapper for pin-only fields — the address plus
+native Directions / Order Now link blocks bound to CMS fields, with the two
+Directions variants gated by Webflow conditional visibility. It's Display: None
+in Designer, and `webflow/head-code.html` brings it back inside the popup:
+
+```css
+.cms-map-popup-card .map-item_show-modal { display: flex; flex-direction: column; gap: 8px; }
+```
+
+When you build the links natively this way, turn the JS-generated buttons off
+with `data-map-popup-actions="false"` so they don't duplicate yours.
+
+**Action links (JS-generated alternative).** Instead of native link blocks, the
+component can append the two links for you, built from CMS fields bound as data
+attributes on the Collection Item:
 
 | Link | Source | Fallback |
 |---|---|---|
