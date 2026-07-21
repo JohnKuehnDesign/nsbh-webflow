@@ -177,15 +177,18 @@ For anything long-lived, prefer tagging the element itself with
 does not.
 
 **Popup-only content.** The clone (and only the clone) gets the
-`.cms-map-popup-card` class, so anything hidden in the list with Display: None
-can be revealed just in the popup by scoping a CSS rule to that class. The site
-uses a `.map-item_show-modal` wrapper for pin-only fields — the address plus
-native Directions / Order Now link blocks bound to CMS fields, with the two
-Directions variants gated by Webflow conditional visibility. It's Display: None
-in Designer, and `webflow/head-code.html` brings it back inside the popup:
+`.cms-map-popup-card` class. Use that to hide things in the **list** rather than
+to reveal them in the popup — revealing means re-declaring `display`, which
+throws away the layout set in Designer.
+
+The site uses a `.map-item_show-modal` wrapper for pin-only fields — the address
+plus native Directions / Order Now link blocks bound to CMS fields, with the two
+Directions variants gated by Webflow conditional visibility. Style it freely in
+Designer (do **not** set Display: None on it); `webflow/head-code.html` hides it
+only in the list copy:
 
 ```css
-.cms-map-popup-card .map-item_show-modal { display: flex; flex-direction: column; gap: 8px; }
+[data-map-element="item"]:not(.cms-map-popup-card) .map-item_show-modal { display: none; }
 ```
 
 When you build the links natively this way, turn the JS-generated buttons off
@@ -214,7 +217,11 @@ Set `data-map-popup-actions="false"` to turn the whole feature off.
 Split deliberately:
 
 - **This repo** styles only what Webflow can't reach — the marker `<button>` and
-  the MapLibre popup shell, both injected into the DOM at runtime.
+  the MapLibre popup shell, both injected into the DOM at runtime. It does
+  **not** style the popup card: that's a clone of your Collection Item and
+  carries your Designer classes, so anything set here would out-specify them.
+  The one exception is resetting MapLibre's font on the map container, which
+  otherwise leaks its own Helvetica/12px into the cloned card.
 - **`webflow/head-code.html`** holds the site-side styles. They're there instead
   of here so you can change them without cutting a release, and each rule is a
   candidate to move onto a real Webflow class as the section gets rebuilt.

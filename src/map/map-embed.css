@@ -77,28 +77,40 @@
   outline: none;
 }
 
+/* ---- Typography containment ----
+   MapLibre sets its own font stack on the map container. The popup lives inside
+   that container, so a cloned card would inherit MapLibre's Helvetica/12px
+   instead of the site's type. Reset it here so your Designer typography reaches
+   the card, then pin MapLibre's own chrome back to the size it expects. */
+
+[data-map-element="viewport"].maplibregl-map {
+  font: inherit;
+}
+
+.maplibregl-ctrl,
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-attrib-inner {
+  font-size: 12px;
+  font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+}
+
 /* ---- Popup shell ----
-   MapLibre injects .maplibregl-popup-content; the card inside it is a clone of
-   your Webflow list item, so it inherits whatever you styled in Designer. */
+   MapLibre injects .maplibregl-popup-content. Padding lives here rather than on
+   the card, so the card keeps whatever padding it has in Designer. */
 
 .maplibregl-popup-content {
-  padding: 0;
+  padding: var(--map-popup-padding);
   border-radius: var(--map-popup-radius);
   box-shadow: var(--map-popup-shadow);
   overflow: hidden;
 }
 
-.cms-map-popup-card {
-  display: block;
-  padding: var(--map-popup-padding);
-  font: inherit;
-  color: inherit;
-}
+/* The card is a clone of YOUR Collection Item and carries your Webflow classes,
+   so it is deliberately left unstyled — anything set here would beat Designer.
+   The one exception is a guard so an oversized image can't blow out the popup. */
 
 .cms-map-popup-card img {
   max-width: 100%;
-  height: auto;
-  display: block;
 }
 
 /* ---- Popup action links ----

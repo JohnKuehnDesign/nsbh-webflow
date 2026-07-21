@@ -6,6 +6,41 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.5.0 — 2026-07-21
+
+Stops the component fighting the card styling set in Webflow. The popup is a
+clone of the Collection Item and carries its Designer classes, but several rules
+here out-specified them.
+
+### Fixed
+
+- **MapLibre's typography no longer leaks into the card.** MapLibre sets its own
+  font stack on the map container; the popup lives inside it, so a cloned card
+  inherited Helvetica Neue 12px instead of the site's type. The container's font
+  is now reset to `inherit`, and MapLibre's own controls/attribution are pinned
+  back to 12px so they stay the size the library expects.
+- **The card root is no longer restyled.** `display: block`, `font: inherit`,
+  `color: inherit` and the padding were all overriding Designer. The rule is
+  gone; only a `max-width: 100%` image guard remains. Popup padding moved to
+  `.maplibregl-popup-content`, so the card keeps whatever padding it has in
+  Designer.
+
+### Changed — head-code block (re-paste required)
+
+- Dropped the rules that were overriding Designer: `font-weight: bold` on the
+  popup, `text-decoration: none; color: inherit` on card links (this was what
+  flattened the Directions / Order Now link styling), the card `max-width`, and
+  the image margin/radius.
+- **Popup-only content is now hidden in the list instead of revealed in the
+  popup.** Previously `.map-item_show-modal` was Display: None in Designer and a
+  head-code rule forced it back with its own flex/gap, dictating layout. Now the
+  wrapper is styled freely in Designer and hidden only in the list copy via
+  `[data-map-element="item"]:not(.cms-map-popup-card)` — the popup clone is the
+  only copy carrying that class, so it goes untouched.
+
+  **Action needed:** remove Display: None from `.map-item_show-modal` in
+  Designer, or it stays hidden everywhere.
+
 ## v1.4.0 — 2026-07-21
 
 ### Added

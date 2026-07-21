@@ -43,12 +43,19 @@
        A hidden Image element; its src becomes the pin. Set Display: None.
 
      POPUP-ONLY CONTENT (inside the Collection Item)
-       .map-item_show-modal ............... Display: None wrapper for pin-only
-                                            fields (address + Directions / Order
-                                            Now). Revealed in the popup by the
-                                            .cms-map-popup-card rule below.
+       .map-item_show-modal ............... wrapper for pin-only fields (address
+                                            + Directions / Order Now). Style it
+                                            normally in Designer — do NOT set
+                                            Display: None. The rule below hides
+                                            it in the list only, so the popup
+                                            keeps your Designer styling.
        data-map-omit="popup" .............. put on any element to drop it from
                                             the popup (survives class renames)
+
+     STYLING THE CARD
+       The popup card is a clone of the Collection Item and carries your Webflow
+       classes — style it in Designer, not here. Rules added here out-specify
+       Designer and you end up fighting them.
 
      LAYOUT GOTCHA
        The map's flex-item ancestor (.map_panel here) needs min-width: 0 or the
@@ -60,7 +67,7 @@
 
 <!-- 2. The map component's stylesheet, from GitHub via jsDelivr.
         Pinned to a release tag — bump the version to pick up changes. -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.4.0/src/map/map-embed.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.5.0/src/map/map-embed.css" />
 
 <!-- 3. Optional config fallback.
         Anything set here applies unless overridden by a data-map-* attribute on
@@ -103,36 +110,25 @@
 
   @media (max-width: 640px) {
     [data-map-element="viewport"] { min-height: 320px; }
-    .cms-map-popup-card { max-width: 220px; }
   }
 
-  /* Popup card — the clone of your Collection Item. Style the item in Designer
-     and most of this becomes unnecessary. */
-  .maplibregl-popup-content { font-weight: bold; }
+  /* ---- Popup card ----
+     The popup is a clone of your Collection Item, so it already carries your
+     Webflow classes. Nothing is styled here on purpose: any rule added would
+     out-specify your Designer styles and you'd be fighting it. Style the card
+     in Designer and it shows up the same in the popup.
 
-  .cms-map-popup-card { max-width: 280px; }
-  .cms-map-popup-card img { margin-bottom: 8px; border-radius: 8px; }
-  .cms-map-popup-card a { text-decoration: none; color: inherit; }
-
-  /* ---- Popup-only content ----
-     The popup is a clone of the Collection Item, and the clone (only the clone)
-     gets the .cms-map-popup-card class. So anything you hide in the list with
-     Display: None shows up in the popup by scoping a reveal rule to that class.
-
-     .map-item_show-modal is your wrapper for pin-only fields (address + the
-     Directions / Order Now links). It's Display: None in Designer, so it stays
-     out of the side list; this rule brings it back just inside the popup.
-     Two classes here beat Webflow's single-class display:none — it wins. */
-  .cms-map-popup-card .map-item_show-modal {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 10px;
+     ---- Popup-only content ----
+     Do NOT set Display: None on .map-item_show-modal in Designer. Style it there
+     however you like (flex, gap, padding) and hide it only in the LIST with the
+     rule below. The popup clone is the only copy carrying .cms-map-popup-card,
+     so :not() leaves the popup completely untouched — no override to undo. */
+  [data-map-element="item"]:not(.cms-map-popup-card) .map-item_show-modal {
+    display: none;
   }
 
-  /* Insurance: if the address itself is also Display: None in Designer, reveal
-     it in the popup too. Harmless if it isn't. */
-  .cms-map-popup-card .map-item_address { display: block; }
+  /* Pin icon — swap by pointing this at any asset URL. */
+  /* [data-map-element="viewport"] { --map-marker-image: url("YOUR-ASSET-URL.svg"); } */
 
   /* Active list item — JS toggles .is-active on both the marker and the list
      item. Best long-term home for this is a Webflow combo class. */
