@@ -6,6 +6,26 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.3.0 — 2026-07-20
+
+### Added
+
+- **Pin image from a Webflow element.** An Image element tagged
+  `data-map-element="marker-image"` (Display: None) has its `src` read on load
+  and used as the marker icon, then stays hidden. Lets the pin be set from the
+  Asset Manager with no URL-pasting. The `data-map-marker-image` attribute and
+  `NSBH_MAP_CONFIG.markerImage` still take priority.
+
+### Fixed
+
+- **Mobile horizontal scroll.** The map's flex-item ancestor had the default
+  `min-width: auto`, so it refused to shrink below the map canvas's pixel width
+  and pushed the page wider than the phone screen. The component stylesheet now
+  sets `min-width: 0; max-width: 100%` on the viewport, and the head-code block
+  adds `min-width: 0` to the site's `.map_panel` flex ancestor. `map.resize()` is
+  also called once on load as insurance for containers whose width settles after
+  init.
+
 ## v1.2.0 — 2026-07-20
 
 ### Added

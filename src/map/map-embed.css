@@ -38,6 +38,13 @@
   --map-action-order-border: 1px solid currentColor;
 
   position: relative; /* MapLibre requires a positioned container */
+
+  /* Let the map shrink inside a flex/grid parent. Without min-width:0 the map
+     canvas's pixel width props the container open and overflows narrow screens.
+     If the map's own PARENT is a flex item, it needs min-width:0 too — that part
+     is site-specific and lives in the head-code block. */
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* ---- Markers ---- */

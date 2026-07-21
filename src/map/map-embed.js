@@ -155,6 +155,7 @@ function boot() {
   if (!mapEl) return;
 
   const config = readConfig(mapEl);
+  resolveMarkerImageElement(config);
   applyMarkerStyles(mapEl, config);
 
   const items = collectItems();
@@ -192,11 +193,33 @@ function boot() {
   map.on('moveend',   () => mapEl.classList.remove('is-moving'));
 
   map.on('load', () => {
+    // Defensive: if the container's final width settles after init (common when
+    // the map is a flex child), match the canvas to it before fitting bounds.
+    map.resize();
     const markers = addMarkers(map, items, config);
     wireListSync(items, markers, map, config);
     wireGeoSearch(items, markers, map, config);
     if (items.length && config.fitOnLoad) fitToMarkers(map, items, config);
   });
+}
+
+// Designer-native pin image: drop an Image element in Webflow (pick the asset
+// from the Asset Manager), set Display: None on it, and tag it
+//   data-map-element="marker-image"
+// The script reads its src and uses it as the marker, so the pin can be swapped
+// in the Designer without touching code or pasting a URL. An explicit
+// data-map-marker-image attribute (or NSBH_MAP_CONFIG.markerImage) still wins.
+function resolveMarkerImageElement(config) {
+  if (config.markerImage) return; // explicit attribute / head config takes priority
+  const el = document.querySelector('[data-map-element="marker-image"]');
+  if (!el) return;
+  const src = el.currentSrc || el.src || el.getAttribute('src') || el.dataset.src || '';
+  if (src) {
+    config.markerImage = src;
+  } else {
+    console.warn('[cms-map] [data-map-element="marker-image"] has no src to read.');
+  }
+  el.style.display = 'none'; // it is a source, never shown on the page
 }
 
 // MapLibre appends markers and popups inside the viewport element, so custom

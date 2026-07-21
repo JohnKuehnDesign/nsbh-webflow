@@ -48,6 +48,7 @@ these, so no IDs or classes are load-bearing.
 | Attribute | On | Required |
 |---|---|---|
 | `data-map-element="viewport"` | The map div | Yes |
+| `data-map-element="marker-image"` | A hidden Image element whose `src` becomes the pin icon | Optional |
 | `data-map-element="item"` | Each Collection Item | Yes |
 | `data-id` / `data-lat` / `data-lng` | Each Collection Item, bound to Slug / Latitude / Longitude | Yes |
 | `data-google-map-link` | Each Collection Item, bound to **Google Business Map Link** | Optional |
@@ -228,6 +229,21 @@ data-map-marker-image = https://your-asset-url/pin.svg
 The attribute writes the variable inline on the map div, so it wins over the
 stylesheet. A bare URL is wrapped in `url("…")` for you; a full CSS value
 (`url(…)`, `none`, a gradient) is passed through untouched.
+
+#### Setting the pin image from the Asset Manager
+
+Pasting an asset URL is fiddly. For a fully Designer-native pin, drop an **Image**
+element anywhere in the map section, pick the icon from the Asset Manager, set it
+to **Display: None**, and give it the attribute:
+
+```
+data-map-element = marker-image
+```
+
+On load the script reads that image's `src`, uses it as the marker, and keeps
+the element hidden. Swapping the pin is then just swapping the image in Designer —
+no code, no URL. Priority: `data-map-marker-image` (or head config) wins if set,
+otherwise the element, otherwise the stylesheet default.
 
 Popup content is a clone of the Collection Item's own HTML, so a card styled once
 in Designer works in both the list and the popup.
