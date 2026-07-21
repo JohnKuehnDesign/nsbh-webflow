@@ -153,8 +153,18 @@
     padding: 16px 18px;
   }
 
-  /* Pin icon — swap by pointing this at any asset URL. */
-  /* [data-map-element="viewport"] { --map-marker-image: url("YOUR-ASSET-URL.svg"); } */
+  /* ---- Map pin ----
+     Swap the icon by changing the URL below to any asset URL. This wins over the
+     component's built-in default, so it is the one place to edit.
+
+     Note: --map-marker-color does NOT recolor the pin. The icon is drawn as a
+     background-image, and CSS colour can't reach inside an SVG loaded that way —
+     to change the pin colour, upload an SVG in the colour you want. */
+  [data-map-element="viewport"] {
+    --map-marker-image: url("https://cdn.prod.website-files.com/68b4a46bb22ee95bf92540a0/69ead1e714f98dd2030bbd22_9a16b1b139e96b274ed784173e4dc91c_PhMapPinFill.svg");
+    --map-marker-size: 2rem;
+    --map-marker-active-scale: 1.15;
+  }
 
   /* Active list item — JS toggles .is-active on both the marker and the list
      item. Best long-term home for this is a Webflow combo class. */
