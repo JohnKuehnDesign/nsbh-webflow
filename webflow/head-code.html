@@ -5,6 +5,54 @@
      other page. Must be in <head>, never a body Embed — load-order matters.)
      ============================================================================ -->
 
+<!-- ============================================================================
+     ATTRIBUTE PLACEMENT MAP — what goes on which element in Designer.
+     Everything is found by attribute, so no class name is load-bearing.
+     Full option list: github.com/JohnKuehnDesign/nsbh-webflow
+
+     MAP DIV .............................. data-map-element="viewport"     REQUIRED
+       Optional settings, same element (data-map-* — see README for all ~28):
+         data-map-scroll-zoom="false"       wheel won't zoom the map
+         data-map-cooperative-gestures="true"  two-finger / ctrl to zoom (mobile)
+         data-map-center="-70.95,42.55"     lng,lat
+         data-map-zoom="9"
+         data-map-popup-actions="false"     off when using native links in the card
+         data-map-popup-omit=".map_town-name"   selector dropped from the popup
+         data-map-marker-image="https://…"  pin icon (or use the Image element below)
+
+     COLLECTION ITEM ...................... data-map-element="item"         REQUIRED
+       Bind these three to CMS fields on the SAME element:
+         data-id   → Slug
+         data-lat  → Latitude
+         data-lng  → Longitude
+       Only if using the JS-generated buttons (not native link blocks):
+         data-google-map-link → Google Business Map Link   (Directions, preferred)
+         data-directions-link → Directions Link            (Directions, fallback)
+         data-website         → Website                    (Order Now)
+
+     SEARCH UI (all optional; omit the whole search and it's skipped)
+       Text input ......................... data-map-element="search-input"
+       Miles <select> ..................... data-map-element="search-radius"
+       Search button ...................... data-map-element="search-submit"
+       Clear button ....................... data-map-element="search-clear"
+       Result text block .................. data-map-element="search-status"
+
+     PIN ICON (optional) .................. data-map-element="marker-image"
+       A hidden Image element; its src becomes the pin. Set Display: None.
+
+     POPUP-ONLY CONTENT (inside the Collection Item)
+       .map-item_show-modal ............... Display: None wrapper for pin-only
+                                            fields (address + Directions / Order
+                                            Now). Revealed in the popup by the
+                                            .cms-map-popup-card rule below.
+       data-map-omit="popup" .............. put on any element to drop it from
+                                            the popup (survives class renames)
+
+     LAYOUT GOTCHA
+       The map's flex-item ancestor (.map_panel here) needs min-width: 0 or the
+       canvas props the page wider than a phone screen. Rule is below.
+     ============================================================================ -->
+
 <!-- 1. MapLibre's own stylesheet. Must load before ours. -->
 <link rel="stylesheet" href="https://esm.sh/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
 
