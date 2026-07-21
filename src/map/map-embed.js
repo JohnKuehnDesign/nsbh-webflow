@@ -46,6 +46,7 @@ const CONFIG_SCHEMA = {
   'single-zoom':      { key: 'singleZoom',      parse: asNumber, default: 12 },
   'focus-zoom':       { key: 'focusZoom',       parse: asNumber, default: 12 },
   'scroll-zoom':      { key: 'scrollZoom',      parse: asBool,   default: true },
+  'cooperative-gestures': { key: 'cooperativeGestures', parse: asBool, default: false },
   'nav-control':      { key: 'navControl',      parse: asString, default: 'top-right' },
   'popup-max-width':  { key: 'popupMaxWidth',   parse: asString, default: '320px' },
   'popup-offset':     { key: 'popupOffset',     parse: asNumber, default: 18 },
@@ -161,12 +162,25 @@ function boot() {
     console.warn('[cms-map] No [data-map-element="item"] nodes with data-lat/data-lng found.');
   }
 
+  // Cooperative gestures and scroll-zoom=false both stop a plain scroll from
+  // zooming, but they don't compose: cooperative gestures gates the scroll-zoom
+  // handler behind a modifier (ctrl/⌘ on desktop, a second finger on touch), so
+  // it needs that handler enabled. Turning scroll-zoom off would leave the
+  // gesture hint telling users to ctrl+scroll while nothing happens. When both
+  // are set, cooperative gestures wins.
+  let scrollZoom = config.scrollZoom;
+  if (config.cooperativeGestures && !scrollZoom) {
+    console.warn('[cms-map] data-map-cooperative-gestures overrides data-map-scroll-zoom="false" — cooperative gestures already block a plain scroll and need scroll-zoom enabled for the two-finger / ctrl+scroll gesture to work.');
+    scrollZoom = true;
+  }
+
   const map = new maplibregl.Map({
     container: mapEl,
     style: config.style,
     center: config.center,
     zoom: config.zoom,
-    scrollZoom: config.scrollZoom,
+    scrollZoom,
+    cooperativeGestures: config.cooperativeGestures,
     attributionControl: { compact: true },
   });
 

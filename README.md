@@ -88,6 +88,7 @@ Every value below can be set three ways. First match wins:
 | `data-map-single-zoom` | `singleZoom` | `12` | Zoom used when only one shop exists |
 | `data-map-focus-zoom` | `focusZoom` | `12` | Minimum zoom when a list item is clicked |
 | `data-map-scroll-zoom` | `scrollZoom` | `true` | Mouse wheel zooms the map. Set `false` to stop the map capturing page scroll |
+| `data-map-cooperative-gestures` | `cooperativeGestures` | `false` | Require a modifier to zoom: two fingers on touch, ctrl/⌘+scroll on desktop. A plain scroll passes through to the page. See below |
 | `data-map-nav-control` | `navControl` | `top-right` | Zoom buttons corner, or `none` |
 | `data-map-popup-max-width` | `popupMaxWidth` | `320px` | Popup max width |
 | `data-map-popup-offset` | `popupOffset` | `18` | Popup offset from the pin, in px |
@@ -109,6 +110,26 @@ Every value below can be set three ways. First match wins:
 
 An unparseable attribute logs a warning and falls through to the next source
 rather than breaking the map.
+
+#### Scroll and zoom behavior
+
+Three related controls, in order of how aggressive they are:
+
+- **Default** — a mouse wheel or trackpad scroll over the map zooms it. On a long
+  page this traps the reader's scroll.
+- **`data-map-scroll-zoom="false"`** — the wheel never zooms. Drag-pan and the
+  +/− buttons still work. Good for desktop, but it does nothing for touch: a
+  one-finger drag on a phone still pans the map instead of scrolling the page.
+- **`data-map-cooperative-gestures="true"`** — the recommended fix for a
+  page-embedded map. A plain scroll (desktop) or one-finger drag (touch) passes
+  through to the page; the map only zooms/pans when the reader uses ctrl/⌘+scroll
+  or two fingers. MapLibre shows a short "use two fingers" / "use ctrl to zoom"
+  hint over the map while a plain gesture is in progress.
+
+Use **one** of the last two, not both. Cooperative gestures already blocks a
+plain scroll, and it needs the scroll-zoom handler enabled to gate it behind the
+modifier — so if you set both, the component forces scroll-zoom back on and logs
+a warning. For a map inside a scrolling page, prefer cooperative gestures alone.
 
 #### About `filterMode`
 

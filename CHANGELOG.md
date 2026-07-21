@@ -6,6 +6,24 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.2.0 — 2026-07-20
+
+### Added
+
+- **`data-map-cooperative-gestures`.** Requires a modifier to zoom or pan the
+  map — two fingers on touch, ctrl/⌘+scroll on desktop — so a plain scroll or
+  one-finger drag passes through to the page instead of being captured. This is
+  the fix for a map embedded mid-page; `data-map-scroll-zoom="false"` only
+  covered the desktop wheel and did nothing for one-finger touch.
+
+### Changed
+
+- Cooperative gestures and `scroll-zoom="false"` don't compose: the former gates
+  the scroll-zoom handler behind a modifier and needs it enabled, the latter
+  disables it. When both are set, cooperative gestures wins — scroll-zoom is
+  forced back on and a warning is logged — so the gesture hint never tells users
+  to ctrl+scroll while nothing happens.
+
 ## v1.1.0 — 2026-07-20
 
 ### Added
