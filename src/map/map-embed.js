@@ -45,6 +45,9 @@ const CONFIG_SCHEMA = {
   'fit-max-zoom':     { key: 'fitMaxZoom',      parse: asNumber, default: 13 },
   'single-zoom':      { key: 'singleZoom',      parse: asNumber, default: 12 },
   'focus-zoom':       { key: 'focusZoom',       parse: asNumber, default: 12 },
+  // Pixels to drop the focused pin below the map's vertical centre, so a tall
+  // popup has room above it. 0 centres the pin (the old behaviour).
+  'focus-offset':     { key: 'focusOffset',     parse: asNumber, default: 0 },
   'scroll-zoom':      { key: 'scrollZoom',      parse: asBool,   default: true },
   'cooperative-gestures': { key: 'cooperativeGestures', parse: asBool, default: false },
   'nav-control':      { key: 'navControl',      parse: asString, default: 'top-right' },
@@ -419,9 +422,12 @@ function wireListSync(items, markers, map, config) {
     item.el.addEventListener('click', (e) => {
       if (e.target.closest('a, button')) return; // let real links/buttons through
       setActive({ items, markers, activeId: item.id, scrollList: false });
+      // offset [x, y]: a positive y lands the pin that many pixels BELOW the
+      // container's centre, leaving headroom for the popup card above it.
       map.flyTo({
         center: marker.getLngLat(),
         zoom: Math.max(map.getZoom(), config.focusZoom),
+        offset: [0, config.focusOffset],
         speed: 1.1,
       });
       openExclusive(markers, marker);

@@ -6,6 +6,30 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.4.0 — 2026-07-21
+
+### Added
+
+- **`data-map-focus-offset`** — pixels to drop the focused pin below the map's
+  vertical centre when flying to it from a list click, so a tall popup card has
+  room above instead of running past the bottom of the frame. Defaults to `0`,
+  which keeps the previous dead-centre behaviour.
+
+  Sizing it: a card needs about `card height + 18px popup offset + padding` of
+  space above the pin, and a centred pin only has half the map height. On this
+  site (320px map, 134–168px cards) a centred pin has 160px against the ~190px a
+  tall card wants — hence the clipping. `70` clears it on both the mobile and
+  desktop map heights.
+
+### Known, not addressed
+
+- Clicking a marker directly doesn't recentre the map, so a pin near the top or
+  bottom edge can still open a clipped card. Popups already anchor-flip to sit
+  above or below the pin depending on room, but neither side fits when the pin is
+  hard against an edge. Fixing it means panning the popup into view on open,
+  which risks fighting MapLibre's own anchor recalculation — deferred until it
+  actually bites.
+
 ## v1.3.0 — 2026-07-20
 
 ### Added

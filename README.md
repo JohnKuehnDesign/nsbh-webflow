@@ -88,6 +88,7 @@ Every value below can be set three ways. First match wins:
 | `data-map-fit-max-zoom` | `fitMaxZoom` | `13` | Zoom ceiling when fitting bounds |
 | `data-map-single-zoom` | `singleZoom` | `12` | Zoom used when only one shop exists |
 | `data-map-focus-zoom` | `focusZoom` | `12` | Minimum zoom when a list item is clicked |
+| `data-map-focus-offset` | `focusOffset` | `0` | Pixels to drop the focused pin below centre, giving the popup headroom above it. See below |
 | `data-map-scroll-zoom` | `scrollZoom` | `true` | Mouse wheel zooms the map. Set `false` to stop the map capturing page scroll |
 | `data-map-cooperative-gestures` | `cooperativeGestures` | `false` | Require a modifier to zoom: two fingers on touch, ctrl/⌘+scroll on desktop. A plain scroll passes through to the page. See below |
 | `data-map-nav-control` | `navControl` | `top-right` | Zoom buttons corner, or `none` |
@@ -111,6 +112,26 @@ Every value below can be set three ways. First match wins:
 
 An unparseable attribute logs a warning and falls through to the next source
 rather than breaking the map.
+
+#### Giving the popup headroom (`focusOffset`)
+
+Clicking a list item flies the map so the pin sits dead centre. The popup opens
+off the pin, so on a short map a tall card runs past the frame and the buttons at
+its bottom get clipped.
+
+`data-map-focus-offset` lands the pin that many pixels *below* centre instead,
+leaving room for the card above it. Pick it from the card height rather than by
+eye: a card needs roughly `card height + 18px popup offset + a little padding`
+of space above the pin, and a centred pin only has half the map height.
+
+Measured on this site — map 320px tall, cards 134–168px — a centred pin has
+160px of headroom against the ~190px a tall card wants, hence the clipping.
+**70** puts the pin at 230px, comfortably clearing the tallest card, and still
+works on the 420px desktop map. Raise it if cards get taller.
+
+Note this only affects the fly-to from a list click. Clicking a marker directly
+doesn't recentre the map, so a pin near the very top or bottom edge can still
+show a clipped card.
 
 #### Scroll and zoom behavior
 

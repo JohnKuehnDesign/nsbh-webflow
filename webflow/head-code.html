@@ -16,6 +16,8 @@
          data-map-cooperative-gestures="true"  two-finger / ctrl to zoom (mobile)
          data-map-center="-70.95,42.55"     lng,lat
          data-map-zoom="9"
+         data-map-focus-offset="70"         drops the focused pin below centre
+                                            so the popup card has room above
          data-map-popup-actions="false"     off when using native links in the card
          data-map-popup-omit=".map_town-name"   selector dropped from the popup
          data-map-marker-image="https://…"  pin icon (or use the Image element below)
@@ -58,7 +60,7 @@
 
 <!-- 2. The map component's stylesheet, from GitHub via jsDelivr.
         Pinned to a release tag — bump the version to pick up changes. -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.3.0/src/map/map-embed.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.4.0/src/map/map-embed.css" />
 
 <!-- 3. Optional config fallback.
         Anything set here applies unless overridden by a data-map-* attribute on
