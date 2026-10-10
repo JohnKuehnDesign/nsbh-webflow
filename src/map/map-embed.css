@@ -30,6 +30,7 @@
   --map-popup-radius: 0;
   --map-popup-shadow: none;
   --map-popup-padding: 0;
+  --map-popup-tip-color: #fff; /* match the card's background */
 
   /* Close button (MapLibre injects it, so Designer can't reach it) */
   --map-popup-close-size: 32px;
@@ -131,6 +132,17 @@
   /* visible, not hidden: the card's own drop shadow would otherwise be clipped
      at the shell's edge. */
   overflow: visible;
+}
+
+/* Caret pointing at the dot. MapLibre puts the tip before the card in the DOM
+   and leaves it unpositioned, so the card (and its large drop shadow) painted
+   over it and hid it. Positioned and lifted, it sits above the shadow; the 1px
+   nudge overlaps the card edge so no hairline shows between them. */
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  position: relative;
+  z-index: 2;
+  top: -1px;
+  border-top-color: var(--map-popup-tip-color);
 }
 
 /* Close button. Sits inset inside the card rather than out in shell padding

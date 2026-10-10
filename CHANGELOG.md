@@ -6,6 +6,18 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.5 — 2026-10-10
+
+Includes everything in v1.6.4.
+
+### Fixed
+
+- **Caret hidden under the card's shadow.** MapLibre puts the popup tip before the
+  card in the DOM and leaves it unpositioned, so the card and its large drop
+  shadow painted over it. The tip is now positioned with `z-index: 2` and nudged
+  up 1px to overlap the card edge. Its colour is `--map-popup-tip-color`
+  (default white, matching the card).
+
 ## v1.6.4 — 2026-10-10
 
 Includes everything in v1.6.3.
