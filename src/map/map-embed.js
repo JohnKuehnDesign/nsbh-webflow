@@ -400,15 +400,39 @@ function buildCardFromTemplate(item, config) {
     fillLink(card, 'link', d.id ? `/destinations/${encodeURIComponent(d.id)}` : null, false);
   }
 
-  // Slots with no data source yet (tags, premium seal, images, nearby shops) are
-  // dropped from the clone rather than shown as template placeholders.
-  for (const slot of ['tags', 'premium', 'image', 'nearby']) {
+  if (kind === 'destination') fillImage(card, item);
+
+  // Slots with no data source yet (tags, premium seal, nearby shops) are dropped
+  // from the clone rather than shown as template placeholders.
+  for (const slot of ['tags', 'premium', 'nearby']) {
     for (const el of card.querySelectorAll(`[data-map-slot="${slot}"]`)) el.remove();
   }
   for (const el of card.querySelectorAll('[data-map-slot]')) el.removeAttribute('data-map-slot');
 
   void config;
   return card;
+}
+
+// An image field cannot bind to an attribute, so the hidden Collection Item
+// carries an <img data-map-field="image"> bound to it instead. Its src goes onto
+// the template's image slot; with no image, the slot and its now-empty wrapper
+// are removed so the card has no blank band.
+function fillImage(card, item) {
+  const source = item.querySelector('img[data-map-field="image"]');
+  const src = source && (source.getAttribute('src') || '').trim();
+  for (const img of card.querySelectorAll('[data-map-slot="image"]')) {
+    const wrapper = img.parentElement && img.parentElement !== card ? img.parentElement : null;
+    if (src) {
+      img.setAttribute('src', src);
+      img.setAttribute('alt', source.getAttribute('alt') || '');
+      img.removeAttribute('srcset');
+      img.removeAttribute('sizes');
+      img.setAttribute('loading', 'lazy');
+    } else {
+      img.remove();
+      if (wrapper && !wrapper.children.length) wrapper.remove();
+    }
+  }
 }
 
 // Sets a slot link's href, or removes the link when there is nowhere to go. The

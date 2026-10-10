@@ -35,10 +35,15 @@
   /* Close button (MapLibre injects it, so Designer can't reach it) */
   --map-popup-close-size: 32px;
   --map-popup-close-font-size: 24px;
-  --map-popup-close-inset: 4px;
+  /* Negative: the circle is centred on the card's top-right corner point, so it
+     sits in the cut-out of the rounded corner and clear of anything inside the
+     card (the premium badge). Half the size centres it; 0 puts it flush. */
+  --map-popup-close-inset: calc(var(--map-popup-close-size) / -2);
   --map-popup-close-color: inherit;
-  --map-popup-close-radius: 6px;
-  --map-popup-close-hover-bg: rgba(0, 0, 0, 0.06);
+  --map-popup-close-radius: 50%;
+  --map-popup-close-bg: #fff;
+  --map-popup-close-shadow: 0 2px 6px rgba(20, 47, 56, 0.22);
+  --map-popup-close-hover-bg: #eef2f3;
 
   /* Popup action links */
   --map-action-gap: 8px;
@@ -145,11 +150,11 @@
   border-top-color: var(--map-popup-tip-color);
 }
 
-/* Close button. Sits inset inside the card rather than out in shell padding
-   (there isn't any now), and is large enough to be a comfortable tap target.
-   z-index lifts it above the card: a card that is positioned with its own
-   z-index (the shop panel has z-index 1) would otherwise paint over it and
-   swallow the click. */
+/* Close button: a small circle centred on the card's top-right corner, outside
+   the rounded corner, so it never overlaps content inside the card. Large enough
+   to be a comfortable tap target. z-index lifts it above the card: a card that
+   is positioned with its own z-index (the shop panel has z-index 1) would
+   otherwise paint over it and swallow the click. */
 .maplibregl-popup-close-button {
   z-index: 2;
   width: var(--map-popup-close-size);
@@ -161,7 +166,8 @@
   line-height: 1;
   border-radius: var(--map-popup-close-radius);
   color: var(--map-popup-close-color);
-  background: transparent;
+  background: var(--map-popup-close-bg);
+  box-shadow: var(--map-popup-close-shadow);
 }
 
 .maplibregl-popup-close-button:hover,

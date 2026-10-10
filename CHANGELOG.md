@@ -6,6 +6,25 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.6 — 2026-10-10
+
+Includes everything in v1.6.5.
+
+### Changed
+
+- **Close button is a circle on the card's corner.** A white 32px circle centred on
+  the card's top-right corner point, in the cut-out of the rounded corner, so it
+  never overlaps anything inside the card (the premium badge). Variables:
+  `--map-popup-close-inset` (default half the size, negative), `-bg`, `-shadow`,
+  `-hover-bg`, `-radius`.
+
+### Added
+
+- **Destination images.** An image field cannot bind to an attribute, so the hidden
+  destination item carries `<img data-map-field="image">` bound to Featured Image.
+  Its `src` and alt go onto the template's `data-map-slot="image"`. With no image,
+  the slot and its empty wrapper are removed.
+
 ## v1.6.5 — 2026-10-10
 
 Includes everything in v1.6.4.
