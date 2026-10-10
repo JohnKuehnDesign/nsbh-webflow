@@ -419,7 +419,13 @@ function buildCardFromTemplate(item, config) {
 // are removed so the card has no blank band.
 function fillImage(card, item) {
   const source = item.querySelector('img[data-map-field="image"]');
-  const src = source && (source.getAttribute('src') || '').trim();
+  let src = source && (source.getAttribute('src') || '').trim();
+  // An empty CMS image falls back to the asset the element was created with.
+  // Webflow flags that case with w-dyn-bind-empty; data-map-placeholder (the
+  // fallback asset's id) is a second check in case the class is ever dropped.
+  const placeholder = source && source.dataset.mapPlaceholder;
+  if (source && source.classList.contains('w-dyn-bind-empty')) src = '';
+  else if (src && placeholder && src.includes(placeholder)) src = '';
   for (const img of card.querySelectorAll('[data-map-slot="image"]')) {
     const wrapper = img.parentElement && img.parentElement !== card ? img.parentElement : null;
     if (src) {

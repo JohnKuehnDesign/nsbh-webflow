@@ -6,6 +6,16 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.7 — 2026-10-10
+
+### Fixed
+
+- **Broken image on destinations with no Featured Image.** An empty CMS image falls
+  back to the asset the hidden element was created with, and the script treated
+  that as a real photo. Webflow marks the empty case with `w-dyn-bind-empty`, which
+  the script now checks; `data-map-placeholder` (the fallback asset id) is a second
+  check. With no image, the slot and its wrapper are removed.
+
 ## v1.6.6 — 2026-10-10
 
 Includes everything in v1.6.5.
