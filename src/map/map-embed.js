@@ -72,6 +72,7 @@ const CONFIG_SCHEMA = {
   // Popup content.
   'popup-omit':       { key: 'popupOmit',       parse: asString, default: '.map_town-name' },
   'popup-actions':    { key: 'popupActions',    parse: asBool,   default: true },
+  'premium':          { key: 'premiumSeal',     parse: asString, default: 'all' },
   // MapLibre moves focus into the popup on open, which lands on the first link
   // and paints a focus ring on it for mouse users. Off by default; set true to
   // restore the keyboard-friendly behaviour.
@@ -402,14 +403,24 @@ function buildCardFromTemplate(item, config) {
 
   if (kind === 'destination') fillImage(card, item);
 
-  // Slots with no data source yet (tags, premium seal, nearby shops) are dropped
-  // from the clone rather than shown as template placeholders.
-  for (const slot of ['tags', 'premium', 'nearby']) {
+  // Premium seal. data-map-premium on the map div picks the rule:
+  //   all  (default) show the seal on every shop card, whatever the CMS says
+  //   cms  only on shops marked Premium (the hidden item then holds a
+  //        [data-map-field="premium"] element, present only for those shops)
+  //   none never show it
+  if (kind === 'shop') {
+    const mode = config.premiumSeal;
+    const show = mode === 'all' || (mode === 'cms' && item.querySelector('[data-map-field="premium"]'));
+    if (!show) for (const el of card.querySelectorAll('[data-map-slot="premium"]')) el.remove();
+  }
+
+  // Slots with no data source yet (tags, nearby shops) are dropped from the clone
+  // rather than shown as template placeholders.
+  for (const slot of ['tags', 'nearby']) {
     for (const el of card.querySelectorAll(`[data-map-slot="${slot}"]`)) el.remove();
   }
   for (const el of card.querySelectorAll('[data-map-slot]')) el.removeAttribute('data-map-slot');
 
-  void config;
   return card;
 }
 

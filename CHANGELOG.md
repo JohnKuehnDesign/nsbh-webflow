@@ -6,6 +6,21 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.8 — 2026-10-10
+
+### Added
+
+- **Premium seal.** `data-map-premium` on the map div: `all` (default, the seal
+  shows on every shop card), `cms` (only shops marked Premium; the hidden item
+  holds a `[data-map-field="premium"]` element whose visibility is bound to the
+  Premium switch, because a switch cannot bind to an attribute), or `none`.
+
+### Changed
+
+- Reference head-code block rewritten for the current design: removed the rules
+  for list-item cards that the templates replaced (`.map-item_show-modal`, the
+  popup card padding, the active list outline).
+
 ## v1.6.7 — 2026-10-10
 
 ### Fixed
