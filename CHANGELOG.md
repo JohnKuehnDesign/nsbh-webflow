@@ -6,6 +6,17 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.3 — 2026-10-10
+
+### Fixed
+
+- **Close button hidden under the card.** The shop card has its own `z-index: 1`
+  and painted over MapLibre's absolutely positioned close button, hiding it and
+  swallowing the click. The button now has `z-index: 2`.
+- **Dots announced as "Map marker".** MapLibre sets that label when a marker is
+  added, replacing the place name. The name is now applied after the marker is
+  added.
+
 ## v1.6.2 — 2026-10-10
 
 Popups are built from static card templates instead of the list items.

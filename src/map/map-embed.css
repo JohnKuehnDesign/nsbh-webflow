@@ -134,8 +134,12 @@
 }
 
 /* Close button. Sits inset inside the card rather than out in shell padding
-   (there isn't any now), and is large enough to be a comfortable tap target. */
+   (there isn't any now), and is large enough to be a comfortable tap target.
+   z-index lifts it above the card: a card that is positioned with its own
+   z-index (the shop panel has z-index 1) would otherwise paint over it and
+   swallow the click. */
 .maplibregl-popup-close-button {
+  z-index: 2;
   width: var(--map-popup-close-size);
   height: var(--map-popup-close-size);
   top: var(--map-popup-close-inset);

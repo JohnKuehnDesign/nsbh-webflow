@@ -282,7 +282,8 @@ function addMarkers(map, items, config) {
     markerEl.className = 'cms-map-marker';
     if (it.el.dataset.mapKind === 'destination') markerEl.classList.add('is-destination');
     const d = it.el.dataset;
-    markerEl.setAttribute('aria-label', d.displayName || d.name || it.el.textContent.trim().split('\n')[0] || 'Location');
+    const label = d.displayName || d.name || it.el.textContent.trim().split('\n')[0] || 'Location';
+    markerEl.setAttribute('aria-label', label);
 
     const popup = new maplibregl.Popup({
       offset: config.popupOffset,
@@ -295,6 +296,10 @@ function addMarkers(map, items, config) {
       .setLngLat([it.lng, it.lat])
       .setPopup(popup)
       .addTo(map);
+
+    // MapLibre labels every marker "Map marker" when it is added, replacing the
+    // name set above, so the place's own name is applied last.
+    markerEl.setAttribute('aria-label', label);
 
     byId.set(it.id, { marker, markerEl, popup, item: it });
   }
