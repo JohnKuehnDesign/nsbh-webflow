@@ -6,6 +6,36 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.11 — 2026-10-10
+
+### Added
+
+- **Region buttons work.** `[data-map-element="region"]` (with `data-slug`) flies the
+  map to that region's dots and marks the button `aria-pressed`. Pressing the active
+  one again returns to everything.
+- **"Show Things To Do" switch works.** `[data-map-element="destinations-toggle"]`
+  hides only the destination dots (open destination cards close with them). It is
+  keyboard operable (Space or Enter). Searches and region fits leave destinations
+  out while it is off, and the "N shops within…" count is shops only.
+- **Use My Location.** `locate` asks the browser for a position only when pressed,
+  `locate-input` looks up an address on Enter, and `locate-clear` forgets the place
+  and shows everything again. Both fields measure the radius from the same place as
+  the search bar.
+- **Radius Reset.** `[data-map-element="radius-reset"]` puts the radius back to the
+  default.
+- Pressed and off states for the region buttons and the switch, driven by the ARIA
+  attributes (Designer cannot style on them).
+
+### Changed
+
+- **The default radius is shown.** Every radius `<select>` starts on
+  `data-map-search-radius` (set it to `10` on the map div) while the list keeps its
+  ascending order. The search bar's select and the panel's select now move together,
+  and changing the radius re-applies to the place already found instead of looking
+  it up again.
+- **An option with an empty value still works.** Its miles come from its label
+  ("10 miles"), so it no longer reads as `NaN`.
+
 ## v1.6.10 — 2026-10-10
 
 ### Changed

@@ -232,6 +232,36 @@
   display: none;
 }
 
+/* ---- Settings panel controls ----
+   Pressed and off states come from the ARIA attributes map-embed.js keeps in sync,
+   because Designer cannot style on them. */
+
+.cms-map-marker.is-layer-off {
+  display: none;
+}
+
+[data-map-element="region"][aria-pressed="true"] {
+  background-color: var(--_primitives---colors--h-redwood, #a65456);
+}
+
+[data-map-element="region"]:focus-visible,
+[data-map-element="destinations-toggle"]:focus-visible {
+  outline: 2px solid var(--_primitives---colors--h-harbor-blue, #35798c);
+  outline-offset: 2px;
+}
+
+[data-map-element="destinations-toggle"] {
+  cursor: pointer;
+}
+
+[data-map-element="destinations-toggle"][aria-checked="false"] {
+  background-color: #b9c3c7;
+}
+
+[data-map-element="destinations-toggle"][aria-checked="false"] .map-quick-picks_switch-dot {
+  margin-left: 0;
+}
+
 /* ---- Settings panel as a dialog (tablet and below) ----
    map-embed.js marks the panel [data-map-panel], adds the backdrop and the close
    button, and toggles .is-open. Above 991px none of this applies and the panel is

@@ -8,7 +8,7 @@
 //   [data-map-element="item"]          Collection List items (inside the list)
 //     data-id, data-lat, data-lng      bound to CMS Slug / Latitude / Longitude fields
 //   [data-map-element="search-input"]  Address / zip input    (optional)
-//   [data-map-element="search-radius"] <select> of miles      (optional; values 5/10/25/50/100)
+//   [data-map-element="search-radius"] <select> of miles      (optional; one or several, kept in step)
 //   [data-map-element="search-submit"] Submit button          (optional)
 //   [data-map-element="search-clear"]  Clear button           (optional)
 //   [data-map-element="search-status"] Text container for result summary (optional)
@@ -211,6 +211,7 @@ function boot() {
     const markers = addMarkers(map, items, config);
     wireListSync(items, markers, map, config);
     wireGeoSearch(items, markers, map, config);
+    wireSettingsControls(items, markers, map, config);
     if (items.length && config.fitOnLoad) fitToMarkers(map, items, config);
   });
 }
@@ -355,15 +356,19 @@ function collectItems() {
   return items;
 }
 
-function fitToMarkers(map, items, config) {
+// animate is for fits the visitor asks for (a region button); the first fit on
+// load stays instant. Reduced-motion visitors always get the instant version.
+function fitToMarkers(map, items, config, animate = false) {
   if (!items.length) return;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const duration = animate && !reduceMotion ? 800 : 0;
   if (items.length === 1) {
-    map.easeTo({ center: [items[0].lng, items[0].lat], zoom: config.singleZoom, duration: 0 });
+    map.easeTo({ center: [items[0].lng, items[0].lat], zoom: config.singleZoom, duration });
     return;
   }
   const bounds = new maplibregl.LngLatBounds();
   for (const it of items) bounds.extend([it.lng, it.lat]);
-  map.fitBounds(bounds, { padding: config.fitPadding, duration: 0, maxZoom: config.fitMaxZoom });
+  map.fitBounds(bounds, { padding: config.fitPadding, duration, maxZoom: config.fitMaxZoom });
 }
 
 function addMarkers(map, items, config) {
@@ -679,7 +684,6 @@ function wireGeoSearch(items, markers, map, config) {
   const input  = document.querySelector('[data-map-element="search-input"]');
   const submit = document.querySelector('[data-map-element="search-submit"]');
   const clear  = document.querySelector('[data-map-element="search-clear"]');
-  const radius = document.querySelector('[data-map-element="search-radius"]');
   const status = document.querySelector('[data-map-element="search-status"]');
   if (!input && !submit) return; // no search UI on page; skip.
 
@@ -690,8 +694,7 @@ function wireGeoSearch(items, markers, map, config) {
     try {
       const hit = await geocodeQuery(query, config);
       if (!hit) { setStatus(status, `No match for “${query}”.`); return; }
-      const miles = radius ? parseFloat(radius.value) : config.searchRadius;
-      applyRadiusFilter({ items, markers, map, from: hit, miles, status, label: query, config });
+      applyOrigin({ items, markers, map, status, config }, hit, query);
     } catch (err) {
       console.error('[cms-map] geo-search failed', err);
       setStatus(status, 'Search failed. Try again.');
@@ -700,14 +703,175 @@ function wireGeoSearch(items, markers, map, config) {
 
   submit?.addEventListener('click', (e) => { e.preventDefault(); runSearch(); });
   input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); runSearch(); } });
-  radius?.addEventListener('change', () => { if ((input?.value || '').trim()) runSearch(); });
   clear?.addEventListener('click', (e) => {
     e.preventDefault();
     if (input) input.value = '';
-    for (const { marker } of markers.values()) {
-      if (marker.getPopup().isOpen()) marker.getPopup().remove();
+    closeAllPopups(markers);
+    clearOrigin({ items, markers, map, status, config });
+  });
+}
+
+// --- settings controls ----------------------------------------------------
+//
+// The panel's own controls, all optional and found by data-map-element:
+//   region            buttons with data-slug; click flies to that region's dots
+//   destinations-toggle  role="switch" that shows or hides the destination dots
+//   search-radius     <select>; each option's miles come from its value, or from
+//                     its label when the value is empty ("10 miles")
+//   radius-reset      puts the radius back to the configured default
+//   locate            "use my location" button (asks the browser, on click only)
+//   locate-input      address field, Enter looks it up
+//   locate-clear      forgets the place and shows everything again
+// Tag highlight is not wired yet (shop items carry no tag data).
+
+// The place a radius is measured from, shared by the search bar and the panel.
+const searchState = { from: null, label: '' };
+const layerState = { showDestinations: true, region: null };
+
+const isDestination = (it) => it.el.dataset.mapKind === 'destination';
+
+function closeAllPopups(markers) {
+  for (const { marker } of markers.values()) {
+    if (marker.getPopup().isOpen()) marker.getPopup().remove();
+  }
+}
+
+// Miles for one <option>. The value wins; an empty value falls back to the number
+// in its label, so "10 miles" works however the option was entered in Designer.
+function optionMiles(opt) {
+  const fromValue = parseFloat(opt.value);
+  return Number.isFinite(fromValue) ? fromValue : parseFloat(opt.textContent);
+}
+
+// The page may carry more than one radius <select> (the search bar and the
+// settings panel). They all show the same radius: changing one moves the others.
+const radiusState = { miles: null };
+const radiusSelects = () => Array.from(document.querySelectorAll('[data-map-element="search-radius"]'));
+const readRadius = (config) => (Number.isFinite(radiusState.miles) ? radiusState.miles : config.searchRadius);
+
+// Selects the option for these miles in every radius <select>. The list keeps the
+// order it has in Designer (ascending); only the selected option changes.
+function setRadius(miles) {
+  radiusState.miles = miles;
+  for (const select of radiusSelects()) {
+    const i = Array.from(select.options).findIndex((o) => optionMiles(o) === miles);
+    if (i >= 0) select.selectedIndex = i;
+  }
+}
+
+function applyOrigin(ctx, from, label) {
+  searchState.from = from;
+  searchState.label = label;
+  applyRadiusFilter({ ...ctx, from, miles: readRadius(ctx.config), label });
+}
+
+function clearOrigin(ctx) {
+  searchState.from = null;
+  searchState.label = '';
+  resetFilter(ctx);
+}
+
+function wireSettingsControls(items, markers, map, config) {
+  const status = document.querySelector('[data-map-element="search-status"]');
+  const ctx = { items, markers, map, status, config };
+  const eligible = () => items.filter((it) => layerState.showDestinations || !isDestination(it));
+
+  // Regions: one at a time; pressing the active one again goes back to everything.
+  const regionButtons = Array.from(document.querySelectorAll('[data-map-element="region"]'));
+  for (const btn of regionButtons) {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const slug = btn.dataset.slug;
+      layerState.region = layerState.region === slug ? null : slug;
+      for (const b of regionButtons) b.setAttribute('aria-pressed', String(b.dataset.slug === layerState.region));
+      closeAllPopups(markers);
+      const pool = eligible();
+      const inRegion = layerState.region ? pool.filter((it) => it.el.dataset.region === layerState.region) : pool;
+      fitToMarkers(map, inRegion.length ? inRegion : pool, config, true);
+    });
+  }
+
+  // Destinations: hides only the destination dots. Shops, search and regions go
+  // on working; a region fit afterwards leaves destinations out while it is off.
+  const toggle = document.querySelector('[data-map-element="destinations-toggle"]');
+  if (toggle) {
+    if (!toggle.hasAttribute('tabindex')) toggle.tabIndex = 0;
+    const setShown = (on) => {
+      layerState.showDestinations = on;
+      toggle.setAttribute('aria-checked', String(on));
+      for (const { marker, markerEl, item } of markers.values()) {
+        if (!isDestination(item)) continue;
+        markerEl.classList.toggle('is-layer-off', !on);
+        if (!on && marker.getPopup().isOpen()) marker.getPopup().remove();
+      }
+    };
+    setShown(toggle.getAttribute('aria-checked') !== 'false');
+    toggle.addEventListener('click', (e) => { e.preventDefault(); setShown(!layerState.showDestinations); });
+    toggle.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setShown(!layerState.showDestinations); }
+    });
+  }
+
+  // Radius: every select shows the configured default to begin with, a change in
+  // one carries to the others and re-applies to the place already found (no second
+  // geocoder request), and Reset puts the default back.
+  setRadius(config.searchRadius);
+  for (const select of radiusSelects()) {
+    select.addEventListener('change', () => {
+      const opt = select.options[select.selectedIndex];
+      const miles = opt ? optionMiles(opt) : NaN;
+      setRadius(Number.isFinite(miles) ? miles : config.searchRadius);
+      if (searchState.from) applyOrigin(ctx, searchState.from, searchState.label);
+    });
+  }
+  document.querySelector('[data-map-element="radius-reset"]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    setRadius(config.searchRadius);
+    if (searchState.from) applyOrigin(ctx, searchState.from, searchState.label);
+  });
+
+  // Location: the browser is asked only when the visitor presses the button.
+  const locateInput = document.querySelector('[data-map-element="locate-input"]');
+  const searchInput = document.querySelector('[data-map-element="search-input"]');
+
+  document.querySelector('[data-map-element="locate"]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!navigator.geolocation) { setStatus(status, 'Location is not available in this browser.'); return; }
+    setStatus(status, config.searchingText);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (locateInput) locateInput.value = '';
+        applyOrigin(ctx, { lat: pos.coords.latitude, lng: pos.coords.longitude }, 'your location');
+      },
+      () => setStatus(status, 'Could not get your location. Enter an address instead.'),
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+    );
+  });
+
+  // The field sits inside a form, so Enter is caught before the browser (or
+  // Webflow) can submit it.
+  locateInput?.addEventListener('keydown', async (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const query = locateInput.value.trim();
+    if (!query) return;
+    setStatus(status, config.searchingText);
+    try {
+      const hit = await geocodeQuery(query, config);
+      if (!hit) { setStatus(status, `No match for “${query}”.`); return; }
+      applyOrigin(ctx, hit, query);
+    } catch (err) {
+      console.error('[cms-map] locate failed', err);
+      setStatus(status, 'Search failed. Try again.');
     }
-    resetFilter({ items, markers, map, status, config });
+  });
+
+  document.querySelector('[data-map-element="locate-clear"]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (locateInput) locateInput.value = '';
+    if (searchInput) searchInput.value = '';
+    closeAllPopups(markers);
+    clearOrigin(ctx);
   });
 }
 
@@ -736,14 +900,20 @@ async function geocodeQuery(q, config) {
 function applyRadiusFilter({ items, markers, map, from, miles, status, label, config }) {
   const origin = [from.lng, from.lat];
   const keep = new Set();
+  let shops = 0;
   for (const it of items) {
+    // Destination dots that are switched off take no part in the search.
+    if (isDestination(it) && !layerState.showDestinations) continue;
     const d = distance(origin, [it.lng, it.lat], { units: 'miles' });
-    if (d <= miles) keep.add(it.id);
+    if (d <= miles) {
+      keep.add(it.id);
+      if (!isDestination(it)) shops += 1;
+    }
   }
 
   const noun = config.itemNoun;
-  setStatus(status, keep.size
-    ? `${keep.size} ${noun}${keep.size === 1 ? '' : 's'} within ${miles} mi of ${label.split(',')[0]}.`
+  setStatus(status, shops
+    ? `${shops} ${noun}${shops === 1 ? '' : 's'} within ${miles} mi of ${label.split(',')[0]}.`
     : config.emptyText);
 
   if (config.filterMode === 'filter') setVisible({ markers, keep });
@@ -770,7 +940,7 @@ function setVisible({ markers, keep }) {
 function resetFilter({ items, markers, map, status, config }) {
   setStatus(status, '');
   if (config.filterMode === 'filter') setVisible({ markers, keep: null });
-  fitToMarkers(map, items, config);
+  fitToMarkers(map, items.filter((it) => layerState.showDestinations || !isDestination(it)), config);
 }
 
 function setStatus(el, text) { if (el) el.textContent = text; }
