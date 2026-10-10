@@ -52,7 +52,7 @@ const CONFIG_SCHEMA = {
   'cooperative-gestures': { key: 'cooperativeGestures', parse: asBool, default: false },
   'nav-control':      { key: 'navControl',      parse: asString, default: 'top-right' },
   'popup-max-width':  { key: 'popupMaxWidth',   parse: asString, default: '320px' },
-  'popup-offset':     { key: 'popupOffset',     parse: asNumber, default: 18 },
+  'popup-offset':     { key: 'popupOffset',     parse: asNumber, default: 14 },
   'search-radius':    { key: 'searchRadius',    parse: asNumber, default: 25 },
   'filter-mode':      { key: 'filterMode',      parse: asString, default: 'highlight' },
   'geocode-viewbox':  { key: 'geocodeViewbox',  parse: asString, default: '-73.5,44.5,-68.5,41.0' },
@@ -280,6 +280,7 @@ function addMarkers(map, items, config) {
     const markerEl = document.createElement('button');
     markerEl.type = 'button';
     markerEl.className = 'cms-map-marker';
+    if (it.el.dataset.mapKind === 'destination') markerEl.classList.add('is-destination');
     markerEl.setAttribute('aria-label', it.el.textContent.trim().split('\n')[0] || 'Location');
 
     const popup = new maplibregl.Popup({
@@ -289,7 +290,7 @@ function addMarkers(map, items, config) {
       focusAfterOpen: config.popupFocus,
     }).setHTML(buildPopupHtml(it.el, config));
 
-    const marker = new maplibregl.Marker({ element: markerEl, anchor: 'bottom' })
+    const marker = new maplibregl.Marker({ element: markerEl, anchor: 'center' })
       .setLngLat([it.lng, it.lat])
       .setPopup(popup)
       .addTo(map);

@@ -44,9 +44,9 @@
        Clear button ....................... data-map-element="search-clear"
        Result text block .................. data-map-element="search-status"
 
-     PIN ICON .............................. set --map-marker-image in the CSS
-       below. That is the reliable route. (There is also a
-       data-map-element="marker-image" hidden Image element, unverified here.)
+     MAP DOTS .............................. Redwood for shops, Harbor Blue when the
+       item has data-map-kind="destination". Optional image override:
+       --map-marker-image in the CSS below.
 
      POPUP-ONLY CONTENT (inside the Collection Item)
        .map-item_show-modal ............... wrapper for pin-only fields (address
@@ -153,18 +153,11 @@
     padding: 16px 18px;
   }
 
-  /* ---- Map pin ----
-     Swap the icon by changing the URL below to any asset URL. This wins over the
-     component's built-in default, so it is the one place to edit.
-
-     Note: --map-marker-color does NOT recolor the pin. The icon is drawn as a
-     background-image, and CSS colour can't reach inside an SVG loaded that way —
-     to change the pin colour, upload an SVG in the colour you want. */
-  [data-map-element="viewport"] {
-    --map-marker-image: url("https://cdn.prod.website-files.com/68b4a46bb22ee95bf92540a0/69ead1e714f98dd2030bbd22_9a16b1b139e96b274ed784173e4dc91c_PhMapPinFill.svg");
-    --map-marker-size: 2rem;
-    --map-marker-active-scale: 1.15;
-  }
+  /* ---- Map dots ----
+     Shops are Redwood dots and destinations (data-map-kind="destination") are
+     Harbor Blue dots. The defaults live in map-embed.css and read the project
+     color variables, so nothing is needed here. To use an image instead of a dot,
+     set --map-marker-image: url("...") on the viewport. */
 
   /* Active list item — JS toggles .is-active on both the marker and the list
      item. Best long-term home for this is a Webflow combo class. */
