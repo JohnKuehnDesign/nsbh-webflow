@@ -715,6 +715,7 @@ function wireGeoSearch(items, markers, map, config) {
 //
 // The panel's own controls, all optional and found by data-map-element:
 //   region            buttons with data-slug; click flies to that region's dots
+//   region-clear      deselects the region and shows the whole map again
 //   destinations-toggle  role="switch" that shows or hides the destination dots
 //   search-radius     <select>; each option's miles come from its value, or from
 //                     its label when the value is empty ("10 miles")
@@ -778,18 +779,25 @@ function wireSettingsControls(items, markers, map, config) {
 
   // Regions: one at a time; pressing the active one again goes back to everything.
   const regionButtons = Array.from(document.querySelectorAll('[data-map-element="region"]'));
+  const selectRegion = (slug) => {
+    layerState.region = slug;
+    for (const b of regionButtons) b.setAttribute('aria-pressed', String(b.dataset.slug === slug));
+    closeAllPopups(markers);
+    const pool = eligible();
+    const inRegion = slug ? pool.filter((it) => it.el.dataset.region === slug) : pool;
+    fitToMarkers(map, inRegion.length ? inRegion : pool, config, true);
+  };
   for (const btn of regionButtons) {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      const slug = btn.dataset.slug;
-      layerState.region = layerState.region === slug ? null : slug;
-      for (const b of regionButtons) b.setAttribute('aria-pressed', String(b.dataset.slug === layerState.region));
-      closeAllPopups(markers);
-      const pool = eligible();
-      const inRegion = layerState.region ? pool.filter((it) => it.el.dataset.region === layerState.region) : pool;
-      fitToMarkers(map, inRegion.length ? inRegion : pool, config, true);
+      selectRegion(layerState.region === btn.dataset.slug ? null : btn.dataset.slug);
     });
   }
+  // Clear deselects the region and returns the map to the view of everything.
+  document.querySelector('[data-map-element="region-clear"]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    selectRegion(null);
+  });
 
   // Destinations: hides only the destination dots. Shops, search and regions go
   // on working; a region fit afterwards leaves destinations out while it is off.

@@ -6,6 +6,14 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.12 — 2026-10-10
+
+### Added
+
+- **Regions Clear.** `[data-map-element="region-clear"]` deselects the region and
+  flies the map back to the view of everything, matching the Clear links on
+  Highlight and Use My Location.
+
 ## v1.6.11 — 2026-10-10
 
 ### Added
