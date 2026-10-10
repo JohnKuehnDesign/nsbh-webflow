@@ -6,6 +6,23 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.4 — 2026-10-10
+
+Includes everything in v1.6.3.
+
+### Changed
+
+- **Clicking a dot centres the card.** The map flies to the dot and the card
+  opens centred in the map, with the dot just below it. The offset is measured
+  from the real card height, so a taller card sits correctly without tuning, and
+  the dot is kept inside the map on short maps. A non-zero
+  `data-map-focus-offset` still overrides the measured value. Clicking the dot
+  of an open card closes it and leaves the camera alone. Honors
+  `prefers-reduced-motion` (no flight).
+- **Card stays above the dot.** The popup anchor is fixed to the bottom, so the
+  card no longer flips below the dot while the map is moving.
+- List-row clicks use the same behavior.
+
 ## v1.6.3 — 2026-10-10
 
 ### Fixed

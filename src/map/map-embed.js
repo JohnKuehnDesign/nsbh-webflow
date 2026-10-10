@@ -288,6 +288,9 @@ function addMarkers(map, items, config) {
     const popup = new maplibregl.Popup({
       offset: config.popupOffset,
       closeButton: true,
+      // Fixed above the dot. With auto anchoring the card flips below the dot
+      // while the map is still moving, which reads as a jump.
+      anchor: 'bottom',
       maxWidth: config.popupMaxWidth,
       focusAfterOpen: config.popupFocus,
     }).setHTML(buildPopupHtml(it.el, config));
@@ -308,11 +311,38 @@ function addMarkers(map, items, config) {
     entry.markerEl.addEventListener('click', (e) => {
       e.stopPropagation();
       setActive({ items, markers: byId, activeId: entry.item.id, scrollList: true });
-      openExclusive(byId, entry.marker);
+      focusMarker(map, byId, entry, config);
     });
   }
 
   return byId;
+}
+
+// Opens the clicked dot's card and flies the map so the CARD sits centred in the
+// map, with the dot just below it. The card is measured after it opens, so the
+// offset follows the real card height instead of a fixed number. Clicking the
+// dot of an open card closes it and leaves the camera alone. A non-zero
+// data-map-focus-offset still overrides the measured value.
+function focusMarker(map, markers, entry, config) {
+  const wasOpen = entry.popup.isOpen();
+  openExclusive(markers, entry.marker);
+  if (wasOpen) return;
+
+  const el = entry.popup.getElement();
+  const cardHeight = el ? el.offsetHeight : 0;
+  const mapHeight = map.getContainer().clientHeight;
+  const measured = config.popupOffset + cardHeight / 2;
+  // Keep the dot itself inside the map even when the card is tall.
+  const y = config.focusOffset > 0 ? config.focusOffset : Math.max(0, Math.min(measured, mapHeight / 2 - 24));
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  map.flyTo({
+    center: entry.marker.getLngLat(),
+    zoom: Math.max(map.getZoom(), config.focusZoom),
+    offset: [0, y],
+    speed: 1.1,
+    ...(reduceMotion ? { duration: 0 } : {}),
+  });
 }
 
 function openExclusive(markers, targetMarker) {
@@ -497,7 +527,7 @@ function setActive({ items, markers, activeId, scrollList }) {
 }
 
 function wireListSync(items, markers, map, config) {
-  for (const { markerEl, item, marker } of markers.values()) {
+  for (const { item } of markers.values()) {
     const onEnter = () => setActive({ items, markers, activeId: item.id, scrollList: false });
     const onLeave = () => setActive({ items, markers, activeId: null, scrollList: false });
     item.el.addEventListener('mouseenter', onEnter);
@@ -506,15 +536,7 @@ function wireListSync(items, markers, map, config) {
     item.el.addEventListener('click', (e) => {
       if (e.target.closest('a, button')) return; // let real links/buttons through
       setActive({ items, markers, activeId: item.id, scrollList: false });
-      // offset [x, y]: a positive y lands the pin that many pixels BELOW the
-      // container's centre, leaving headroom for the popup card above it.
-      map.flyTo({
-        center: marker.getLngLat(),
-        zoom: Math.max(map.getZoom(), config.focusZoom),
-        offset: [0, config.focusOffset],
-        speed: 1.1,
-      });
-      openExclusive(markers, marker);
+      focusMarker(map, markers, markers.get(item.id), config);
     });
   }
 }
