@@ -299,3 +299,19 @@ html.cms-map-panel-open {
     cursor: pointer;
   }
 }
+
+/* ---- Zoom buttons on narrow maps ----
+   On a phone the open card fills most of the map and the +/- control, pinned to
+   the top-right corner, collides with the card's close circle. Pinch zooms on
+   touch, so the buttons step aside while a card is open and return when it
+   closes. */
+@media (max-width: 767px) {
+  [data-map-element="viewport"] .maplibregl-ctrl-top-right {
+    transition: opacity 120ms ease;
+  }
+
+  [data-map-element="viewport"]:has(.maplibregl-popup) .maplibregl-ctrl-top-right {
+    opacity: 0;
+    pointer-events: none;
+  }
+}

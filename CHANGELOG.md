@@ -6,6 +6,18 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.10 — 2026-10-10
+
+### Changed
+
+- **Popup width is relative to the map, not the screen.** `data-map-popup-max-width`
+  now defaults to `min(30rem, calc(100% - 2.5rem))`. On a phone the card leaves
+  1.25rem on each side, enough for the close circle that overhangs its corner by
+  1rem, so the circle is no longer clipped by the map edge.
+- **Zoom buttons step aside on phones.** At 767px and below, the +/- control fades
+  while a card is open (it collided with the card's close circle) and returns when
+  the card closes. Pinch zooms on touch.
+
 ## v1.6.9 — 2026-10-10
 
 ### Added

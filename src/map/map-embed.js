@@ -51,9 +51,10 @@ const CONFIG_SCHEMA = {
   'scroll-zoom':      { key: 'scrollZoom',      parse: asBool,   default: true },
   'cooperative-gestures': { key: 'cooperativeGestures', parse: asBool, default: false },
   'nav-control':      { key: 'navControl',      parse: asString, default: 'top-right' },
-  // 'none' lets the card take its own designed width (the shop panel caps itself
-  // at 30rem); the min() keeps it inside a phone screen.
-  'popup-max-width':  { key: 'popupMaxWidth',   parse: asString, default: 'min(30rem, calc(100vw - 3rem))' },
+  // The card takes its own designed width (the shop panel caps itself at 30rem).
+  // The percentage is of the map, not the screen, and 2.5rem leaves 1.25rem each
+  // side: room for the close circle that overhangs the card's corner by 1rem.
+  'popup-max-width':  { key: 'popupMaxWidth',   parse: asString, default: 'min(30rem, calc(100% - 2.5rem))' },
   'popup-offset':     { key: 'popupOffset',     parse: asNumber, default: 14 },
   'search-radius':    { key: 'searchRadius',    parse: asNumber, default: 25 },
   'filter-mode':      { key: 'filterMode',      parse: asString, default: 'highlight' },
