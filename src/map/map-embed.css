@@ -232,6 +232,15 @@
   display: none;
 }
 
+/* ---- Search status ----
+   The status element carries placeholder text in Designer so it can be styled.
+   map-embed.js empties it and marks it data-map-ready; until then it is hidden, so
+   the placeholder never flashes on the published page. */
+
+[data-map-element="search-status"]:not([data-map-ready]) {
+  visibility: hidden;
+}
+
 /* ---- Settings panel controls ----
    Pressed and off states come from the ARIA attributes map-embed.js keeps in sync,
    because Designer cannot style on them. */

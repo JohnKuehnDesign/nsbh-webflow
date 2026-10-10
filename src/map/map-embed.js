@@ -63,6 +63,9 @@ const CONFIG_SCHEMA = {
   'searching-text':   { key: 'searchingText',   parse: asString, default: 'Searching…' },
   'empty-text':       { key: 'emptyText',       parse: asString, default: 'No Beefs here. 😞' },
   'item-noun':        { key: 'itemNoun',        parse: asString, default: 'shop' },
+  // Shown in [data-map-element="locate-status"] after "use my location" (GPS).
+  // A typed address shows what was typed instead.
+  'location-label':   { key: 'locationLabel',   parse: asString, default: 'Your location' },
 
   // Marker appearance. These are written to the viewport as CSS custom
   // properties, so the stylesheet stays the single source of truth for how they
@@ -166,6 +169,7 @@ function boot() {
   if (!mapEl) return;
 
   const config = readConfig(mapEl);
+  initStatusElements();
   wireSettingsPanel();
   resolveMarkerImageElement(config);
   applyMarkerStyles(mapEl, config);
@@ -726,8 +730,36 @@ function wireGeoSearch(items, markers, map, config) {
 // Tag highlight is not wired yet (shop items carry no tag data).
 
 // The place a radius is measured from, shared by the search bar and the panel.
-const searchState = { from: null, label: '' };
+// source is 'locate' when it came from "use my location" (the GPS button or the
+// address field), 'search' when it came from the search bar.
+const searchState = { from: null, label: '', source: null };
 const layerState = { showDestinations: true, region: null };
+
+// Two text elements are written to, and each keeps the text it has in Designer:
+//   search-status  empty on the published page (its Designer text is a styling
+//                  placeholder); filled with search results.
+//   locate-status  "Not set" until a place is chosen with "use my location".
+const locationState = { el: null, fallback: '' };
+
+function initStatusElements() {
+  const status = document.querySelector('[data-map-element="search-status"]');
+  if (status) {
+    status.textContent = '';
+    // map-embed.css keeps the placeholder hidden until this point, so it never flashes.
+    status.setAttribute('data-map-ready', '');
+  }
+  const location = document.querySelector('[data-map-element="locate-status"]');
+  if (location) {
+    locationState.el = location;
+    locationState.fallback = location.textContent;
+  }
+}
+
+function showLocation() {
+  if (!locationState.el) return;
+  const chosen = searchState.source === 'locate' && searchState.label;
+  locationState.el.textContent = chosen ? searchState.label : locationState.fallback;
+}
 
 const isDestination = (it) => it.el.dataset.mapKind === 'destination';
 
@@ -760,15 +792,24 @@ function setRadius(miles) {
   }
 }
 
-function applyOrigin(ctx, from, label) {
+function applyOrigin(ctx, from, label, source = 'search') {
   searchState.from = from;
   searchState.label = label;
+  searchState.source = source;
+  showLocation();
   applyRadiusFilter({ ...ctx, from, miles: readRadius(ctx.config), label });
+}
+
+// A new radius measures again from the place already chosen.
+function reapplyOrigin(ctx) {
+  if (searchState.from) applyOrigin(ctx, searchState.from, searchState.label, searchState.source);
 }
 
 function clearOrigin(ctx) {
   searchState.from = null;
   searchState.label = '';
+  searchState.source = null;
+  showLocation();
   resetFilter(ctx);
 }
 
@@ -829,13 +870,13 @@ function wireSettingsControls(items, markers, map, config) {
       const opt = select.options[select.selectedIndex];
       const miles = opt ? optionMiles(opt) : NaN;
       setRadius(Number.isFinite(miles) ? miles : config.searchRadius);
-      if (searchState.from) applyOrigin(ctx, searchState.from, searchState.label);
+      reapplyOrigin(ctx);
     });
   }
   document.querySelector('[data-map-element="radius-reset"]')?.addEventListener('click', (e) => {
     e.preventDefault();
     setRadius(config.searchRadius);
-    if (searchState.from) applyOrigin(ctx, searchState.from, searchState.label);
+    reapplyOrigin(ctx);
   });
 
   // Location: the browser is asked only when the visitor presses the button.
@@ -849,7 +890,7 @@ function wireSettingsControls(items, markers, map, config) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         if (locateInput) locateInput.value = '';
-        applyOrigin(ctx, { lat: pos.coords.latitude, lng: pos.coords.longitude }, 'your location');
+        applyOrigin(ctx, { lat: pos.coords.latitude, lng: pos.coords.longitude }, config.locationLabel, 'locate');
       },
       () => setStatus(status, 'Could not get your location. Enter an address instead.'),
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
@@ -867,7 +908,7 @@ function wireSettingsControls(items, markers, map, config) {
     try {
       const hit = await geocodeQuery(query, config);
       if (!hit) { setStatus(status, `No match for “${query}”.`); return; }
-      applyOrigin(ctx, hit, query);
+      applyOrigin(ctx, hit, query, 'locate');
     } catch (err) {
       console.error('[cms-map] locate failed', err);
       setStatus(status, 'Search failed. Try again.');

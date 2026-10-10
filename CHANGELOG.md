@@ -6,6 +6,25 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.13 — 2026-10-10
+
+### Added
+
+- **"My Current Location" shows the place.** `[data-map-element="locate-status"]`
+  keeps whatever text it has in Designer ("Not set") until a place is chosen with
+  "use my location": the GPS button shows `data-map-location-label` (default
+  "Your location") and a typed address shows what was typed. Locate Clear, or a new
+  search from the search bar, puts "Not set" back.
+
+### Changed
+
+- **The results status can carry placeholder text in Designer.** On the published
+  page `[data-map-element="search-status"]` starts empty and is filled with search
+  results. The stylesheet hides it until the script has emptied it, so the
+  placeholder never flashes.
+- A new radius, Reset and Clear keep the "My Current Location" text in step with the
+  place the radius is measured from.
+
 ## v1.6.12 — 2026-10-10
 
 ### Added

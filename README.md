@@ -101,6 +101,7 @@ Every value below can be set three ways. First match wins:
 | `data-map-searching-text` | `searchingText` | `Searching…` | Status while geocoding |
 | `data-map-empty-text` | `emptyText` | `No Beefs here. 😞` | Status when nothing is in range |
 | `data-map-item-noun` | `itemNoun` | `shop` | Noun in the result count. Pluralized with `s` |
+| `data-map-location-label` | `locationLabel` | `Your location` | Text shown in `locate-status` after "use my location" (GPS). A typed address shows what was typed |
 | `data-map-marker-image` | `markerImage` | stylesheet default | Marker icon. A bare URL, or any CSS image value |
 | `data-map-marker-size` | `markerSize` | `2rem` | Marker width and height |
 | `data-map-marker-color` | `markerColor` | `--_primitives---colors--h-redwood` | Marker `color` |
