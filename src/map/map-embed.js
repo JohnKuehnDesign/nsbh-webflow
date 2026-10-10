@@ -281,7 +281,8 @@ function addMarkers(map, items, config) {
     markerEl.type = 'button';
     markerEl.className = 'cms-map-marker';
     if (it.el.dataset.mapKind === 'destination') markerEl.classList.add('is-destination');
-    markerEl.setAttribute('aria-label', it.el.textContent.trim().split('\n')[0] || 'Location');
+    const d = it.el.dataset;
+    markerEl.setAttribute('aria-label', d.displayName || d.name || it.el.textContent.trim().split('\n')[0] || 'Location');
 
     const popup = new maplibregl.Popup({
       offset: config.popupOffset,
@@ -317,11 +318,83 @@ function openExclusive(markers, targetMarker) {
   if (!isAlreadyOpen) targetMarker.togglePopup();
 }
 
-// The popup is a clone of the list item, so a card designed once in Webflow
-// works in both places. Two things differ in the popup: some elements are
-// dropped (the town name, which the address already contains), and the action
-// links are appended.
+// Static card templates. Each [data-map-template="shop|destination"] block holds
+// one designed card, marked with data-map-card, and its fields are marked with
+// data-map-slot. The popup clones that card and fills the slots from the data
+// attributes on the hidden Collection Item. Templates live outside every
+// Collection List and stay visible in Designer.
+const SLOT_TEXT = {
+  shop:        { name: (d) => d.displayName || d.name, region: (d) => d.regionName, town: (d) => d.townName,
+                 description: (d) => d.description, address: (d) => d.address },
+  destination: { name: (d) => d.name, region: (d) => d.regionName, description: (d) => d.description },
+};
+
+function buildCardFromTemplate(item, config) {
+  const kind = item.dataset.mapKind === 'destination' ? 'destination' : 'shop';
+  const tpl = document.querySelector(`[data-map-template="${kind}"]`);
+  const source = tpl && (tpl.querySelector('[data-map-card]') || tpl.firstElementChild);
+  if (!source) return null;
+
+  const card = source.cloneNode(true);
+  card.classList.add('cms-map-popup-card');
+  card.removeAttribute('id');
+  const d = item.dataset;
+
+  // MapLibre draws its own close button, and the card needs no popover chrome.
+  for (const el of card.querySelectorAll('[data-shop-popover-close], [data-shop-popover-backdrop]')) el.remove();
+
+  // Text slots. An empty value removes the slot so no placeholder text is left.
+  for (const [slot, read] of Object.entries(SLOT_TEXT[kind])) {
+    for (const el of card.querySelectorAll(`[data-map-slot="${slot}"]`)) {
+      const value = (read(d) || '').trim();
+      if (value) el.textContent = value; else el.remove();
+    }
+  }
+
+  // The region/town divider only makes sense when both are present.
+  if (!d.regionName || !d.townName) {
+    for (const el of card.querySelectorAll('[data-map-slot="separator"]')) el.remove();
+  }
+
+  if (kind === 'shop') {
+    fillLink(card, 'directions', safeUrl(d.googleMapLink) || safeUrl(d.directionsLink));
+    fillLink(card, 'website', safeUrl(d.website));
+    const digits = (d.phone || '').replace(/[^\d+]/g, '');
+    fillLink(card, 'call', digits ? `tel:${digits}` : null, false);
+  } else {
+    fillLink(card, 'link', d.id ? `/destinations/${encodeURIComponent(d.id)}` : null, false);
+  }
+
+  // Slots with no data source yet (tags, premium seal, images, nearby shops) are
+  // dropped from the clone rather than shown as template placeholders.
+  for (const slot of ['tags', 'premium', 'image', 'nearby']) {
+    for (const el of card.querySelectorAll(`[data-map-slot="${slot}"]`)) el.remove();
+  }
+  for (const el of card.querySelectorAll('[data-map-slot]')) el.removeAttribute('data-map-slot');
+
+  void config;
+  return card;
+}
+
+// Sets a slot link's href, or removes the link when there is nowhere to go. The
+// page's popover script hides empty-href links on the template itself, so any
+// inline display it left behind is cleared on the clone.
+function fillLink(card, slot, href, external = true) {
+  for (const a of card.querySelectorAll(`[data-map-slot="${slot}"]`)) {
+    a.style.removeProperty('display');
+    if (!href) { a.remove(); continue; }
+    a.setAttribute('href', href);
+    if (external) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
+  }
+}
+
+// The popup is a clone of a static template card when one exists, and of the
+// list item otherwise (the earlier behaviour, kept as a fallback). In the
+// fallback, some elements are dropped and the action links are appended.
 function buildPopupHtml(listItemEl, config) {
+  const card = buildCardFromTemplate(listItemEl, config);
+  if (card) return card.outerHTML;
+
   const clone = listItemEl.cloneNode(true);
   clone.classList.add('cms-map-popup-card');
 

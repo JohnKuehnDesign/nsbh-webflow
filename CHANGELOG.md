@@ -6,6 +6,33 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.2 — 2026-10-10
+
+Popups are built from static card templates instead of the list items.
+
+### Added
+
+- **Template cards.** `[data-map-template="shop"]` and `[data-map-template="destination"]`
+  blocks hold one designed card each, marked `data-map-card`, with fields marked
+  `data-map-slot`. The popup clones the card and fills the slots from data
+  attributes on the hidden Collection Item (`data-name`, `data-display-name`,
+  `data-region-name`, `data-town-name`, `data-description`, `data-address`,
+  `data-phone`, `data-website`, `data-google-map-link`, `data-directions-link`).
+  Empty values remove their slot. With no template on the page the old
+  list-item clone still runs.
+- **Marker names.** The marker's accessible name comes from `data-display-name` or
+  `data-name`.
+
+### Not yet filled
+
+Tags, the premium seal, destination images and nearby shops have no data source on
+the hidden items, so those slots are dropped from the popup.
+
+## v1.6.1 — 2026-10-10
+
+Shop-icon pins replaced by centered dots: Redwood for shops, Harbor Blue for
+items with `data-map-kind="destination"`. Popup offset default 18 -> 14.
+
 ## v1.6.0 — 2026-07-21
 
 Popup presentation fixes, all three visible in the card.
