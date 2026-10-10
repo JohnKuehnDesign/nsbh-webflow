@@ -6,6 +6,26 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.9 — 2026-10-10
+
+### Added
+
+- **Settings panel opens.** At 991px and below, the settings button
+  (`data-map-element="quick-picks-open"`) opens the panel
+  (`data-map-element="quick-picks"` form's `.w-form` wrapper) as a dialog:
+  backdrop, a close button, focus moves in, Tab stays inside, Escape / backdrop /
+  close dismiss it and focus returns to the opener, page scroll is locked while
+  open, and `aria-expanded`, `aria-controls` and `role="dialog"` are kept in sync.
+  Growing past 991px closes it and restores the desktop column. The panel is only
+  hidden once JavaScript has tagged it, so it stays visible without JS.
+
+### Changed
+
+- **Popup cards use their own designed width.** `data-map-popup-max-width` now
+  defaults to `min(30rem, calc(100vw - 3rem))` instead of 320px, so the three shop
+  buttons (Directions, Call Now, Visit Site) sit on one row and only wrap under the
+  tags when there is no room.
+
 ## v1.6.8 — 2026-10-10
 
 ### Added

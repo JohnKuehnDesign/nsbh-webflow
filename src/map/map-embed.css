@@ -231,3 +231,71 @@
 [data-map-element="item"].is-hidden {
   display: none;
 }
+
+/* ---- Settings panel as a dialog (tablet and below) ----
+   map-embed.js marks the panel [data-map-panel], adds the backdrop and the close
+   button, and toggles .is-open. Above 991px none of this applies and the panel is
+   the normal column beside the map. */
+
+.cms-map-panel-close,
+.cms-map-panel-backdrop {
+  display: none;
+}
+
+.cms-map-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(24, 18, 12, 0.5);
+}
+
+html.cms-map-panel-open {
+  overflow: hidden;
+}
+
+@media (max-width: 991px) {
+  .cms-map-panel-backdrop:not([hidden]) {
+    display: block;
+  }
+
+  [data-map-panel] {
+    display: none;
+  }
+
+  [data-map-panel].is-open {
+    display: block;
+    position: fixed;
+    z-index: 10001;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    width: min(26rem, calc(100vw - 2rem));
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    padding: 1.75rem 1.25rem 1.25rem;
+    background: var(--map-panel-bg, #fff); /* set on :root or the panel to override */
+    border-radius: 0.5rem 2rem 0.5rem 0.5rem;
+    box-shadow: 0 12px 28px 0 rgba(20, 47, 56, 0.18), 0 28px 56px 0 rgba(53, 121, 140, 0.24);
+  }
+
+  [data-map-panel].is-open .cms-map-panel-close {
+    display: flex;
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 1;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #eef2f3;
+    color: inherit;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+}

@@ -51,7 +51,9 @@ const CONFIG_SCHEMA = {
   'scroll-zoom':      { key: 'scrollZoom',      parse: asBool,   default: true },
   'cooperative-gestures': { key: 'cooperativeGestures', parse: asBool, default: false },
   'nav-control':      { key: 'navControl',      parse: asString, default: 'top-right' },
-  'popup-max-width':  { key: 'popupMaxWidth',   parse: asString, default: '320px' },
+  // 'none' lets the card take its own designed width (the shop panel caps itself
+  // at 30rem); the min() keeps it inside a phone screen.
+  'popup-max-width':  { key: 'popupMaxWidth',   parse: asString, default: 'min(30rem, calc(100vw - 3rem))' },
   'popup-offset':     { key: 'popupOffset',     parse: asNumber, default: 14 },
   'search-radius':    { key: 'searchRadius',    parse: asNumber, default: 25 },
   'filter-mode':      { key: 'filterMode',      parse: asString, default: 'highlight' },
@@ -163,6 +165,7 @@ function boot() {
   if (!mapEl) return;
 
   const config = readConfig(mapEl);
+  wireSettingsPanel();
   resolveMarkerImageElement(config);
   applyMarkerStyles(mapEl, config);
 
@@ -209,6 +212,93 @@ function boot() {
     wireGeoSearch(items, markers, map, config);
     if (items.length && config.fitOnLoad) fitToMarkers(map, items, config);
   });
+}
+
+// --- settings panel -------------------------------------------------------
+//
+// Above 991px the settings panel is a normal column beside the map and nothing
+// here applies. At 991px and below it is a dialog: the opener button shows it,
+// focus moves inside, Tab stays inside, Escape or the backdrop or the close
+// button dismiss it, and focus returns to the opener. The panel is marked
+// data-map-panel by this code, so with no JavaScript it just stays visible.
+const PANEL_NARROW = '(max-width: 991px)';
+
+function wireSettingsPanel() {
+  const opener = document.querySelector('[data-map-element="quick-picks-open"]');
+  const form = document.querySelector('[data-map-element="quick-picks"]');
+  if (!opener || !form) return;
+
+  const panel = form.closest('.w-form') || form.parentElement;
+  panel.setAttribute('data-map-panel', '');
+  if (!panel.id) panel.id = 'cms-map-settings-panel';
+
+  const narrow = window.matchMedia(PANEL_NARROW);
+  const label = opener.getAttribute('aria-label') || 'Search settings';
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'cms-map-panel-backdrop';
+  backdrop.hidden = true;
+  document.body.appendChild(backdrop);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'cms-map-panel-close';
+  closeBtn.setAttribute('aria-label', `Close ${label.toLowerCase()}`);
+  closeBtn.textContent = '\u00d7';
+  panel.insertBefore(closeBtn, panel.firstChild);
+
+  opener.setAttribute('aria-haspopup', 'dialog');
+  opener.setAttribute('aria-controls', panel.id);
+  opener.setAttribute('aria-expanded', 'false');
+
+  const isOpen = () => panel.classList.contains('is-open');
+
+  const focusable = () => Array.from(panel.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter((el) => el.offsetParent !== null);
+
+  function open() {
+    if (!narrow.matches || isOpen()) return;
+    panel.classList.add('is-open');
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-modal', 'true');
+    panel.setAttribute('aria-label', label);
+    backdrop.hidden = false;
+    document.documentElement.classList.add('cms-map-panel-open');
+    opener.setAttribute('aria-expanded', 'true');
+    closeBtn.focus();
+  }
+
+  function close(returnFocus = true) {
+    if (!isOpen()) return;
+    panel.classList.remove('is-open');
+    panel.removeAttribute('role');
+    panel.removeAttribute('aria-modal');
+    panel.removeAttribute('aria-label');
+    backdrop.hidden = true;
+    document.documentElement.classList.remove('cms-map-panel-open');
+    opener.setAttribute('aria-expanded', 'false');
+    if (returnFocus) opener.focus();
+  }
+
+  opener.addEventListener('click', () => (isOpen() ? close() : open()));
+  closeBtn.addEventListener('click', () => close());
+  backdrop.addEventListener('click', () => close());
+
+  document.addEventListener('keydown', (e) => {
+    if (!isOpen()) return;
+    if (e.key === 'Escape') { e.preventDefault(); close(); return; }
+    if (e.key !== 'Tab') return;
+    const items = focusable();
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+
+  // Growing past the breakpoint turns the dialog back into the desktop column.
+  narrow.addEventListener('change', (e) => { if (!e.matches) close(false); });
 }
 
 // Designer-native pin image: drop an Image element in Webflow (pick the asset
