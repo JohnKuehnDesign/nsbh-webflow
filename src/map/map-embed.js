@@ -36,7 +36,7 @@ const TURF_DISTANCE_URL = 'https://esm.sh/@turf/distance@7.1.0';
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 
 // Where focus goes back to when a card that was opened from the keyboard closes.
-const popupFocus = { returnTo: null };
+const popupFocus = { returnTo: null, quiet: false };
 
 // --- config --------------------------------------------------------------
 
@@ -416,7 +416,12 @@ function addMarkers(map, items, config) {
     popup.on('close', () => {
       const back = popupFocus.returnTo;
       popupFocus.returnTo = null;
-      if (back && back.isConnected) back.focus({ preventScroll: true });
+      if (back && back.isConnected) {
+        // Focus coming back is not a reason to reopen the search suggestions.
+        popupFocus.quiet = true;
+        back.focus({ preventScroll: true });
+        popupFocus.quiet = false;
+      }
     });
 
     const marker = new maplibregl.Marker({ element: markerEl, anchor: 'center' })
@@ -961,7 +966,7 @@ function wireSuggestions({ input, items, markers, map, status, config }) {
   };
 
   input.addEventListener('input', update);
-  input.addEventListener('focus', update);
+  input.addEventListener('focus', () => { if (!popupFocus.quiet) update(); });
   input.addEventListener('blur', () => setOpen(false));
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {

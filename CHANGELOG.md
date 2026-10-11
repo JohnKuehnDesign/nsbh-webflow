@@ -6,6 +6,13 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.7.4 — 2026-10-11
+
+### Fixed
+
+- **Closing a card with Escape no longer reopens the search suggestions** when focus
+  returns to the search input.
+
 ## v1.7.3 — 2026-10-11
 
 ### Fixed
