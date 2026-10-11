@@ -6,6 +6,14 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.7.5 — 2026-10-11
+
+### Fixed
+
+- **Escape closes a card opened with a mouse click.** A click leaves focus on the page,
+  not the dot, so the key never reached the card. Escape on the map or the bare page
+  now closes the open card; Escape in a field or the suggestions is unchanged.
+
 ## v1.7.4 — 2026-10-11
 
 ### Fixed

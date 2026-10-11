@@ -224,6 +224,7 @@ function boot() {
     // the map is a flex child), match the canvas to it before fitting bounds.
     map.resize();
     const markers = addMarkers(map, items, config);
+    wireEscapeToClose(mapEl, markers);
     wireListSync(items, markers, map, config);
     wireGeoSearch(items, markers, map, config);
     wireSettingsControls(items, markers, map, config);
@@ -730,6 +731,22 @@ function wireListSync(items, markers, map, config) {
       focusMarker(map, markers, markers.get(item.id), config);
     });
   }
+}
+
+// --- closing a card with Escape ---------------------------------------------
+//
+// A click on a dot leaves focus on the page, not the dot, so a key listener on the
+// dot or the card is not enough. Escape on the map or the bare page closes whichever
+// card is open. Escape elsewhere (a field, the suggestions) is left alone.
+function wireEscapeToClose(mapEl, markers) {
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || e.defaultPrevented) return;
+    const t = e.target;
+    if (t !== document.body && t !== document.documentElement && !mapEl.contains(t)) return;
+    for (const { popup } of markers.values()) {
+      if (popup.isOpen()) { popup.remove(); break; }
+    }
+  });
 }
 
 // --- action links ---------------------------------------------------------
