@@ -776,14 +776,14 @@ function wireSuggestions({ input, items, markers, map, status, config }) {
       hits.push({ e, score });
     }
     hits.sort((a, b) => a.score - b.score || a.e.name.localeCompare(b.e.name));
-    return { total: hits.length, rows: hits.slice(0, cap).map((h) => h.e) };
+    return { total: hits.length, best: hits.length ? hits[0].score : 3, rows: hits.slice(0, cap).map((h) => h.e) };
   };
   const compute = (q) => {
     const tokens = q.split(' ');
     const r = find(regions, q, tokens, SUGGEST_MAX.region);
     const t = find(towns, q, tokens, SUGGEST_MAX.town);
     const sh = find(shopEntries, q, tokens, SUGGEST_MAX.shop);
-    return { rows: [...r.rows, ...t.rows, ...sh.rows], placeCount: r.rows.length + t.rows.length, shopTotal: sh.total };
+    return { rows: [...r.rows, ...t.rows, ...sh.rows], placeCount: r.rows.length + t.rows.length, shopTotal: sh.total, shopBest: sh.best };
   };
 
   // Screen readers hear how many suggestions there are.
@@ -883,13 +883,15 @@ function wireSuggestions({ input, items, markers, map, status, config }) {
 
   // Enter picks the highlighted row. With none highlighted: a place hit wins, a
   // lone shop hit opens it, several shop hits keep the list open (a shop name is
-  // not geocoded), and no hits fall through to the address search. Anything with a
-  // digit in it (a ZIP, a street number) is an address and goes to the geocoder.
+  // not geocoded), and no hits fall through to the address search. Text with a digit
+  // in it (a ZIP, a street number) is an address and goes to the geocoder, unless a
+  // name matches ("110 Roast Beef").
   const enter = () => {
     if (!dropdown.hidden && activeIdx >= 0) { choose(rows[activeIdx]); return true; }
     const q = foldText(input.value);
-    if (q.length < SUGGEST_MIN_CHARS || /\d/.test(q)) return false;
+    if (q.length < SUGGEST_MIN_CHARS) return false;
     const r = compute(q);
+    if (/\d/.test(q) && !r.placeCount && r.shopBest > 1) return false;
     const place = r.rows.find((e) => e.kind !== 'shop');
     if (place) { choose(place); return true; }
     if (r.shopTotal === 1) { choose(r.rows[0]); return true; }

@@ -6,6 +6,14 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.7.1 — 2026-10-11
+
+### Fixed
+
+- **Shops with a number in the name** ("110 Roast Beef") now act as suggestions on
+  Enter. Text with a digit still goes to the address search, unless a region, town
+  or shop name matches it.
+
 ## v1.7.0 — 2026-10-11
 
 ### Added

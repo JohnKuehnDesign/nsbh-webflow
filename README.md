@@ -79,7 +79,7 @@ typed must appear. Choosing a row:
 Enter picks the highlighted row (arrow keys move it, Escape closes the list). With
 no row highlighted a region or town hit wins, a single shop hit opens it, several
 shop hits leave the list open, and no hits send the text to the address search. Text
-containing a digit (a ZIP, a street number) always goes to the address search.
+containing a digit (a ZIP, a street number) goes to the address search, unless a region, town or shop name matches it ("110 Roast Beef").
 
 The look is built in Designer. Put the `data-map-template="suggestion"` block in the
 card templates section, with one row marked `data-map-suggest="place"` (slots
