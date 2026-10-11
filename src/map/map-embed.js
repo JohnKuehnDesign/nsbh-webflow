@@ -954,6 +954,9 @@ function wireSettingsControls(items, markers, map, config) {
 
   // Regions: one at a time; pressing the active one again goes back to everything.
   const regionButtons = Array.from(document.querySelectorAll('[data-map-element="region"]'));
+  // Start unpressed whatever classes Designer left on the buttons (a combo applied to
+  // preview the pressed look would otherwise show on every button until first click).
+  for (const b of regionButtons) setPressed(b, false);
   const selectRegion = (slug) => {
     layerState.region = slug;
     for (const b of regionButtons) setPressed(b, b.dataset.slug === slug);
@@ -1016,6 +1019,7 @@ function wireSettingsControls(items, markers, map, config) {
   // Tags: chips toggle; a shop must carry every chosen tag to stay bright. Clear
   // drops them all. The tag pages load on the first press.
   const chips = tagChips();
+  for (const c of chips) setPressed(c, false);
   const syncChips = () => {
     for (const c of chips) setPressed(c, tagState.selected.has(c.dataset.slug));
   };

@@ -6,6 +6,14 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.17 — 2026-10-11
+
+### Fixed
+
+- **Chips start unpressed.** On load every region button and tag chip is set to
+  not-pressed, so an `is-active` combo left on a button in Designer (to preview the
+  pressed look) no longer shows on every button until the first click.
+
 ## v1.6.16 — 2026-10-11
 
 ### Added
