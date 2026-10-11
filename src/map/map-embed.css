@@ -21,6 +21,7 @@
   --map-marker-color: var(--_primitives---colors--h-redwood, #a65456);
   --map-marker-destination-color: var(--_primitives---colors--h-harbor-blue, #35798c);
   --map-marker-ring: #fff;
+  --map-marker-highlight: #2f9e5b; /* ring + glow on shops matching the chosen tags */
   --map-marker-active-scale: 1.3;
   /* Popup shell — chrome-less by default. The card inside is a clone of your
      Collection Item and already brings its own background, radius and shadow
@@ -249,14 +250,16 @@
   display: none;
 }
 
-/* Tag highlight: shops that carry every chosen tag stay bright and sit on top, the
-   rest fade back (still clickable). Nothing here applies until a tag is chosen. */
-.cms-map-marker.is-tag-dim {
-  opacity: 0.3;
-}
-
+/* Tag highlight: shops that carry every chosen tag get a green ring and glow and
+   sit on top of the rest. Other dots are left alone (is-tag-dim is set on them as a
+   hook but carries no style, so nothing fades or seems to disappear). Nothing here
+   applies until a tag is chosen. */
 .cms-map-marker.is-tag-match {
   z-index: 1;
+  border-color: var(--map-marker-highlight, #2f9e5b);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--map-marker-highlight, #2f9e5b) 45%, transparent),
+    0 0 12px 5px color-mix(in srgb, var(--map-marker-highlight, #2f9e5b) 70%, transparent);
 }
 
 /* The card's tag row stays out of the way until its tags are known. */

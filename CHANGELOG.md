@@ -6,6 +6,15 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.15 — 2026-10-11
+
+### Changed
+
+- **Tag highlight is a green ring and glow, not a fade.** Shops that carry every
+  chosen tag get a green ring and glow (`--map-marker-highlight`, default `#2f9e5b`)
+  and sit on top. Other dots are no longer faded; `is-tag-dim` is still set on them
+  as a hook but has no style.
+
 ## v1.6.14 — 2026-10-11
 
 ### Added
