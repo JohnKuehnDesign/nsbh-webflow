@@ -817,9 +817,11 @@ async function fillPopupTags(popup, shopId, config) {
     tpl.innerHTML = tagState.proto;
     const tag = tpl.content.firstElementChild;
     const name = chip.textContent.trim();
-    const icon = chip.querySelector('[class*="shop-tag_svg-embed"]');
+    // The icon is whatever SVG the chip holds, so renaming its wrapper class in
+    // Designer cannot break this.
+    const icon = chip.querySelector('svg');
     const slot = tag.querySelector('[data-map-slot="tag-icon"]');
-    if (slot && icon) slot.innerHTML = icon.innerHTML;
+    if (slot && icon) slot.innerHTML = icon.outerHTML;
     for (const el of tag.querySelectorAll('[data-map-slot]')) el.removeAttribute('data-map-slot');
     tag.removeAttribute('data-map-slot');
     tag.setAttribute('role', 'img');
@@ -938,6 +940,13 @@ function clearOrigin(ctx) {
   resetFilter(ctx);
 }
 
+// A toggle button keeps aria-pressed for assistive tech and gets an is-active class
+// for Designer: style the pressed look on a combo class named is-active.
+function setPressed(el, on) {
+  el.setAttribute('aria-pressed', String(on));
+  el.classList.toggle('is-active', on);
+}
+
 function wireSettingsControls(items, markers, map, config) {
   const status = document.querySelector('[data-map-element="search-status"]');
   const ctx = { items, markers, map, status, config };
@@ -947,7 +956,7 @@ function wireSettingsControls(items, markers, map, config) {
   const regionButtons = Array.from(document.querySelectorAll('[data-map-element="region"]'));
   const selectRegion = (slug) => {
     layerState.region = slug;
-    for (const b of regionButtons) b.setAttribute('aria-pressed', String(b.dataset.slug === slug));
+    for (const b of regionButtons) setPressed(b, b.dataset.slug === slug);
     closeAllPopups(markers);
     const pool = eligible();
     const inRegion = slug ? pool.filter((it) => it.el.dataset.region === slug) : pool;
@@ -1008,7 +1017,7 @@ function wireSettingsControls(items, markers, map, config) {
   // drops them all. The tag pages load on the first press.
   const chips = tagChips();
   const syncChips = () => {
-    for (const c of chips) c.setAttribute('aria-pressed', String(tagState.selected.has(c.dataset.slug)));
+    for (const c of chips) setPressed(c, tagState.selected.has(c.dataset.slug));
   };
   for (const chip of chips) {
     chip.addEventListener('click', (e) => {

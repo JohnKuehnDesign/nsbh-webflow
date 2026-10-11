@@ -6,6 +6,29 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.16 — 2026-10-11
+
+### Added
+
+- **`is-active` on pressed chips.** Tag chips and region buttons get an `is-active`
+  class together with `aria-pressed`, so the pressed look is a Designer combo class
+  (`map-UI_chip-button` + `is-active`). The code no longer paints a redwood background
+  on pressed chips.
+
+### Changed
+
+- **Highlight glow is mint.** Matching dots get a very light green ring
+  (`--map-marker-highlight-ring`, `#e6faef`) and a mint glow (`--map-marker-highlight`,
+  `#7ddfae`).
+- **An open card sits above every dot.** `.maplibregl-popup` has `z-index: 2`, above
+  highlighted dots (`z-index: 1`).
+
+### Fixed
+
+- **Card tag icons no longer depend on a class name.** The icon is the SVG the chip
+  holds, whatever its wrapper is called, so renaming `shop-tag_svg-embed` in Designer
+  no longer empties the card's tags.
+
 ## v1.6.15 — 2026-10-11
 
 ### Changed
