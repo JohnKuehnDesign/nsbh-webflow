@@ -268,6 +268,22 @@
   z-index: 2;
 }
 
+/* The visitor's own place. With a [data-map-template="location"] block the pin looks
+   like that block (Designer's); this plain dot is only the fallback without one. */
+.cms-map-location-pin:not([class*="my-location"]) {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--map-marker-color, #35798c);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--map-marker-color, #35798c) 35%, transparent);
+}
+
+/* The distance flag stays hidden until the visitor has set a place. */
+[data-map-distance][hidden] {
+  display: none;
+}
+
 /* The card's tag row stays out of the way until its tags are known. */
 [data-map-tags][hidden] {
   display: none;

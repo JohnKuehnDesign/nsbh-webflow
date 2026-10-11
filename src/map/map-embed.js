@@ -409,6 +409,7 @@ function addMarkers(map, items, config) {
     }).setHTML(buildPopupHtml(it.el, config));
     popup.on('open', () => {
       fillPopupTags(popup, it.id, config);
+      fillPopupDistance(popup, it);
       // Escape inside the card closes it.
       popup.getElement()?.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') { e.stopPropagation(); popup.remove(); }
@@ -570,9 +571,39 @@ function buildCardFromTemplate(item, config) {
   // Nearby shops have no data source yet and are dropped rather than left as
   // template placeholders.
   for (const el of card.querySelectorAll('[data-map-slot="nearby"]')) el.remove();
+  markDistanceFlag(card);
   for (const el of card.querySelectorAll('[data-map-slot]')) el.removeAttribute('data-map-slot');
 
   return card;
+}
+
+// The distance flag ("4.2 miles away") is filled each time a card opens, because the
+// visitor's place can change after the cards are built. Its slots turn into
+// data-map-distance (the flag, hidden until there is a place) and
+// data-map-distance-text (the element holding the words, optional).
+function markDistanceFlag(root) {
+  const within = (slot) => [root, ...root.querySelectorAll('*')].filter((el) => el.getAttribute('data-map-slot') === slot);
+  for (const el of within('distance')) {
+    el.setAttribute('data-map-distance', '');
+    el.hidden = true;
+  }
+  for (const el of within('distance-text')) el.setAttribute('data-map-distance-text', '');
+}
+
+// In the shop template the flag sits beside the card inside its popover wrapper, not
+// inside the card that gets cloned. When the cloned card has none, the template's own
+// flag is added in front of it; the popup's content box is the flag's positioning
+// parent, so it lands on the card's top edge.
+function distanceFlagHtml(kind, card) {
+  if (card.querySelector('[data-map-distance]')) return '';
+  const tpl = document.querySelector(`[data-map-template="${kind}"]`);
+  const source = tpl && tpl.querySelector('[data-map-slot="distance"]');
+  if (!source) return '';
+  const flag = source.cloneNode(true);
+  flag.removeAttribute('id');
+  markDistanceFlag(flag);
+  for (const el of [flag, ...flag.querySelectorAll('[data-map-slot]')]) el.removeAttribute('data-map-slot');
+  return flag.outerHTML;
 }
 
 // An image field cannot bind to an attribute, so the hidden Collection Item
@@ -620,7 +651,10 @@ function fillLink(card, slot, href, external = true) {
 // fallback, some elements are dropped and the action links are appended.
 function buildPopupHtml(listItemEl, config) {
   const card = buildCardFromTemplate(listItemEl, config);
-  if (card) return card.outerHTML;
+  if (card) {
+    const kind = listItemEl.dataset.mapKind === 'destination' ? 'destination' : 'shop';
+    return distanceFlagHtml(kind, card) + card.outerHTML;
+  }
 
   const clone = listItemEl.cloneNode(true);
   clone.classList.add('cms-map-popup-card');
@@ -1062,7 +1096,9 @@ function wireGeoSearch(items, markers, map, config) {
 //   radius-reset      puts the radius back to the configured default
 //   locate            "use my location" button (asks the browser, on click only)
 //   locate-input      address field, Enter looks it up
-//   locate-clear      forgets the place and shows everything again
+//   locate-clear      forgets the visitor's place (pin, status, distances)
+// Either way of setting a place draws the pin, writes locate-status and adds a
+// distance flag to the cards; neither moves the camera or runs the radius search.
 //   tag               buttons with data-slug (the Shop Tag's slug); click toggles
 //                     highlighting shops that carry every chosen tag
 //   tag-clear         drops every chosen tag
@@ -1184,17 +1220,19 @@ async function applyTagHighlight({ markers, status, config }) {
   }
 }
 
-// The place a radius is measured from, shared by the search bar and the panel.
-// source is 'locate' when it came from "use my location" (the GPS button or the
-// address field), 'search' when it came from the search bar.
-const searchState = { from: null, label: '', source: null };
+// The place a radius is measured from: the search bar only. "Use my location" is a
+// separate thing (see locationState) and never moves the camera or filters.
+const searchState = { from: null, label: '' };
 const layerState = { showDestinations: true, region: null };
 
 // Two text elements are written to, and each keeps the text it has in Designer:
 //   search-status  empty on the published page (its Designer text is a styling
 //                  placeholder); filled with search results.
 //   locate-status  "Not set" until a place is chosen with "use my location".
-const locationState = { el: null, fallback: '' };
+// point is the visitor's own place ({ lat, lng }) from the GPS button or the address
+// field beside it; pin is the map marker drawn there. It only feeds the pin, the
+// status text and the distance flag on the cards.
+const locationState = { el: null, fallback: '', point: null, label: '', pin: null, request: 0 };
 
 function initStatusElements() {
   const status = document.querySelector('[data-map-element="search-status"]');
@@ -1210,10 +1248,90 @@ function initStatusElements() {
   }
 }
 
+// Text in locate-status: a message while working or on a problem, the place once it
+// is set, and the Designer text ("Not set") when nothing is chosen.
+function setLocateStatus(text) {
+  if (locationState.el) locationState.el.textContent = text;
+}
+
 function showLocation() {
-  if (!locationState.el) return;
-  const chosen = searchState.source === 'locate' && searchState.label;
-  locationState.el.textContent = chosen ? searchState.label : locationState.fallback;
+  setLocateStatus(locationState.point ? locationState.label : locationState.fallback);
+}
+
+// The marker for the visitor's place. It is a clone of [data-map-template="location"]
+// (the look is Designer's); without the template a plain dot from the stylesheet is
+// used. Clicks pass through it so it never hides a shop dot.
+function buildLocationPinEl() {
+  const tpl = document.querySelector('[data-map-template="location"]');
+  const el = tpl ? tpl.cloneNode(true) : document.createElement('div');
+  el.removeAttribute('data-map-template');
+  el.removeAttribute('id');
+  el.classList.add('cms-map-location-pin');
+  if (!tpl) {
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', 'Your search location');
+  }
+  el.style.pointerEvents = 'none';
+  return el;
+}
+
+function placeLocationPin(map, point) {
+  if (locationState.pin) {
+    locationState.pin.setLngLat([point.lng, point.lat]);
+    return;
+  }
+  locationState.pin = new maplibregl.Marker({ element: buildLocationPinEl(), anchor: 'center' })
+    .setLngLat([point.lng, point.lat])
+    .addTo(map);
+}
+
+// "4.2 miles away", measured in a straight line from the visitor's place.
+function distanceText(item) {
+  const p = locationState.point;
+  const miles = distance([p.lng, p.lat], [item.lng, item.lat], { units: 'miles' });
+  const rounded = Math.round(miles * 10) / 10;
+  if (rounded < 0.1) return 'Less than 0.1 miles away';
+  return `${rounded.toFixed(1)} ${rounded === 1 ? 'mile' : 'miles'} away`;
+}
+
+// Fills (or hides) the distance flag inside one open card. The flag is
+// [data-map-distance]; its words go in [data-map-distance-text] when the template has
+// one, so the flag keeps its own markup.
+function fillPopupDistance(popup, item) {
+  const root = popup.getElement();
+  if (!root) return;
+  for (const flag of root.querySelectorAll('[data-map-distance]')) {
+    if (!locationState.point) { flag.hidden = true; continue; }
+    const target = flag.querySelector('[data-map-distance-text]') || flag;
+    target.textContent = distanceText(item);
+    flag.hidden = false;
+  }
+}
+
+function refreshDistances(markers) {
+  for (const { popup, item } of markers.values()) {
+    if (popup.isOpen()) fillPopupDistance(popup, item);
+  }
+}
+
+// The visitor's place from the GPS button or the address field. It draws the pin,
+// writes the status and shows distances on the cards. It does not move the camera and
+// takes no part in the radius search.
+function setUserLocation(ctx, point, label) {
+  locationState.point = point;
+  locationState.label = label;
+  placeLocationPin(ctx.map, point);
+  showLocation();
+  refreshDistances(ctx.markers);
+}
+
+function clearUserLocation(ctx) {
+  locationState.request += 1; // a lookup still in flight must not set a place afterwards
+  locationState.point = null;
+  locationState.label = '';
+  if (locationState.pin) { locationState.pin.remove(); locationState.pin = null; }
+  showLocation();
+  refreshDistances(ctx.markers);
 }
 
 const isDestination = (it) => it.el.dataset.mapKind === 'destination';
@@ -1247,24 +1365,20 @@ function setRadius(miles) {
   }
 }
 
-function applyOrigin(ctx, from, label, source = 'search') {
+function applyOrigin(ctx, from, label) {
   searchState.from = from;
   searchState.label = label;
-  searchState.source = source;
-  showLocation();
   applyRadiusFilter({ ...ctx, from, miles: readRadius(ctx.config), label });
 }
 
 // A new radius measures again from the place already chosen.
 function reapplyOrigin(ctx) {
-  if (searchState.from) applyOrigin(ctx, searchState.from, searchState.label, searchState.source);
+  if (searchState.from) applyOrigin(ctx, searchState.from, searchState.label);
 }
 
 function clearOrigin(ctx) {
   searchState.from = null;
   searchState.label = '';
-  searchState.source = null;
-  showLocation();
   resetFilter(ctx);
 }
 
@@ -1368,20 +1482,26 @@ function wireSettingsControls(items, markers, map, config) {
     applyTagHighlight(ctx);
   });
 
-  // Location: the browser is asked only when the visitor presses the button.
+  // Location: the browser is asked only when the visitor presses the button. The
+  // place it finds, or the address typed beside it, becomes the visitor's location:
+  // a pin on the map, the status text, a distance on each card. The camera stays put
+  // and the radius search is left alone.
   const locateInput = document.querySelector('[data-map-element="locate-input"]');
-  const searchInput = document.querySelector('[data-map-element="search-input"]');
 
   document.querySelector('[data-map-element="locate"]')?.addEventListener('click', (e) => {
     e.preventDefault();
-    if (!navigator.geolocation) { setStatus(status, 'Location is not available in this browser.'); return; }
-    setStatus(status, config.searchingText);
+    if (!navigator.geolocation) { setLocateStatus('Location is not available in this browser.'); return; }
+    const request = ++locationState.request;
+    setLocateStatus(config.searchingText);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        if (request !== locationState.request) return;
         if (locateInput) locateInput.value = '';
-        applyOrigin(ctx, { lat: pos.coords.latitude, lng: pos.coords.longitude }, config.locationLabel, 'locate');
+        setUserLocation(ctx, { lat: pos.coords.latitude, lng: pos.coords.longitude }, config.locationLabel);
       },
-      () => setStatus(status, 'Could not get your location. Enter an address instead.'),
+      () => {
+        if (request === locationState.request) setLocateStatus('Could not get your location. Enter an address instead.');
+      },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
     );
   });
@@ -1393,23 +1513,24 @@ function wireSettingsControls(items, markers, map, config) {
     e.preventDefault();
     const query = locateInput.value.trim();
     if (!query) return;
-    setStatus(status, config.searchingText);
+    const request = ++locationState.request;
+    setLocateStatus(config.searchingText);
     try {
       const hit = await geocodeQuery(query, config);
-      if (!hit) { setStatus(status, `No match for “${query}”.`); return; }
-      applyOrigin(ctx, hit, query, 'locate');
+      if (request !== locationState.request) return;
+      if (!hit) { setLocateStatus(`No match for “${query}”.`); return; }
+      setUserLocation(ctx, hit, query);
     } catch (err) {
       console.error('[cms-map] locate failed', err);
-      setStatus(status, 'Search failed. Try again.');
+      if (request === locationState.request) setLocateStatus('Lookup failed. Try again.');
     }
   });
 
+  // Clear forgets the visitor's place only; the search bar and its results stay.
   document.querySelector('[data-map-element="locate-clear"]')?.addEventListener('click', (e) => {
     e.preventDefault();
     if (locateInput) locateInput.value = '';
-    if (searchInput) searchInput.value = '';
-    closeAllPopups(markers);
-    clearOrigin(ctx);
+    clearUserLocation(ctx);
   });
 }
 

@@ -82,6 +82,28 @@ of exactly one place name, is picked; one shop matched on its name opens, severa
 keep the list open; anything else, including text that only matches shop addresses
 (a town outside the CMS, a ZIP), goes to the address search and its radius.
 
+### Your location: pin and distance
+
+The Use my location button and the address field beside it set the visitor's own
+place. Neither moves the camera or runs the radius search; the search bar does that.
+
+- **GPS button** (`data-map-element="locate"`, a `<button type="button">` with the icon
+  embed inside) asks the browser, on click only. **Address field**
+  (`locate-input`): Enter looks the text up (address, town or ZIP).
+- **Pin:** a clone of `[data-map-template="location"]` (Designer's `my-location_pin`)
+  is placed at the spot. Without that block a plain dot from the stylesheet is used.
+  A second place moves the pin; Clear (`locate-clear`) removes it.
+- **Status:** `locate-status` shows what was typed, or `data-map-location-label` for
+  GPS, and its Designer text ("Not set") when nothing is chosen.
+- **Distance flag:** a card template element marked `data-map-slot="distance"` (with
+  an optional `data-map-slot="distance-text"` inside it for the words) is hidden until
+  a place is set, then reads "4.2 miles away" (straight line). It is filled each time a
+  card opens, and updated on a card that is already open. In the shop template the flag
+  can sit beside the card inside the popover wrapper; the script puts it in front of
+  the card in the popup. The look and position are Designer's (`position: absolute`
+  with `bottom: 100%` sits it on the card's top edge at any height). The Shops by
+  region list shows no distance.
+
 ### Keyboard and screen readers
 
 - Tab order is search, map, settings panel. The dots are clickable but not tab

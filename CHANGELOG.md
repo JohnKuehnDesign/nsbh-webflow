@@ -6,6 +6,24 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.8.0 — 2026-10-11
+
+### Changed
+
+- **The address field beside Use my location no longer refocuses the map.** It, and the
+  GPS button, now set the visitor's own place only: a pin on the map, the
+  `locate-status` text and a distance flag on the cards. The camera stays put and the
+  radius search is not run. Clear (`locate-clear`) forgets the place only; it no longer
+  clears the search bar's results.
+- The status for a location lookup now shows in `locate-status`, not `search-status`.
+
+### Added
+
+- **Location pin:** a clone of `[data-map-template="location"]` is drawn at the place
+  (a plain dot when the template is missing).
+- **Distance flag on cards:** `data-map-slot="distance"` / `"distance-text"` in the shop
+  and destination templates, e.g. "4.2 miles away", hidden until a place is set.
+
 ## v1.7.5 — 2026-10-11
 
 ### Fixed

@@ -42,7 +42,7 @@
        data-map-card                       the element that gets cloned
        data-map-slot="name|region|town|separator|description|address|premium|
                       tags|tag|tag-icon|directions|call|website|image|link|
-                      nearby|nearby-item"  fields the script fills; an empty value
+                      distance|distance-text|nearby|nearby-item"  fields the script fills; an empty value
                                            removes the slot
 
      SEARCH UI (all optional; omit the whole search and it's skipped)
@@ -67,7 +67,9 @@
        Tags: data-map-element="tag" buttons with data-slug, "tag-clear"
        Things to do switch: data-map-element="destinations-toggle" (role="switch")
        Radius select: "search-radius"; "radius-reset"
-       My location: "locate", "locate-input", "locate-clear", "locate-status"
+       My location: "locate" (a <button>), "locate-input", "locate-clear", "locate-status";
+       pin template data-map-template="location"; card flag slots "distance"
+       (the flag) and "distance-text" (its words, optional)
        Give each control an aria-label where its visible text is not enough.
 
      LAYOUT GOTCHA
@@ -80,7 +82,7 @@
 
 <!-- 2. The map component's stylesheet, from GitHub via jsDelivr.
         Pinned to a release tag — bump the version to pick up changes. -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.7.5/src/map/map-embed.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.8.0/src/map/map-embed.css" />
 
 <!-- 3. Site-side styles. Yours to change without cutting a release. -->
 <style>
