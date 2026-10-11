@@ -852,7 +852,6 @@ async function applyTagHighlight({ markers, status, config }) {
     if (isDestination(item)) continue;
     const hit = on && now.every((slug) => tagState.byTag.get(slug)?.has(item.id));
     markerEl.classList.toggle('is-tag-match', hit);
-    markerEl.classList.toggle('is-tag-dim', on && !hit);
     if (hit) matches += 1;
   }
   if (on && !matches) { setStatus(status, config.emptyText); tagState.statusSet = true; }

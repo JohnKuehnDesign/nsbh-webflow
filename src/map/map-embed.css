@@ -254,8 +254,7 @@
 
 /* Tag highlight: shops that carry every chosen tag get a very light green ring and a
    mint glow, and sit above the other dots (but under an open card). Other dots are
-   left alone (is-tag-dim is set on them as a hook but carries no style). Nothing
-   here applies until a tag is chosen. */
+   left alone. Nothing here applies until a tag is chosen. */
 .cms-map-marker.is-tag-match {
   z-index: 1;
   border-color: var(--map-marker-highlight-ring, #e6faef);

@@ -6,6 +6,14 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.19 — 2026-10-11
+
+### Changed
+
+- **Shops outside a tag choice no longer get `is-tag-dim`.** The class was set on every
+  non-matching dot but carried no style, so it is gone. Highlight is unchanged
+  (`is-tag-match`); the class can come back with a rule if dimming is wanted later.
+
 ## v1.6.18 — 2026-10-11
 
 ### Added
