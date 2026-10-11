@@ -58,6 +58,9 @@ const CONFIG_SCHEMA = {
   'popup-offset':     { key: 'popupOffset',     parse: asNumber, default: 14 },
   'search-radius':    { key: 'searchRadius',    parse: asNumber, default: 25 },
   'filter-mode':      { key: 'filterMode',      parse: asString, default: 'highlight' },
+  // Where each Shop Tag's page lives; the tag's slug is added to the end. Those
+  // pages list the shops that carry the tag (see "Shop tags" below).
+  'tag-page-path':    { key: 'tagPagePath',     parse: asString, default: '/shop-tags/' },
   'geocode-viewbox':  { key: 'geocodeViewbox',  parse: asString, default: '-73.5,44.5,-68.5,41.0' },
   'geocode-country':  { key: 'geocodeCountry',  parse: asString, default: 'us' },
   'searching-text':   { key: 'searchingText',   parse: asString, default: 'Searching…' },
@@ -395,6 +398,7 @@ function addMarkers(map, items, config) {
       maxWidth: config.popupMaxWidth,
       focusAfterOpen: config.popupFocus,
     }).setHTML(buildPopupHtml(it.el, config));
+    popup.on('open', () => fillPopupTags(popup, it.id, config));
 
     const marker = new maplibregl.Marker({ element: markerEl, anchor: 'center' })
       .setLngLat([it.lng, it.lat])
@@ -514,11 +518,21 @@ function buildCardFromTemplate(item, config) {
     if (!show) for (const el of card.querySelectorAll('[data-map-slot="premium"]')) el.remove();
   }
 
-  // Slots with no data source yet (tags, nearby shops) are dropped from the clone
-  // rather than shown as template placeholders.
-  for (const slot of ['tags', 'nearby']) {
-    for (const el of card.querySelectorAll(`[data-map-slot="${slot}"]`)) el.remove();
+  // Tags are filled in when the popup opens (see fillPopupTags), because which
+  // shops carry a tag is read from the tag pages. The container stays hidden and
+  // empty until then; its first tag element becomes the template for the rest.
+  for (const el of card.querySelectorAll('[data-map-slot="tags"]')) {
+    if (kind !== 'shop' || !d.id) { el.remove(); continue; }
+    const proto = el.querySelector('[data-map-slot="tag"]');
+    if (!proto) { el.remove(); continue; }
+    tagState.proto = tagState.proto || proto.outerHTML;
+    el.replaceChildren();
+    el.hidden = true;
+    el.setAttribute('data-map-tags', d.id);
   }
+  // Nearby shops have no data source yet and are dropped rather than left as
+  // template placeholders.
+  for (const el of card.querySelectorAll('[data-map-slot="nearby"]')) el.remove();
   for (const el of card.querySelectorAll('[data-map-slot]')) el.removeAttribute('data-map-slot');
 
   return card;
@@ -727,7 +741,118 @@ function wireGeoSearch(items, markers, map, config) {
 //   locate            "use my location" button (asks the browser, on click only)
 //   locate-input      address field, Enter looks it up
 //   locate-clear      forgets the place and shows everything again
-// Tag highlight is not wired yet (shop items carry no tag data).
+//   tag               buttons with data-slug (the Shop Tag's slug); click toggles
+//                     highlighting shops that carry every chosen tag
+//   tag-clear         drops every chosen tag
+// Tags are explained under "Shop tags" below.
+
+// --- shop tags --------------------------------------------------------------
+//
+// A multi-reference field (a shop's tags) cannot be bound to an attribute, and a
+// Collection List of Shop Tags knows nothing about shops. The way round it: each
+// Shop Tag's own page lists the shops that carry it (a hidden Shops list filtered
+// "Shop Tags contains the current Shop Tag", every item marked
+// [data-map-element="tag-shop"] with data-id = the shop slug). The tag chips in the
+// panel give the slugs; their pages are fetched once, the first time tags are
+// needed, and flipped into a shop -> tags lookup.
+const tagState = {
+  proto: null,          // outerHTML of the template tag element in the shop card
+  ready: null,          // Promise for the loaded lookup, or null before the first use
+  byTag: new Map(),     // tag slug -> Set of shop ids
+  byShop: new Map(),    // shop id  -> [tag slug, ...] in chip order
+  selected: new Set(),  // tag slugs currently highlighted
+  statusSet: false,     // true while the status line shows the "no match" text
+};
+
+const tagChips = () => Array.from(document.querySelectorAll('[data-map-element="tag"]'));
+
+// Fetches each tag's page. A tag whose page cannot be read is skipped with a
+// warning; if any failed, the next use tries again.
+function loadTagData(config) {
+  if (tagState.ready) return tagState.ready;
+  const slugs = [...new Set(tagChips().map((c) => c.dataset.slug).filter(Boolean))];
+  let failed = false;
+  tagState.ready = Promise.all(slugs.map(async (slug) => {
+    try {
+      const url = new URL(config.tagPagePath + encodeURIComponent(slug), window.location.origin);
+      const res = await fetch(url, { headers: { Accept: 'text/html' } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+      const ids = new Set();
+      for (const el of doc.querySelectorAll('[data-map-element="tag-shop"]')) {
+        if (el.dataset.id) ids.add(el.dataset.id);
+      }
+      tagState.byTag.set(slug, ids);
+    } catch (err) {
+      failed = true;
+      console.warn(`[cms-map] could not read the shops for tag "${slug}"`, err);
+    }
+  })).then(() => {
+    tagState.byShop.clear();
+    for (const slug of slugs) {
+      for (const id of tagState.byTag.get(slug) || []) {
+        if (!tagState.byShop.has(id)) tagState.byShop.set(id, []);
+        tagState.byShop.get(id).push(slug);
+      }
+    }
+    if (failed) tagState.ready = null;
+  });
+  return tagState.ready;
+}
+
+// Adds one tag element per tag the shop carries to the card's tags container. The
+// icon and the name come from the panel chip with the same slug, so nothing is
+// duplicated in the card template. With no tags, or no chips, the container stays
+// hidden.
+async function fillPopupTags(popup, shopId, config) {
+  if (!tagState.proto) return;
+  await loadTagData(config);
+  const box = popup.getElement()?.querySelector(`[data-map-tags="${CSS.escape(shopId)}"]`);
+  if (!box || box.children.length) return;
+  const chips = new Map(tagChips().map((c) => [c.dataset.slug, c]));
+  const tpl = document.createElement('template');
+  for (const slug of tagState.byShop.get(shopId) || []) {
+    const chip = chips.get(slug);
+    if (!chip) continue;
+    tpl.innerHTML = tagState.proto;
+    const tag = tpl.content.firstElementChild;
+    const name = chip.textContent.trim();
+    const icon = chip.querySelector('[class*="shop-tag_svg-embed"]');
+    const slot = tag.querySelector('[data-map-slot="tag-icon"]');
+    if (slot && icon) slot.innerHTML = icon.innerHTML;
+    for (const el of tag.querySelectorAll('[data-map-slot]')) el.removeAttribute('data-map-slot');
+    tag.removeAttribute('data-map-slot');
+    tag.setAttribute('role', 'img');
+    tag.setAttribute('aria-label', name);
+    tag.title = name;
+    box.append(tag);
+  }
+  box.hidden = !box.children.length;
+}
+
+// Dims the shop dots that do not carry every chosen tag. Destinations have no tags
+// and are left as they are.
+async function applyTagHighlight({ markers, status, config }) {
+  const chosen = [...tagState.selected];
+  if (chosen.length) await loadTagData(config);
+  // A chip pressed or cleared while the lookup was loading wins.
+  const now = [...tagState.selected];
+  const on = now.length > 0;
+  let matches = 0;
+  for (const { markerEl, item } of markers.values()) {
+    if (isDestination(item)) continue;
+    const hit = on && now.every((slug) => tagState.byTag.get(slug)?.has(item.id));
+    markerEl.classList.toggle('is-tag-match', hit);
+    markerEl.classList.toggle('is-tag-dim', on && !hit);
+    if (hit) matches += 1;
+  }
+  if (on && !matches) { setStatus(status, config.emptyText); tagState.statusSet = true; }
+  else if (tagState.statusSet) {
+    // Only take the text back if a radius search has not replaced it meanwhile.
+    if (status && status.textContent === config.emptyText) setStatus(status, '');
+    tagState.statusSet = false;
+  }
+}
 
 // The place a radius is measured from, shared by the search bar and the panel.
 // source is 'locate' when it came from "use my location" (the GPS button or the
@@ -877,6 +1002,29 @@ function wireSettingsControls(items, markers, map, config) {
     e.preventDefault();
     setRadius(config.searchRadius);
     reapplyOrigin(ctx);
+  });
+
+  // Tags: chips toggle; a shop must carry every chosen tag to stay bright. Clear
+  // drops them all. The tag pages load on the first press.
+  const chips = tagChips();
+  const syncChips = () => {
+    for (const c of chips) c.setAttribute('aria-pressed', String(tagState.selected.has(c.dataset.slug)));
+  };
+  for (const chip of chips) {
+    chip.addEventListener('click', (e) => {
+      e.preventDefault();
+      const slug = chip.dataset.slug;
+      if (!slug) return;
+      if (tagState.selected.has(slug)) tagState.selected.delete(slug); else tagState.selected.add(slug);
+      syncChips();
+      applyTagHighlight(ctx);
+    });
+  }
+  document.querySelector('[data-map-element="tag-clear"]')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    tagState.selected.clear();
+    syncChips();
+    applyTagHighlight(ctx);
   });
 
   // Location: the browser is asked only when the visitor presses the button.

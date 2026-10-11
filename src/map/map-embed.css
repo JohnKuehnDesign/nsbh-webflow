@@ -249,6 +249,30 @@
   display: none;
 }
 
+/* Tag highlight: shops that carry every chosen tag stay bright and sit on top, the
+   rest fade back (still clickable). Nothing here applies until a tag is chosen. */
+.cms-map-marker.is-tag-dim {
+  opacity: 0.3;
+}
+
+.cms-map-marker.is-tag-match {
+  z-index: 1;
+}
+
+/* The card's tag row stays out of the way until its tags are known. */
+[data-map-tags][hidden] {
+  display: none;
+}
+
+[data-map-element="tag"][aria-pressed="true"] {
+  background-color: var(--_primitives---colors--h-redwood, #a65456);
+}
+
+[data-map-element="tag"]:focus-visible {
+  outline: 2px solid var(--_primitives---colors--h-harbor-blue, #35798c);
+  outline-offset: 2px;
+}
+
 [data-map-element="region"][aria-pressed="true"] {
   background-color: var(--_primitives---colors--h-redwood, #a65456);
 }

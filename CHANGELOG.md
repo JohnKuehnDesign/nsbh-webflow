@@ -6,6 +6,23 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.14 — 2026-10-11
+
+### Added
+
+- **Tag highlight.** The Highlight chips (`[data-map-element="tag"]`, each with
+  `data-slug` bound to the Shop Tag's slug) toggle `aria-pressed`; shop dots that do
+  not carry every chosen tag fade back (`is-tag-dim`). `tag-clear` drops them all.
+  No match shows the empty-text status.
+- **Tags in the shop popup.** The card's `data-map-slot="tags"` row is filled when the
+  popup opens: one copy of its `data-map-slot="tag"` element per tag, with the icon
+  and name copied from the chip with the same slug. Hidden when the shop has no tags.
+- **Where the shop-to-tag link comes from.** A multi-reference cannot bind to an
+  attribute, so each Shop Tag's page lists its shops in hidden Shops lists
+  (`[data-map-element="tag-shop"]`, `data-id` = shop slug; a second list starting at
+  item 101 covers tags with more than 100 shops). The script fetches those pages once,
+  on first use, from `data-map-tag-page-path` (default `/shop-tags/`).
+
 ## v1.6.13 — 2026-10-10
 
 ### Added
