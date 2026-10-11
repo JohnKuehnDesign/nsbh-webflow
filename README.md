@@ -68,6 +68,32 @@ to `Longitude is set`, pagination off. Both serve double duty as the visible lis
 and the map's data source. `collectItems()` de-duplicates by `data-id` as a
 safety net.
 
+### Tags: highlight and card tags
+
+A shop's tags are a multi-reference, which cannot be bound to an attribute, so the
+shop-to-tag link comes from each **Shop Tag's own page**.
+
+| Attribute | On |
+|---|---|
+| `data-map-element="tag"` + `data-slug` (bound to the tag's slug) | Each chip in the panel's Highlight list (a `<button>`) |
+| `data-map-element="tag-clear"` | The Highlight Clear link |
+| `data-map-element="tag-shop"` + `data-id` (bound to the shop slug) | Each item of the hidden Shops list(s) on the **Shop Tags template page** |
+| `data-map-slot="tags"` / `"tag"` / `"tag-icon"` / `"tag-name"` | The card template's tags row, one tag, its icon embed, and its name text |
+
+On the Shop Tags template page, the hidden Shops list is filtered "Shop Tags contains
+the current Shop Tag". Collection Lists stop at 100 items, so a tag that can pass 100
+shops gets a second list set to start at item 101, with the same attributes. The
+template page must be **published**, and should carry
+`<meta name="robots" content="noindex, follow">` and be excluded from the sitemap.
+
+On the first chip press or popup open the script fetches `/shop-tags/<slug>` for each
+chip (`data-map-tag-page-path` changes the prefix) and caches the shop ids. Pressing
+chips gives shops with **every** chosen tag a light-green ring and mint glow
+(`--map-marker-highlight`, `--map-marker-highlight-ring`); other dots are left as they
+are. The chips toggle `aria-pressed` and an `is-active` class: style the pressed look in
+Designer on a combo class named `is-active` (keep a hidden keeper element carrying the
+combo so clean-up does not remove it).
+
 ### Configuration
 
 Every value below can be set three ways. First match wins:
@@ -102,6 +128,7 @@ Every value below can be set three ways. First match wins:
 | `data-map-empty-text` | `emptyText` | `No Beefs here. 😞` | Status when nothing is in range |
 | `data-map-item-noun` | `itemNoun` | `shop` | Noun in the result count. Pluralized with `s` |
 | `data-map-location-label` | `locationLabel` | `Your location` | Text shown in `locate-status` after "use my location" (GPS). A typed address shows what was typed |
+| `data-map-tag-page-path` | `tagPagePath` | `/shop-tags/` | Path prefix of each Shop Tag's page; the tag's slug is added to the end |
 | `data-map-marker-image` | `markerImage` | stylesheet default | Marker icon. A bare URL, or any CSS image value |
 | `data-map-marker-size` | `markerSize` | `2rem` | Marker width and height |
 | `data-map-marker-color` | `markerColor` | `--_primitives---colors--h-redwood` | Marker `color` |
@@ -312,6 +339,9 @@ returns a 404. A new tag can take a few minutes to become available on the CDN.
 - Click a list item → map flies to it, popup opens, other popups close
 - Search `01906` at `25 mi` → status reports a count, map re-fits
 - Clear → status empties, map re-fits to everything
+- Press a tag chip → shops with that tag get the green glow; Clear removes it
+- Open a shop popup → its tags show with icon and name; a shop with no tags shows no tag row
+- Open a destination popup → its short description shows
 
 ---
 
