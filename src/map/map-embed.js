@@ -822,11 +822,18 @@ async function fillPopupTags(popup, shopId, config) {
     const icon = chip.querySelector('svg');
     const slot = tag.querySelector('[data-map-slot="tag-icon"]');
     if (slot && icon) slot.innerHTML = icon.outerHTML;
+    // A card with a visible [data-map-slot="tag-name"] shows the name as text; an
+    // icon-only card names each tag for assistive tech and as a hover title.
+    const label = tag.querySelector('[data-map-slot="tag-name"]');
+    if (label) {
+      label.textContent = name;
+    } else {
+      tag.setAttribute('role', 'img');
+      tag.setAttribute('aria-label', name);
+      tag.title = name;
+    }
     for (const el of tag.querySelectorAll('[data-map-slot]')) el.removeAttribute('data-map-slot');
     tag.removeAttribute('data-map-slot');
-    tag.setAttribute('role', 'img');
-    tag.setAttribute('aria-label', name);
-    tag.title = name;
     box.append(tag);
   }
   box.hidden = !box.children.length;

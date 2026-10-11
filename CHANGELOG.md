@@ -6,6 +6,15 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.6.18 — 2026-10-11
+
+### Added
+
+- **Tag names on the shop card.** Put `data-map-slot="tag-name"` on the text element
+  inside the card's `data-map-slot="tag"` element; each tag shows its own name from
+  the matching panel chip. With no tag-name element the tags stay icon-only and carry
+  the name as an accessible label and hover title instead.
+
 ## v1.6.17 — 2026-10-11
 
 ### Fixed
