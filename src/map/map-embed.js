@@ -712,7 +712,7 @@ function wireListSync(items, markers, map, config) {
 // Without the template or the list, search stays address-only.
 
 const SUGGEST_MIN_CHARS = 2;
-const SUGGEST_MAX = { region: 5, town: 5, shop: 5 };
+const SUGGEST_MAX = { region: 5, town: 5, shop: 25 };
 
 // Case, accents and apostrophes fold away ("Sal's" -> "sals"); anything else that
 // is not a letter or digit becomes one space.
@@ -881,21 +881,26 @@ function wireSuggestions({ input, items, markers, map, status, config }) {
     setStatus(status, `${inPlace.length} ${noun}${inPlace.length === 1 ? '' : 's'} in ${entry.name}.`);
   };
 
-  // Enter picks the highlighted row. With none highlighted: a place hit wins, a
-  // lone shop hit opens it, several shop hits keep the list open (a shop name is
-  // not geocoded), and no hits fall through to the address search. Text with a digit
-  // in it (a ZIP, a street number) is an address and goes to the geocoder, unless a
-  // name matches ("110 Roast Beef").
+  // Enter picks the highlighted row. With none highlighted it decides what was
+  // meant: a region or town typed in full, or the start of exactly one place name,
+  // is picked; shops matched on NAME open (one) or keep the list open (several);
+  // anything else, including text that only matches shop addresses ("Boston", a
+  // ZIP), goes to the address search.
   const enter = () => {
     if (!dropdown.hidden && activeIdx >= 0) { choose(rows[activeIdx]); return true; }
     const q = foldText(input.value);
     if (q.length < SUGGEST_MIN_CHARS) return false;
+    const places = [...regions, ...towns];
+    const exact = places.find((e) => e.nameKey === q);
+    if (exact) { choose(exact); return true; }
+    const starts = places.filter((e) => e.nameKey.startsWith(q));
+    if (starts.length === 1) { choose(starts[0]); return true; }
     const r = compute(q);
-    if (/\d/.test(q) && !r.placeCount && r.shopBest > 1) return false;
-    const place = r.rows.find((e) => e.kind !== 'shop');
-    if (place) { choose(place); return true; }
-    if (r.shopTotal === 1) { choose(r.rows[0]); return true; }
-    if (r.shopTotal > 1) { update(); return true; }
+    if (r.shopTotal && r.shopBest <= 1) {
+      if (r.shopTotal === 1) choose(r.rows.find((e) => e.kind === 'shop'));
+      else update();
+      return true;
+    }
     return false;
   };
 

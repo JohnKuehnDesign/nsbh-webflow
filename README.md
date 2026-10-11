@@ -68,18 +68,19 @@ The search UI is skipped entirely if neither input nor submit is present.
 ### Search suggestions
 
 Typing two or more characters in the search input lists, in this order, regions,
-towns that have shops, then shops matched on name or address (five of each at most).
-Case, accents and apostrophes are ignored (`Sal's` finds `sals`), and every word
-typed must appear. Choosing a row:
+towns that have shops, then shops matched on name or address (up to five regions,
+five towns and 25 shops; the list scrolls). Case, accents and apostrophes are
+ignored (`Sal's` finds `sals`), and every word typed must appear. Choosing a row:
 
 - **Region:** the same as pressing its region button, so the pressed state follows.
 - **Town:** the camera fits that town's shops.
 - **Shop:** the dot's card opens and the map centres on it.
 
-Enter picks the highlighted row (arrow keys move it, Escape closes the list). With
-no row highlighted a region or town hit wins, a single shop hit opens it, several
-shop hits leave the list open, and no hits send the text to the address search. Text
-containing a digit (a ZIP, a street number) goes to the address search, unless a region, town or shop name matches it ("110 Roast Beef").
+Arrow keys move the highlight and Escape closes the list. Enter picks the
+highlighted row. With none highlighted: a region or town typed in full, or the start
+of exactly one place name, is picked; one shop matched on its name opens, several
+keep the list open; anything else, including text that only matches shop addresses
+(a town outside the CMS, a ZIP), goes to the address search and its radius.
 
 The look is built in Designer. Put the `data-map-template="suggestion"` block in the
 card templates section, with one row marked `data-map-suggest="place"` (slots

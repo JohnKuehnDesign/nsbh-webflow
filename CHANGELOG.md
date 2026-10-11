@@ -6,6 +6,17 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.7.2 — 2026-10-11
+
+### Changed
+
+- **Enter no longer picks a place on a partial match.** Typing "Boston" used to pick
+  Greater Boston. A region or town is now picked only when typed in full or when the
+  text starts exactly one place name; text that only matches shop addresses (a town
+  outside the CMS, a ZIP) goes to the address search. Shops matched on name still
+  open (one) or keep the list open (several). This replaces the digit rule.
+- **Up to 25 shop suggestions** (was 5), scrolling inside the list.
+
 ## v1.7.1 — 2026-10-11
 
 ### Fixed
