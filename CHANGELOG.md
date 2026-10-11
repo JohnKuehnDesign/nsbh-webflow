@@ -6,6 +6,19 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.7.0 — 2026-10-11
+
+### Added
+
+- **Search suggestions.** The search input is now a combobox: regions, then towns
+  that have shops, then shops matched on name or address (five of each at most),
+  with keyboard support and a screen-reader count. A region press goes through the
+  region button, a town fits its shops, a shop opens its card. Enter with no row
+  highlighted picks a place hit, opens a lone shop hit, keeps several shop hits in
+  the list, and sends no hits, or any text with a digit, to the address search as
+  before. Needs the `suggest`, `suggest-list` and `suggestion` template markup from
+  the README; without it search stays address-only.
+
 ## v1.6.19 — 2026-10-11
 
 ### Changed

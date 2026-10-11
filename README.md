@@ -59,8 +59,36 @@ these, so no IDs or classes are load-bearing.
 | `data-map-element="search-submit"` | Search button | Optional |
 | `data-map-element="search-clear"` | Clear button | Optional |
 | `data-map-element="search-status"` | Text block for the result summary | Optional |
+| `data-map-element="suggest"` | Wrapper under the input for the suggestions, carrying the `hidden` attribute | Optional |
+| `data-map-element="suggest-list"` | The `role="listbox"` inside it, filled by the script | Optional |
+| `data-map-template="suggestion"` | Sample rows the script clones (see below) | Optional |
 
 The search UI is skipped entirely if neither input nor submit is present.
+
+### Search suggestions
+
+Typing two or more characters in the search input lists, in this order, regions,
+towns that have shops, then shops matched on name or address (five of each at most).
+Case, accents and apostrophes are ignored (`Sal's` finds `sals`), and every word
+typed must appear. Choosing a row:
+
+- **Region:** the same as pressing its region button, so the pressed state follows.
+- **Town:** the camera fits that town's shops.
+- **Shop:** the dot's card opens and the map centres on it.
+
+Enter picks the highlighted row (arrow keys move it, Escape closes the list). With
+no row highlighted a region or town hit wins, a single shop hit opens it, several
+shop hits leave the list open, and no hits send the text to the address search. Text
+containing a digit (a ZIP, a street number) always goes to the address search.
+
+The look is built in Designer. Put the `data-map-template="suggestion"` block in the
+card templates section, with one row marked `data-map-suggest="place"` (slots
+`name` and `label`) and one marked `data-map-suggest="shop"` (slots `name` and
+`address`). The row highlighted from the keyboard gets an `is-active` class. Set
+`data-label-region` / `data-label-town` on the template block to change the words
+"Region" and "Town". The input should carry `role="combobox"`,
+`aria-autocomplete="list"`, `aria-controls` (the list's id) and `aria-expanded="false"`.
+Without the template or the list the search is address-only, as before.
 
 **Note on the 157 shops:** Webflow caps a Collection List at 100 items, so the
 page uses two lists (Show 100 / Skip 0, and Show 100 / Skip 100), both filtered

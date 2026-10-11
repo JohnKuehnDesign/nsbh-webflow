@@ -12,6 +12,10 @@
 //   [data-map-element="search-submit"] Submit button          (optional)
 //   [data-map-element="search-clear"]  Clear button           (optional)
 //   [data-map-element="search-status"] Text container for result summary (optional)
+//   [data-map-element="suggest"]       Dropdown wrapper under the input, hidden until used (optional)
+//   [data-map-element="suggest-list"]  The listbox inside it, filled by the script (optional)
+//   [data-map-template="suggestion"]   Sample rows to clone: data-map-suggest="place|shop"
+//                                      with data-map-slot="name|label|address" (optional)
 //
 // Configuration — see CONFIG_SCHEMA below. Resolution order, first match wins:
 //   1. data-map-* attribute on the viewport element   (set in Designer, per page)
@@ -696,6 +700,230 @@ function wireListSync(items, markers, map, config) {
   }
 }
 
+// --- search suggestions ---------------------------------------------------
+//
+// One combobox over the search input: regions, then towns, then shops matched on
+// name or address. The look is Designer's. A [data-map-template="suggestion"] block
+// holds sample rows marked data-map-suggest="place" (name + label) and "shop"
+// (name + address), their fields marked data-map-slot. The live list is
+// [data-map-element="suggest-list"] inside [data-map-element="suggest"], which the
+// script shows and hides with the hidden attribute. The row highlighted from the
+// keyboard gets an is-active class (style it as a combo on the row class).
+// Without the template or the list, search stays address-only.
+
+const SUGGEST_MIN_CHARS = 2;
+const SUGGEST_MAX = { region: 5, town: 5, shop: 5 };
+
+// Case, accents and apostrophes fold away ("Sal's" -> "sals"); anything else that
+// is not a letter or digit becomes one space.
+const foldText = (s) => String(s || '')
+  .normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .toLowerCase().replace(/['’`]/g, '')
+  .replace(/[^a-z0-9]+/g, ' ').trim();
+
+function wireSuggestions({ input, items, markers, map, status, config }) {
+  const dropdown = document.querySelector('[data-map-element="suggest"]');
+  const list = document.querySelector('[data-map-element="suggest-list"]');
+  const tmplRoot = document.querySelector('[data-map-template="suggestion"]');
+  const placeTmpl = tmplRoot?.querySelector('[data-map-suggest="place"]');
+  const shopTmpl = tmplRoot?.querySelector('[data-map-suggest="shop"]');
+  if (!input || !dropdown || !list || !placeTmpl || !shopTmpl) return null;
+
+  const labels = {
+    region: tmplRoot.dataset.labelRegion || 'Region',
+    town: tmplRoot.dataset.labelTown || 'Town',
+  };
+  const listId = list.id || 'map-search-suggestions';
+
+  // What can be suggested, indexed once at boot.
+  const shops = items.filter((it) => !isDestination(it));
+  const shopsByTown = new Map();
+  for (const it of shops) {
+    const town = it.el.dataset.town;
+    if (!town) continue;
+    if (!shopsByTown.has(town)) shopsByTown.set(town, []);
+    shopsByTown.get(town).push(it);
+  }
+  const regions = [];
+  for (const btn of document.querySelectorAll('[data-map-element="region"]')) {
+    const slug = btn.dataset.slug;
+    const name = btn.textContent.trim();
+    if (slug && name) regions.push({ kind: 'region', slug, name, nameKey: foldText(name) });
+  }
+  const towns = [];
+  const seenTowns = new Set();
+  for (const el of document.querySelectorAll('[data-map-element="town"]')) {
+    const slug = el.dataset.slug;
+    const name = el.dataset.name;
+    // A town with no shop would be a dead end.
+    if (!slug || !name || seenTowns.has(slug) || !shopsByTown.has(slug)) continue;
+    seenTowns.add(slug);
+    towns.push({ kind: 'town', slug, name, nameKey: foldText(name) });
+  }
+  const shopEntries = shops.map((item) => {
+    const d = item.el.dataset;
+    const name = d.displayName || d.name || '';
+    const nameKey = foldText(`${name} ${d.name || ''}`);
+    return { kind: 'shop', item, name, address: d.address || '', nameKey, key: `${nameKey} ${foldText(d.address)}` };
+  });
+
+  // Every word typed must appear; names that start with the query come first.
+  const find = (pool, q, tokens, cap) => {
+    const hits = [];
+    for (const e of pool) {
+      if (!tokens.every((t) => (e.key || e.nameKey).includes(t))) continue;
+      const score = e.nameKey.startsWith(q) ? 0 : tokens.every((t) => e.nameKey.includes(t)) ? 1 : 2;
+      hits.push({ e, score });
+    }
+    hits.sort((a, b) => a.score - b.score || a.e.name.localeCompare(b.e.name));
+    return { total: hits.length, rows: hits.slice(0, cap).map((h) => h.e) };
+  };
+  const compute = (q) => {
+    const tokens = q.split(' ');
+    const r = find(regions, q, tokens, SUGGEST_MAX.region);
+    const t = find(towns, q, tokens, SUGGEST_MAX.town);
+    const sh = find(shopEntries, q, tokens, SUGGEST_MAX.shop);
+    return { rows: [...r.rows, ...t.rows, ...sh.rows], placeCount: r.rows.length + t.rows.length, shopTotal: sh.total };
+  };
+
+  // Screen readers hear how many suggestions there are.
+  const live = document.createElement('div');
+  live.setAttribute('role', 'status');
+  live.setAttribute('aria-live', 'polite');
+  Object.assign(live.style, { position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap' });
+  dropdown.parentElement.appendChild(live);
+
+  let rows = [];
+  let activeIdx = -1;
+
+  const highlight = (i) => {
+    const options = list.children;
+    if (options[activeIdx]) {
+      options[activeIdx].classList.remove('is-active');
+      options[activeIdx].setAttribute('aria-selected', 'false');
+    }
+    activeIdx = i;
+    const next = options[i];
+    if (next) {
+      next.classList.add('is-active');
+      next.setAttribute('aria-selected', 'true');
+      input.setAttribute('aria-activedescendant', next.id);
+      next.scrollIntoView({ block: 'nearest' });
+    } else {
+      input.removeAttribute('aria-activedescendant');
+    }
+  };
+
+  const setOpen = (on) => {
+    dropdown.hidden = !on;
+    input.setAttribute('aria-expanded', String(on));
+    if (!on) highlight(-1);
+  };
+
+  const makeRow = (entry, i) => {
+    const row = (entry.kind === 'shop' ? shopTmpl : placeTmpl).cloneNode(true);
+    row.classList.remove('is-active');
+    row.id = `${listId}-option-${i}`;
+    row.setAttribute('role', 'option');
+    row.setAttribute('aria-selected', 'false');
+    row.dataset.index = String(i);
+    const fill = (slot, text) => {
+      const el = row.querySelector(`[data-map-slot="${slot}"]`);
+      if (!el) return;
+      if (text) el.textContent = text; else el.remove();
+    };
+    fill('name', entry.name);
+    if (entry.kind === 'shop') fill('address', entry.address);
+    else fill('label', labels[entry.kind]);
+    return row;
+  };
+
+  const update = () => {
+    const q = foldText(input.value);
+    if (q.length < SUGGEST_MIN_CHARS) {
+      rows = [];
+      list.replaceChildren();
+      setOpen(false);
+      live.textContent = '';
+      return;
+    }
+    rows = compute(q).rows;
+    list.replaceChildren(...rows.map(makeRow));
+    highlight(-1);
+    setOpen(rows.length > 0);
+    live.textContent = rows.length
+      ? `${rows.length} suggestion${rows.length === 1 ? '' : 's'}`
+      : 'No suggestions. Press Enter to search by address.';
+  };
+
+  const choose = (entry) => {
+    input.value = entry.name;
+    setOpen(false);
+    const noun = config.itemNoun;
+    if (entry.kind === 'shop') {
+      const found = markers.get(entry.item.id);
+      if (!found) return;
+      setActive({ items, markers, activeId: entry.item.id, scrollList: true });
+      // A dot that is already open stays open; focusMarker would close it.
+      if (!found.popup.isOpen()) focusMarker(map, markers, found, config);
+      return;
+    }
+    closeAllPopups(markers);
+    const inPlace = entry.kind === 'region'
+      ? shops.filter((it) => it.el.dataset.region === entry.slug)
+      : shopsByTown.get(entry.slug) || [];
+    const button = entry.kind === 'region'
+      ? Array.from(document.querySelectorAll('[data-map-element="region"]')).find((b) => b.dataset.slug === entry.slug)
+      : null;
+    // A region goes through its own button so the pressed state stays in step.
+    if (button && layerState.region !== entry.slug) button.click();
+    else fitToMarkers(map, inPlace, config, true);
+    setStatus(status, `${inPlace.length} ${noun}${inPlace.length === 1 ? '' : 's'} in ${entry.name}.`);
+  };
+
+  // Enter picks the highlighted row. With none highlighted: a place hit wins, a
+  // lone shop hit opens it, several shop hits keep the list open (a shop name is
+  // not geocoded), and no hits fall through to the address search. Anything with a
+  // digit in it (a ZIP, a street number) is an address and goes to the geocoder.
+  const enter = () => {
+    if (!dropdown.hidden && activeIdx >= 0) { choose(rows[activeIdx]); return true; }
+    const q = foldText(input.value);
+    if (q.length < SUGGEST_MIN_CHARS || /\d/.test(q)) return false;
+    const r = compute(q);
+    const place = r.rows.find((e) => e.kind !== 'shop');
+    if (place) { choose(place); return true; }
+    if (r.shopTotal === 1) { choose(r.rows[0]); return true; }
+    if (r.shopTotal > 1) { update(); return true; }
+    return false;
+  };
+
+  input.addEventListener('input', update);
+  input.addEventListener('focus', update);
+  input.addEventListener('blur', () => setOpen(false));
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (!dropdown.hidden) { e.preventDefault(); setOpen(false); }
+      return;
+    }
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    if (dropdown.hidden) update();
+    if (!rows.length) return;
+    e.preventDefault();
+    const step = e.key === 'ArrowDown' ? 1 : -1;
+    highlight((activeIdx + step + rows.length) % rows.length);
+  });
+  // Pressing a row must not take focus from the input, or the blur closes the list
+  // before the click lands.
+  list.addEventListener('mousedown', (e) => e.preventDefault());
+  list.addEventListener('click', (e) => {
+    const row = e.target.closest('[role="option"]');
+    if (row && rows[Number(row.dataset.index)]) choose(rows[Number(row.dataset.index)]);
+  });
+
+  setOpen(false);
+  return { enter, close: () => setOpen(false) };
+}
+
 // --- geo search ----------------------------------------------------------
 
 function wireGeoSearch(items, markers, map, config) {
@@ -704,6 +932,8 @@ function wireGeoSearch(items, markers, map, config) {
   const clear  = document.querySelector('[data-map-element="search-clear"]');
   const status = document.querySelector('[data-map-element="search-status"]');
   if (!input && !submit) return; // no search UI on page; skip.
+
+  const suggest = wireSuggestions({ input, items, markers, map, status, config });
 
   const runSearch = async () => {
     const query = (input?.value || '').trim();
@@ -718,12 +948,15 @@ function wireGeoSearch(items, markers, map, config) {
       setStatus(status, 'Search failed. Try again.');
     }
   };
+  // Suggestions get first say; an address nothing suggests is geocoded.
+  const submitSearch = () => { if (!suggest?.enter()) runSearch(); };
 
-  submit?.addEventListener('click', (e) => { e.preventDefault(); runSearch(); });
-  input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); runSearch(); } });
+  submit?.addEventListener('click', (e) => { e.preventDefault(); submitSearch(); });
+  input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitSearch(); } });
   clear?.addEventListener('click', (e) => {
     e.preventDefault();
     if (input) input.value = '';
+    suggest?.close();
     closeAllPopups(markers);
     clearOrigin({ items, markers, map, status, config });
   });
