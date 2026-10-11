@@ -82,6 +82,21 @@ of exactly one place name, is picked; one shop matched on its name opens, severa
 keep the list open; anything else, including text that only matches shop addresses
 (a town outside the CMS, a ZIP), goes to the address search and its radius.
 
+### Keyboard and screen readers
+
+- Tab order is search, map, settings panel. The dots are clickable but not tab
+  stops; shops are reached through the search suggestions and the list below the map.
+- Choosing a shop from the suggestions, or pressing Enter on a dot, moves focus into
+  the card. Escape or the close button closes it and returns focus to the search or
+  the dot.
+- Links that act as buttons (`search-submit`, `search-clear`, `region-clear`,
+  `tag-clear`, `locate-clear`, `locate`, `radius-reset`) get `role="button"` and
+  respond to Space.
+- Give every control an accessible name in Designer with `aria-label`: the destinations
+  switch, the radius select, the address input and each Clear link (they would
+  otherwise all read as "Clear"). Put `role="group"` and an `aria-label` on the region
+  and tag chip lists.
+
 The look is built in Designer. Put the `data-map-template="suggestion"` block in the
 card templates section, with one row marked `data-map-suggest="place"` (slots
 `name` and `label`) and one marked `data-map-suggest="shop"` (slots `name` and

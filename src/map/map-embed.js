@@ -35,6 +35,9 @@ const TURF_DISTANCE_URL = 'https://esm.sh/@turf/distance@7.1.0';
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 
+// Where focus goes back to when a card that was opened from the keyboard closes.
+const popupFocus = { returnTo: null };
+
 // --- config --------------------------------------------------------------
 
 // Each entry: attribute suffix -> { key, parse, default }.
@@ -177,6 +180,7 @@ function boot() {
 
   const config = readConfig(mapEl);
   initStatusElements();
+  wireButtonLinks();
   wireSettingsPanel();
   resolveMarkerImageElement(config);
   applyMarkerStyles(mapEl, config);
@@ -402,7 +406,18 @@ function addMarkers(map, items, config) {
       maxWidth: config.popupMaxWidth,
       focusAfterOpen: config.popupFocus,
     }).setHTML(buildPopupHtml(it.el, config));
-    popup.on('open', () => fillPopupTags(popup, it.id, config));
+    popup.on('open', () => {
+      fillPopupTags(popup, it.id, config);
+      // Escape inside the card closes it.
+      popup.getElement()?.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { e.stopPropagation(); popup.remove(); }
+      });
+    });
+    popup.on('close', () => {
+      const back = popupFocus.returnTo;
+      popupFocus.returnTo = null;
+      if (back && back.isConnected) back.focus({ preventScroll: true });
+    });
 
     const marker = new maplibregl.Marker({ element: markerEl, anchor: 'center' })
       .setLngLat([it.lng, it.lat])
@@ -412,6 +427,10 @@ function addMarkers(map, items, config) {
     // MapLibre labels every marker "Map marker" when it is added, replacing the
     // name set above, so the place's own name is applied last.
     markerEl.setAttribute('aria-label', label);
+    // 160-odd dots would otherwise sit between the search and the settings panel.
+    // They stay clickable; keyboard visitors reach shops through the search and the
+    // list below the map.
+    markerEl.tabIndex = -1;
 
     byId.set(it.id, { marker, markerEl, popup, item: it });
   }
@@ -419,8 +438,16 @@ function addMarkers(map, items, config) {
   for (const entry of byId.values()) {
     entry.markerEl.addEventListener('click', (e) => {
       e.stopPropagation();
+      // A click with no pointer behind it (detail 0) came from the keyboard or an
+      // assistive tool: move focus into the card, and back to the dot on close.
+      const byKeyboard = e.detail === 0;
+      entry.popup.options.focusAfterOpen = byKeyboard || config.popupFocus;
       setActive({ items, markers: byId, activeId: entry.item.id, scrollList: true });
       focusMarker(map, byId, entry, config);
+      if (byKeyboard && entry.popup.isOpen()) popupFocus.returnTo = entry.markerEl;
+    });
+    entry.markerEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && entry.popup.isOpen()) entry.popup.remove();
     });
   }
 
@@ -700,6 +727,24 @@ function wireListSync(items, markers, map, config) {
   }
 }
 
+// --- action links ---------------------------------------------------------
+//
+// Search, Clear, Use my location and Reset are links in Designer but act as
+// buttons: say so to assistive tech, and let Space press them as a button does.
+function wireButtonLinks() {
+  const names = ['search-submit', 'search-clear', 'region-clear', 'tag-clear', 'locate-clear', 'locate', 'radius-reset'];
+  for (const name of names) {
+    for (const el of document.querySelectorAll(`[data-map-element="${name}"]`)) {
+      if (el.tagName !== 'A') continue;
+      if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
+      if (!el.hasAttribute('href') && !el.hasAttribute('tabindex')) el.tabIndex = 0;
+      el.addEventListener('keydown', (e) => {
+        if (e.key === ' ') { e.preventDefault(); el.click(); }
+      });
+    }
+  }
+}
+
 // --- search suggestions ---------------------------------------------------
 //
 // One combobox over the search input: regions, then towns, then shops matched on
@@ -764,7 +809,10 @@ function wireSuggestions({ input, items, markers, map, status, config }) {
     const d = item.el.dataset;
     const name = d.displayName || d.name || '';
     const nameKey = foldText(`${name} ${d.name || ''}`);
-    return { kind: 'shop', item, name, address: d.address || '', nameKey, key: `${nameKey} ${foldText(d.address)}` };
+    return {
+      kind: 'shop', item, name, address: d.address || '', nameKey, key: `${nameKey} ${foldText(d.address)}`,
+      titles: [foldText(name), foldText(d.name)],
+    };
   });
 
   // Every word typed must appear; names that start with the query come first.
@@ -864,8 +912,13 @@ function wireSuggestions({ input, items, markers, map, status, config }) {
       const found = markers.get(entry.item.id);
       if (!found) return;
       setActive({ items, markers, activeId: entry.item.id, scrollList: true });
-      // A dot that is already open stays open; focusMarker would close it.
+      // Focus moves into the card so its links are reachable, and Escape or the
+      // close button brings focus back to the search. A dot that is already open
+      // stays open; focusMarker would close it.
+      found.popup.options.focusAfterOpen = true;
       if (!found.popup.isOpen()) focusMarker(map, markers, found, config);
+      else found.popup.getElement()?.querySelector('button, a[href]')?.focus();
+      popupFocus.returnTo = input;
       return;
     }
     closeAllPopups(markers);
@@ -895,6 +948,9 @@ function wireSuggestions({ input, items, markers, map, status, config }) {
     if (exact) { choose(exact); return true; }
     const starts = places.filter((e) => e.nameKey.startsWith(q));
     if (starts.length === 1) { choose(starts[0]); return true; }
+    // A shop name typed in full wins even when longer names contain it.
+    const named = shopEntries.filter((e) => e.titles.includes(q));
+    if (named.length === 1) { choose(named[0]); return true; }
     const r = compute(q);
     if (r.shopTotal && r.shopBest <= 1) {
       if (r.shopTotal === 1) choose(r.rows.find((e) => e.kind === 'shop'));
@@ -956,7 +1012,11 @@ function wireGeoSearch(items, markers, map, config) {
     }
   };
   // Suggestions get first say; an address nothing suggests is geocoded.
-  const submitSearch = () => { if (!suggest?.enter()) runSearch(); };
+  const submitSearch = () => {
+    if (suggest?.enter()) return;
+    suggest?.close();
+    runSearch();
+  };
 
   submit?.addEventListener('click', (e) => { e.preventDefault(); submitSearch(); });
   input?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitSearch(); } });

@@ -6,6 +6,25 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.7.3 — 2026-10-11
+
+### Fixed
+
+- **The suggestion list closes after an address search** (it stayed open over the map).
+- **A shop name typed in full wins on Enter** even when longer names contain it
+  ("110 Roast Beef" no longer ties with "Route 110 Roast Beef").
+
+### Accessibility
+
+- **Map dots leave the tab order** (they stay clickable). Tab now goes search, map,
+  settings instead of through every dot. Shops are reachable by keyboard through the
+  search suggestions and the list below the map.
+- **Cards opened from the keyboard** (the search, or Enter on a dot with a screen
+  reader) take focus, so Directions, Call and Visit are reachable. Escape or the
+  close button closes the card and returns focus to the search or the dot.
+- **Search, Clear, Use my location and Reset links** get `role="button"` and respond to
+  Space as well as Enter.
+
 ## v1.7.2 — 2026-10-11
 
 ### Changed
