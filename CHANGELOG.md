@@ -6,6 +6,25 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.9.0 — 2026-10-11
+
+### Added
+
+- **Region boundary overlay.** Pressing a region tints its shape on the map (Harbor
+  Blue, `#35798c`, 20% opacity, with a thin outline) and fits the camera to the shape
+  instead of to its dots. The tint sits under the map's labels; pressing the region
+  again, Clear (`region-clear`) or choosing a region in the search suggestions all go
+  through the same path. Only the pressed region is drawn.
+- `src/map/regions.geojson` (62 KB, about 15 KB gzipped): the five region shapes, keyed
+  by region slug. It is fetched on the first press, or when a region button is hovered
+  or focused, so nothing is added to first paint. If the file cannot load, the region
+  fit falls back to the dots as before.
+- Config: `data-map-region-color` (default `#35798c`), `data-map-region-opacity`
+  (default `0.2`; `0` turns the overlay off), `data-map-region-shapes` (default: the
+  file beside the script).
+- `tools/regions/` rebuilds the shapes from MassGIS town boundaries and the town to
+  region list taken from the Towns CMS collection.
+
 ## v1.8.1 — 2026-10-11
 
 ### Added

@@ -39,6 +39,10 @@ const NOMINATIM_REVERSE_URL = 'https://nominatim.openstreetmap.org/reverse';
 // Where focus goes back to when a card that was opened from the keyboard closes.
 const popupFocus = { returnTo: null, quiet: false };
 
+// Read while the script first runs: it is how the region shapes file (next to this
+// one on the CDN) is found without a hard-coded version.
+const SCRIPT_URL = document.currentScript?.src || '';
+
 // --- config --------------------------------------------------------------
 
 // Each entry: attribute suffix -> { key, parse, default }.
@@ -77,6 +81,13 @@ const CONFIG_SCHEMA = {
   // Shown in [data-map-element="locate-status"] after "use my location" (GPS).
   // A typed address shows what was typed instead.
   'location-label':   { key: 'locationLabel',   parse: asString, default: 'Your location' },
+
+  // Region overlay (see "Region boundaries" below): the pressed region is tinted
+  // with this colour. Opacity 0 turns the overlay off. The shapes file defaults to
+  // regions.geojson beside this script; set region-shapes only to point elsewhere.
+  'region-color':     { key: 'regionColor',     parse: asString, default: '#35798c' },
+  'region-opacity':   { key: 'regionOpacity',   parse: asNumber, default: 0.2 },
+  'region-shapes':    { key: 'regionShapes',    parse: asString, default: null },
 
   // Marker appearance. These are written to the viewport as CSS custom
   // properties, so the stylesheet stays the single source of truth for how they
@@ -180,6 +191,7 @@ function boot() {
   if (!mapEl) return;
 
   const config = readConfig(mapEl);
+  initRegionShapes(config);
   initStatusElements();
   wireButtonLinks();
   wireSettingsPanel();
@@ -375,10 +387,18 @@ function collectItems() {
 
 // animate is for fits the visitor asks for (a region button); the first fit on
 // load stays instant. Reduced-motion visitors always get the instant version.
+function fitDuration(animate) {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return animate && !reduceMotion ? 800 : 0;
+}
+
+function fitToBounds(map, bounds, config, animate = false) {
+  map.fitBounds(bounds, { padding: config.fitPadding, duration: fitDuration(animate), maxZoom: config.fitMaxZoom });
+}
+
 function fitToMarkers(map, items, config, animate = false) {
   if (!items.length) return;
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const duration = animate && !reduceMotion ? 800 : 0;
+  const duration = fitDuration(animate);
   if (items.length === 1) {
     map.easeTo({ center: [items[0].lng, items[0].lat], zoom: config.singleZoom, duration });
     return;
@@ -987,6 +1007,7 @@ function wireSuggestions({ input, items, markers, map, status, config }) {
       : null;
     // A region goes through its own button so the pressed state stays in step.
     if (button && layerState.region !== entry.slug) button.click();
+    else if (entry.kind === 'region' && regionShapes.bounds.has(entry.slug)) fitToBounds(map, regionShapes.bounds.get(entry.slug), config, true);
     else fitToMarkers(map, inPlace, config, true);
     setStatus(status, `${inPlace.length} ${noun}${inPlace.length === 1 ? '' : 's'} in ${entry.name}.`);
   };
@@ -1383,6 +1404,92 @@ function clearOrigin(ctx) {
   resetFilter(ctx);
 }
 
+// --- region boundaries -----------------------------------------------------
+//
+// Pressing a region tints its shape on the map and fits the camera to it. The
+// shapes (regions.geojson, five features keyed by region slug, built by
+// tools/regions/build-regions.sh) are fetched on the first press, or when a region
+// button is hovered or focused, so nothing is added to first paint. The tint sits
+// under the map's labels. It is decoration only: dots, search and filters are
+// unchanged, and if the file cannot load the region fit falls back to the dots.
+const REGION_SOURCE = 'nsbh-regions';
+const REGION_LAYERS = ['nsbh-region-fill', 'nsbh-region-line'];
+const REGION_WAIT_MS = 600;
+const regionShapes = { url: null, promise: null, bounds: new Map() };
+
+function initRegionShapes(config) {
+  regionShapes.url = config.regionShapes
+    || (SCRIPT_URL ? new URL('regions.geojson', SCRIPT_URL).href : null);
+}
+
+// [[west, south], [east, north]] of a (Multi)Polygon.
+function geometryBounds(geometry) {
+  let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity;
+  const walk = (c) => {
+    if (typeof c[0] === 'number') {
+      w = Math.min(w, c[0]); e = Math.max(e, c[0]);
+      s = Math.min(s, c[1]); n = Math.max(n, c[1]);
+    } else for (const part of c) walk(part);
+  };
+  walk(geometry.coordinates);
+  return [[w, s], [e, n]];
+}
+
+function loadRegionShapes() {
+  if (regionShapes.promise) return regionShapes.promise;
+  if (!regionShapes.url) return Promise.resolve(null);
+  regionShapes.promise = fetch(regionShapes.url)
+    .then((res) => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
+    .then((geo) => {
+      for (const f of geo.features) regionShapes.bounds.set(f.properties.region, geometryBounds(f.geometry));
+      return geo;
+    })
+    .catch((err) => {
+      console.warn('[cms-map] region shapes unavailable, using the dots to fit regions', err);
+      regionShapes.promise = null; // a later press may try again
+      return null;
+    });
+  return regionShapes.promise;
+}
+
+function addRegionLayers(map, geo, config) {
+  if (map.getSource(REGION_SOURCE)) return;
+  // Under the first label layer: tinted land and roads, readable names on top.
+  const beforeId = map.getStyle().layers.find((l) => l.type === 'symbol')?.id;
+  const none = ['==', ['get', 'region'], ''];
+  map.addSource(REGION_SOURCE, { type: 'geojson', data: geo });
+  map.addLayer({
+    id: REGION_LAYERS[0], type: 'fill', source: REGION_SOURCE, filter: none,
+    paint: { 'fill-color': config.regionColor, 'fill-opacity': config.regionOpacity },
+  }, beforeId);
+  map.addLayer({
+    id: REGION_LAYERS[1], type: 'line', source: REGION_SOURCE, filter: none,
+    layout: { 'line-join': 'round' },
+    paint: {
+      'line-color': config.regionColor,
+      'line-opacity': Math.min(1, config.regionOpacity * 3),
+      'line-width': 1.5,
+    },
+  }, beforeId);
+}
+
+// Shows one region's shape (null hides it). Resolves to the shape's bounds for the
+// camera, or null when there is nothing to fit to: no shape, overlay off, or the
+// visitor pressed something else while the file was loading.
+function showRegionShape(map, config, slug) {
+  const setFilter = (value) => {
+    for (const id of REGION_LAYERS) if (map.getLayer(id)) map.setFilter(id, ['==', ['get', 'region'], value]);
+  };
+  if (!slug) { setFilter(''); return Promise.resolve(null); }
+  if (!(config.regionOpacity > 0)) return Promise.resolve(null);
+  return loadRegionShapes().then((geo) => {
+    if (!geo || layerState.region !== slug) return null;
+    addRegionLayers(map, geo, config);
+    setFilter(slug);
+    return regionShapes.bounds.get(slug) || null;
+  });
+}
+
 // A toggle button keeps aria-pressed for assistive tech and gets an is-active class
 // for Designer: style the pressed look on a combo class named is-active.
 function setPressed(el, on) {
@@ -1406,9 +1513,23 @@ function wireSettingsControls(items, markers, map, config) {
     closeAllPopups(markers);
     const pool = eligible();
     const inRegion = slug ? pool.filter((it) => it.el.dataset.region === slug) : pool;
-    fitToMarkers(map, inRegion.length ? inRegion : pool, config, true);
+    const fitDots = () => fitToMarkers(map, inRegion.length ? inRegion : pool, config, true);
+    const shape = showRegionShape(map, config, slug);
+    if (!slug) { fitDots(); return; }
+    // Fit to the shape once it is in; if it is slow, fit to the dots rather than
+    // leave the camera standing still (the tint then appears without a second move).
+    let waited = false;
+    const timer = new Promise((resolve) => setTimeout(() => { waited = true; resolve(null); }, REGION_WAIT_MS));
+    Promise.race([shape, timer]).then((bounds) => {
+      if (layerState.region !== slug) return;
+      if (bounds && !waited) fitToBounds(map, bounds, config, true);
+      else fitDots();
+    });
   };
   for (const btn of regionButtons) {
+    // Start the (small) shapes download as soon as a press looks likely.
+    btn.addEventListener('pointerenter', loadRegionShapes, { once: true });
+    btn.addEventListener('focus', loadRegionShapes, { once: true });
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       selectRegion(layerState.region === btn.dataset.slug ? null : btn.dataset.slug);

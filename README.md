@@ -162,6 +162,25 @@ are. The chips toggle `aria-pressed` and an `is-active` class: style the pressed
 Designer on a combo class named `is-active` (keep a hidden keeper element carrying the
 combo so clean-up does not remove it).
 
+### Region boundaries
+
+Pressing a region (a `data-map-element="region"` button) tints that region's shape
+and fits the camera to it. Only the pressed region is drawn, under the map labels,
+with a thin outline. It is decoration: dots, search and filters are unchanged.
+
+- **Shapes:** `src/map/regions.geojson`, five features keyed by region slug, loaded
+  from beside the script on the first press (or on hover/focus of a region button).
+  If it cannot load, the region fit uses the dots instead.
+- **Look:** `data-map-region-color` (default Harbor Blue `#35798c`) and
+  `data-map-region-opacity` (default `0.2`; `0` turns the overlay off). The outline
+  uses the same colour at three times the opacity.
+- **Rebuilding:** `tools/regions/build-regions.sh` merges MassGIS town boundaries
+  (generalized-coast version) into regions using `tools/regions/town_region.csv`
+  (taken from the Towns CMS collection). Boston and East Boston are left out on
+  purpose. Brookline and Lincoln are not CMS towns; they are listed under Greater
+  Boston so it has no hole. When a town changes region in the CMS, edit the CSV and
+  rebuild.
+
 ### Configuration
 
 Every value below can be set three ways. First match wins:
@@ -196,6 +215,9 @@ Every value below can be set three ways. First match wins:
 | `data-map-empty-text` | `emptyText` | `No Beefs here. 😞` | Status when nothing is in range |
 | `data-map-item-noun` | `itemNoun` | `shop` | Noun in the result count. Pluralized with `s` |
 | `data-map-location-label` | `locationLabel` | `Your location` | Text shown in `locate-status` right after "use my location" (GPS), until the town name comes back. A typed address shows what was typed |
+| `data-map-region-color` | `regionColor` | `#35798c` | Colour of the pressed region's tint and outline (Harbor Blue) |
+| `data-map-region-opacity` | `regionOpacity` | `0.2` | Tint opacity; the outline is three times this. `0` turns the overlay off |
+| `data-map-region-shapes` | `regionShapes` | `regions.geojson` beside the script | Only to point at a different shapes file |
 | `data-map-tag-page-path` | `tagPagePath` | `/shop-tags/` | Path prefix of each Shop Tag's page; the tag's slug is added to the end |
 | `data-map-marker-image` | `markerImage` | stylesheet default | Marker icon. A bare URL, or any CSS image value |
 | `data-map-marker-size` | `markerSize` | `2rem` | Marker width and height |
