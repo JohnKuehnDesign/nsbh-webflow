@@ -23,7 +23,8 @@
 //   3. built-in default                               (matches the original hard-coded value)
 //
 // Design decisions:
-//   - Popups reuse the corresponding list item's own HTML (no duplicate templating).
+//   - Popups use the shared shop card from shop-card.js (load it first); without
+//     it they fall back to a clone of the list item.
 //   - Two-way sync: list hover/click <-> marker state, via a shared .is-active class.
 //   - Zero build step: dependencies are loaded dynamically from esm.sh.
 
@@ -429,8 +430,8 @@ function addMarkers(map, items, config) {
       focusAfterOpen: config.popupFocus,
     }).setHTML(buildPopupHtml(it.el, config));
     popup.on('open', () => {
-      fillPopupTags(popup, it.id, config);
-      fillPopupDistance(popup, it);
+      shopCard()?.fillTags(popup.getElement(), it.id, { tagPagePath: config.tagPagePath });
+      shopCard()?.fillDistance(popup.getElement(), it);
       // Escape inside the card closes it.
       popup.getElement()?.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') { e.stopPropagation(); popup.remove(); }
@@ -517,165 +518,19 @@ function openExclusive(markers, targetMarker) {
   if (!isAlreadyOpen) targetMarker.togglePopup();
 }
 
-// Static card templates. Each [data-map-template="shop|destination"] block holds
-// one designed card, marked with data-map-card, and its fields are marked with
-// data-map-slot. The popup clones that card and fills the slots from the data
-// attributes on the hidden Collection Item. Templates live outside every
-// Collection List and stay visible in Designer.
-const SLOT_TEXT = {
-  shop:        { name: (d) => d.displayName || d.name, region: (d) => d.regionName, town: (d) => d.townName,
-                 description: (d) => d.description, address: (d) => d.address },
-  destination: { name: (d) => d.name, region: (d) => d.regionName, description: (d) => d.description },
-};
+// The card itself is built by shop-card.js (window.NSBHShopCard), which loads before
+// this file: it clones the [data-map-template="shop|destination"] card and fills it
+// from the hidden Collection Item's data attributes. The same builder serves the
+// region lists and other pages, so the card is designed once.
+const shopCard = () => window.NSBHShopCard || null;
 
-function buildCardFromTemplate(item, config) {
-  const kind = item.dataset.mapKind === 'destination' ? 'destination' : 'shop';
-  const tpl = document.querySelector(`[data-map-template="${kind}"]`);
-  const source = tpl && (tpl.querySelector('[data-map-card]') || tpl.firstElementChild);
-  if (!source) return null;
-
-  const card = source.cloneNode(true);
-  card.classList.add('cms-map-popup-card');
-  card.removeAttribute('id');
-  const d = item.dataset;
-
-  // MapLibre draws its own close button, and the card needs no popover chrome.
-  for (const el of card.querySelectorAll('[data-shop-popover-close], [data-shop-popover-backdrop]')) el.remove();
-
-  // Text slots. An empty value removes the slot so no placeholder text is left.
-  for (const [slot, read] of Object.entries(SLOT_TEXT[kind])) {
-    for (const el of card.querySelectorAll(`[data-map-slot="${slot}"]`)) {
-      const value = (read(d) || '').trim();
-      if (value) el.textContent = value; else el.remove();
-    }
-  }
-
-  // The region/town divider only makes sense when both are present.
-  if (!d.regionName || !d.townName) {
-    for (const el of card.querySelectorAll('[data-map-slot="separator"]')) el.remove();
-  }
-
-  if (kind === 'shop') {
-    fillLink(card, 'directions', safeUrl(d.googleMapLink) || safeUrl(d.directionsLink));
-    fillLink(card, 'website', safeUrl(d.website));
-    const digits = (d.phone || '').replace(/[^\d+]/g, '');
-    fillLink(card, 'call', digits ? `tel:${digits}` : null, false);
-  } else {
-    fillLink(card, 'link', d.id ? `/destinations/${encodeURIComponent(d.id)}` : null, false);
-  }
-
-  if (kind === 'destination') fillImage(card, item);
-
-  // Premium seal. data-map-premium on the map div picks the rule:
-  //   all  (default) show the seal on every shop card, whatever the CMS says
-  //   cms  only on shops marked Premium (the hidden item then holds a
-  //        [data-map-field="premium"] element, present only for those shops)
-  //   none never show it
-  if (kind === 'shop') {
-    const mode = config.premiumSeal;
-    const show = mode === 'all' || (mode === 'cms' && item.querySelector('[data-map-field="premium"]'));
-    if (!show) for (const el of card.querySelectorAll('[data-map-slot="premium"]')) el.remove();
-  }
-
-  // Tags are filled in when the popup opens (see fillPopupTags), because which
-  // shops carry a tag is read from the tag pages. The container stays hidden and
-  // empty until then; its first tag element becomes the template for the rest.
-  for (const el of card.querySelectorAll('[data-map-slot="tags"]')) {
-    if (kind !== 'shop' || !d.id) { el.remove(); continue; }
-    const proto = el.querySelector('[data-map-slot="tag"]');
-    if (!proto) { el.remove(); continue; }
-    tagState.proto = tagState.proto || proto.outerHTML;
-    el.replaceChildren();
-    el.hidden = true;
-    el.setAttribute('data-map-tags', d.id);
-  }
-  // Nearby shops have no data source yet and are dropped rather than left as
-  // template placeholders.
-  for (const el of card.querySelectorAll('[data-map-slot="nearby"]')) el.remove();
-  markDistanceFlag(card);
-  for (const el of card.querySelectorAll('[data-map-slot]')) el.removeAttribute('data-map-slot');
-
-  return card;
-}
-
-// The distance flag ("4.2 miles away") is filled each time a card opens, because the
-// visitor's place can change after the cards are built. Its slots turn into
-// data-map-distance (the flag, hidden until there is a place) and
-// data-map-distance-text (the element holding the words, optional).
-function markDistanceFlag(root) {
-  const within = (slot) => [root, ...root.querySelectorAll('*')].filter((el) => el.getAttribute('data-map-slot') === slot);
-  for (const el of within('distance')) {
-    el.setAttribute('data-map-distance', '');
-    el.hidden = true;
-  }
-  for (const el of within('distance-text')) el.setAttribute('data-map-distance-text', '');
-}
-
-// In the shop template the flag sits beside the card inside its popover wrapper, not
-// inside the card that gets cloned. When the cloned card has none, the template's own
-// flag is added in front of it; the popup's content box is the flag's positioning
-// parent, so it lands on the card's top edge.
-function distanceFlagHtml(kind, card) {
-  if (card.querySelector('[data-map-distance]')) return '';
-  const tpl = document.querySelector(`[data-map-template="${kind}"]`);
-  const source = tpl && tpl.querySelector('[data-map-slot="distance"]');
-  if (!source) return '';
-  const flag = source.cloneNode(true);
-  flag.removeAttribute('id');
-  markDistanceFlag(flag);
-  for (const el of [flag, ...flag.querySelectorAll('[data-map-slot]')]) el.removeAttribute('data-map-slot');
-  return flag.outerHTML;
-}
-
-// An image field cannot bind to an attribute, so the hidden Collection Item
-// carries an <img data-map-field="image"> bound to it instead. Its src goes onto
-// the template's image slot; with no image, the slot and its now-empty wrapper
-// are removed so the card has no blank band.
-function fillImage(card, item) {
-  const source = item.querySelector('img[data-map-field="image"]');
-  let src = source && (source.getAttribute('src') || '').trim();
-  // An empty CMS image falls back to the asset the element was created with.
-  // Webflow flags that case with w-dyn-bind-empty; data-map-placeholder (the
-  // fallback asset's id) is a second check in case the class is ever dropped.
-  const placeholder = source && source.dataset.mapPlaceholder;
-  if (source && source.classList.contains('w-dyn-bind-empty')) src = '';
-  else if (src && placeholder && src.includes(placeholder)) src = '';
-  for (const img of card.querySelectorAll('[data-map-slot="image"]')) {
-    const wrapper = img.parentElement && img.parentElement !== card ? img.parentElement : null;
-    if (src) {
-      img.setAttribute('src', src);
-      img.setAttribute('alt', source.getAttribute('alt') || '');
-      img.removeAttribute('srcset');
-      img.removeAttribute('sizes');
-      img.setAttribute('loading', 'lazy');
-    } else {
-      img.remove();
-      if (wrapper && !wrapper.children.length) wrapper.remove();
-    }
-  }
-}
-
-// Sets a slot link's href, or removes the link when there is nowhere to go. The
-// page's popover script hides empty-href links on the template itself, so any
-// inline display it left behind is cleared on the clone.
-function fillLink(card, slot, href, external = true) {
-  for (const a of card.querySelectorAll(`[data-map-slot="${slot}"]`)) {
-    a.style.removeProperty('display');
-    if (!href) { a.remove(); continue; }
-    a.setAttribute('href', href);
-    if (external) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
-  }
-}
-
-// The popup is a clone of a static template card when one exists, and of the
-// list item otherwise (the earlier behaviour, kept as a fallback). In the
+// The popup is the shared shop card when shop-card.js and a template are on the
+// page, and a clone of the list item otherwise (the earlier behaviour, kept as a
+// fallback). In the
 // fallback, some elements are dropped and the action links are appended.
 function buildPopupHtml(listItemEl, config) {
-  const card = buildCardFromTemplate(listItemEl, config);
-  if (card) {
-    const kind = listItemEl.dataset.mapKind === 'destination' ? 'destination' : 'shop';
-    return distanceFlagHtml(kind, card) + card.outerHTML;
-  }
+  const html = shopCard()?.popupHtml(listItemEl, { premium: config.premiumSeal, tagPagePath: config.tagPagePath });
+  if (html) return html;
 
   const clone = listItemEl.cloneNode(true);
   clone.classList.add('cms-map-popup-card');
@@ -1128,109 +983,28 @@ function wireGeoSearch(items, markers, map, config) {
 
 // --- shop tags --------------------------------------------------------------
 //
-// A multi-reference field (a shop's tags) cannot be bound to an attribute, and a
-// Collection List of Shop Tags knows nothing about shops. The way round it: each
-// Shop Tag's own page lists the shops that carry it (a hidden Shops list filtered
-// "Shop Tags contains the current Shop Tag", every item marked
-// [data-map-element="tag-shop"] with data-id = the shop slug). The tag chips in the
-// panel give the slugs; their pages are fetched once, the first time tags are
-// needed, and flipped into a shop -> tags lookup.
+// Which shops carry which tag is read by shop-card.js (loadTags), from each Shop
+// Tag's own page; see the notes there. Here the chips only choose which tags to
+// highlight on the map.
 const tagState = {
-  proto: null,          // outerHTML of the template tag element in the shop card
-  ready: null,          // Promise for the loaded lookup, or null before the first use
-  byTag: new Map(),     // tag slug -> Set of shop ids
-  byShop: new Map(),    // shop id  -> [tag slug, ...] in chip order
   selected: new Set(),  // tag slugs currently highlighted
   statusSet: false,     // true while the status line shows the "no match" text
 };
 
 const tagChips = () => Array.from(document.querySelectorAll('[data-map-element="tag"]'));
 
-// Fetches each tag's page. A tag whose page cannot be read is skipped with a
-// warning; if any failed, the next use tries again.
-function loadTagData(config) {
-  if (tagState.ready) return tagState.ready;
-  const slugs = [...new Set(tagChips().map((c) => c.dataset.slug).filter(Boolean))];
-  let failed = false;
-  tagState.ready = Promise.all(slugs.map(async (slug) => {
-    try {
-      const url = new URL(config.tagPagePath + encodeURIComponent(slug), window.location.origin);
-      const res = await fetch(url, { headers: { Accept: 'text/html' } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
-      const ids = new Set();
-      for (const el of doc.querySelectorAll('[data-map-element="tag-shop"]')) {
-        if (el.dataset.id) ids.add(el.dataset.id);
-      }
-      tagState.byTag.set(slug, ids);
-    } catch (err) {
-      failed = true;
-      console.warn(`[cms-map] could not read the shops for tag "${slug}"`, err);
-    }
-  })).then(() => {
-    tagState.byShop.clear();
-    for (const slug of slugs) {
-      for (const id of tagState.byTag.get(slug) || []) {
-        if (!tagState.byShop.has(id)) tagState.byShop.set(id, []);
-        tagState.byShop.get(id).push(slug);
-      }
-    }
-    if (failed) tagState.ready = null;
-  });
-  return tagState.ready;
-}
-
-// Adds one tag element per tag the shop carries to the card's tags container. The
-// icon and the name come from the panel chip with the same slug, so nothing is
-// duplicated in the card template. With no tags, or no chips, the container stays
-// hidden.
-async function fillPopupTags(popup, shopId, config) {
-  if (!tagState.proto) return;
-  await loadTagData(config);
-  const box = popup.getElement()?.querySelector(`[data-map-tags="${CSS.escape(shopId)}"]`);
-  if (!box || box.children.length) return;
-  const chips = new Map(tagChips().map((c) => [c.dataset.slug, c]));
-  const tpl = document.createElement('template');
-  for (const slug of tagState.byShop.get(shopId) || []) {
-    const chip = chips.get(slug);
-    if (!chip) continue;
-    tpl.innerHTML = tagState.proto;
-    const tag = tpl.content.firstElementChild;
-    const name = chip.textContent.trim();
-    // The icon is whatever SVG the chip holds, so renaming its wrapper class in
-    // Designer cannot break this.
-    const icon = chip.querySelector('svg');
-    const slot = tag.querySelector('[data-map-slot="tag-icon"]');
-    if (slot && icon) slot.innerHTML = icon.outerHTML;
-    // A card with a visible [data-map-slot="tag-name"] shows the name as text; an
-    // icon-only card names each tag for assistive tech and as a hover title.
-    const label = tag.querySelector('[data-map-slot="tag-name"]');
-    if (label) {
-      label.textContent = name;
-    } else {
-      tag.setAttribute('role', 'img');
-      tag.setAttribute('aria-label', name);
-      tag.title = name;
-    }
-    for (const el of tag.querySelectorAll('[data-map-slot]')) el.removeAttribute('data-map-slot');
-    tag.removeAttribute('data-map-slot');
-    box.append(tag);
-  }
-  box.hidden = !box.children.length;
-}
-
 // Dims the shop dots that do not carry every chosen tag. Destinations have no tags
 // and are left as they are.
 async function applyTagHighlight({ markers, status, config }) {
   const chosen = [...tagState.selected];
-  if (chosen.length) await loadTagData(config);
+  const lookup = chosen.length ? await shopCard()?.loadTags({ tagPagePath: config.tagPagePath }) : null;
   // A chip pressed or cleared while the lookup was loading wins.
   const now = [...tagState.selected];
   const on = now.length > 0;
   let matches = 0;
   for (const { markerEl, item } of markers.values()) {
     if (isDestination(item)) continue;
-    const hit = on && now.every((slug) => tagState.byTag.get(slug)?.has(item.id));
+    const hit = on && !!lookup && now.every((slug) => lookup.byTag.get(slug)?.has(item.id));
     markerEl.classList.toggle('is-tag-match', hit);
     if (hit) matches += 1;
   }
@@ -1307,32 +1081,11 @@ function placeLocationPin(map, point) {
     .addTo(map);
 }
 
-// "4.2 miles away", measured in a straight line from the visitor's place.
-function distanceText(item) {
-  const p = locationState.point;
-  const miles = distance([p.lng, p.lat], [item.lng, item.lat], { units: 'miles' });
-  const rounded = Math.round(miles * 10) / 10;
-  if (rounded < 0.1) return 'Less than 0.1 miles away';
-  return `${rounded.toFixed(1)} ${rounded === 1 ? 'mile' : 'miles'} away`;
-}
-
-// Fills (or hides) the distance flag inside one open card. The flag is
-// [data-map-distance]; its words go in [data-map-distance-text] when the template has
-// one, so the flag keeps its own markup.
-function fillPopupDistance(popup, item) {
-  const root = popup.getElement();
-  if (!root) return;
-  for (const flag of root.querySelectorAll('[data-map-distance]')) {
-    if (!locationState.point) { flag.hidden = true; continue; }
-    const target = flag.querySelector('[data-map-distance-text]') || flag;
-    target.textContent = distanceText(item);
-    flag.hidden = false;
-  }
-}
-
+// The "4.2 miles away" flag on an open card. shop-card.js holds the visitor's place
+// (setOrigin) and writes the flag, so the region list cards show it too.
 function refreshDistances(markers) {
   for (const { popup, item } of markers.values()) {
-    if (popup.isOpen()) fillPopupDistance(popup, item);
+    if (popup.isOpen()) shopCard()?.fillDistance(popup.getElement(), item);
   }
 }
 
@@ -1342,6 +1095,7 @@ function refreshDistances(markers) {
 function setUserLocation(ctx, point, label) {
   locationState.point = point;
   locationState.label = label;
+  shopCard()?.setOrigin(point);
   placeLocationPin(ctx.map, point);
   showLocation();
   refreshDistances(ctx.markers);
@@ -1351,6 +1105,7 @@ function clearUserLocation(ctx) {
   locationState.request += 1; // a lookup still in flight must not set a place afterwards
   locationState.point = null;
   locationState.label = '';
+  shopCard()?.setOrigin(null);
   if (locationState.pin) { locationState.pin.remove(); locationState.pin = null; }
   showLocation();
   refreshDistances(ctx.markers);

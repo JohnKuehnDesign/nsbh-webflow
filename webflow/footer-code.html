@@ -4,22 +4,24 @@
      Replaces the old Webflow asset .txt script tag.
      ============================================================================ -->
 
-<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.8.1/src/map/map-embed.js"></script>
+<!-- The shop card (used by the map popup and the region lists). Must come first. -->
+<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.10.0/src/shop-card/shop-card.js"></script>
+<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.10.0/src/map/map-embed.js"></script>
 
 
 <!-- ============================================================================
      Updating to a new version
 
-     The @1.8.1 in both URLs (here and in the head block) is a pinned release
+     The @1.10.0 in every URL (both script tags here and the head block) is a pinned release
      tag. jsDelivr caches it permanently, so the live site cannot change on its
      own — a deploy is always a deliberate act on your side.
 
-     Note the missing "v": the git tag is v1.8.1, but jsDelivr strips the
-     leading v from semver tags. Using @v1.8.1 in the URL returns a 404.
+     Note the missing "v": the git tag is v1.10.0, but jsDelivr strips the
+     leading v from semver tags. Using @v1.10.0 in the URL returns a 404.
      A freshly pushed tag takes a few minutes to appear on the CDN.
 
      To ship a change: a new tag gets pushed to GitHub, then you update the
-     version number in BOTH the head block and this one. They must match.
+     version number in the head block and in both script tags here. They must match.
 
      Tags are listed at:
      https://github.com/JohnKuehnDesign/nsbh-webflow/releases
@@ -27,183 +29,15 @@
 
 
 <!-- ============================================================================
-     BLOCK 2b — shop popovers for the alphabetical list (not part of the map)
+     BLOCK 2b — removed in v1.10.0
 
-     Inline script that sits after the map script in the same Before </body> box.
-     It opens a small card when a list chip (.beef-list_link) is hovered, or a
-     full-screen one when tapped on tablet and below. Copied from the live page so
-     the repo has a recoverable copy.
+     The inline popover script for the region lists is gone, and so are the 163
+     hidden popovers it opened. shop-card.js now opens one shared popover, built
+     from the shop card template, for every link marked data-shop-card-open. Delete
+     the old inline <script> from this box when moving to v1.10.0. Its last copy is
+     in git history (webflow/footer-code.html before v1.10.0).
 
-     Live note: the Webflow copy carries the comment "Designer edit: add combo
-     is-preview on Shop popover and on Shop popover panel. Remove both before
-     publish." — check those combos are off in Designer when publishing.
+     Do NOT remove the is-preview combos on Shop popover / Shop popover panel in
+     the card template: the map popup clones the panel and needs them. The template
+     area is hidden on the live page, so visitors never see them.
      ============================================================================ -->
-<script>
-(function () {
-  var desktop = window.matchMedia("(min-width: 992px)");
-  var closeTimer = null;
-  var current = null;
-  var previousOverflow = "";
-  var chipSelector = ".beef-list_link";
-
-  function popoverOf(chip) {
-    var item = chip && chip.parentElement;
-    return item ? item.querySelector("[data-shop-popover]") : null;
-  }
-
-  function panelOf(pop) {
-    return pop ? pop.querySelector(".shop-popover_panel") : null;
-  }
-
-  function clearPanelPosition(pop) {
-    var panel = panelOf(pop);
-    if (!panel) return;
-    panel.style.position = "";
-    panel.style.top = "";
-    panel.style.left = "";
-    panel.style.transform = "";
-  }
-
-  function closeAll() {
-    document.querySelectorAll("[data-shop-popover].is-open").forEach(function (pop) {
-      pop.classList.remove("is-open");
-      clearPanelPosition(pop);
-    });
-    document.querySelectorAll(chipSelector + "[aria-expanded='true']").forEach(function (chip) {
-      chip.setAttribute("aria-expanded", "false");
-    });
-    document.body.style.overflow = previousOverflow;
-    current = null;
-  }
-
-  function place(chip, pop) {
-    var panel = panelOf(pop);
-    if (!panel) return;
-    pop.classList.add("is-open");
-    panel.style.position = "fixed";
-    panel.style.transform = "none";
-    panel.style.top = "0px";
-    panel.style.left = "0px";
-    var chipRect = chip.getBoundingClientRect();
-    var panelRect = panel.getBoundingClientRect();
-    var rootSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    var overlap = 0.5 * rootSize;
-    var pad = 12;
-    var vw = window.innerWidth;
-    var vh = window.innerHeight;
-    var left = chipRect.right - overlap;
-    var top = chipRect.top;
-    if (left + panelRect.width > vw - pad) left = Math.max(pad, vw - pad - panelRect.width);
-    if (left < pad) left = pad;
-    if (top + panelRect.height > vh - pad) top = Math.max(pad, vh - pad - panelRect.height);
-    if (top < pad) top = pad;
-    panel.style.left = left + "px";
-    panel.style.top = top + "px";
-  }
-
-  function openDesktop(chip) {
-    window.clearTimeout(closeTimer);
-    var pop = popoverOf(chip);
-    if (!pop) return;
-    if (current && current !== pop) closeAll();
-    place(chip, pop);
-    chip.setAttribute("aria-expanded", "true");
-    current = pop;
-  }
-
-  function scheduleClose() {
-    window.clearTimeout(closeTimer);
-    closeTimer = window.setTimeout(closeAll, 220);
-  }
-
-  function stayingInside(fromChip, fromPop, related) {
-    if (!related || !related.closest) return false;
-    if (fromChip) {
-      if (fromChip.contains(related)) return true;
-      var own = popoverOf(fromChip);
-      if (own && own.contains(related)) return true;
-    }
-    if (fromPop && fromPop.contains(related)) return true;
-    var nextChip = related.closest(chipSelector);
-    if (fromPop && nextChip && popoverOf(nextChip) === fromPop) return true;
-    return false;
-  }
-
-  document.addEventListener("pointerover", function (event) {
-    if (!desktop.matches || !event.target.closest) return;
-    var chip = event.target.closest(chipSelector);
-    if (chip) openDesktop(chip);
-    var pop = event.target.closest("[data-shop-popover].is-open");
-    if (pop) window.clearTimeout(closeTimer);
-  });
-
-  document.addEventListener("pointerout", function (event) {
-    if (!desktop.matches || !event.target.closest) return;
-    var chip = event.target.closest(chipSelector);
-    var pop = event.target.closest("[data-shop-popover]");
-    if (!chip && !pop) return;
-    if (stayingInside(chip, pop, event.relatedTarget)) return;
-    scheduleClose();
-  });
-
-  document.addEventListener("click", function (event) {
-    if (!event.target.closest) return;
-    if (event.target.closest(".shop-card_map-link")) return;
-    var closeBtn = event.target.closest("[data-shop-popover-close]");
-    if (closeBtn) {
-      event.preventDefault();
-      closeAll();
-      return;
-    }
-    if (event.target.closest("[data-shop-popover-backdrop]")) {
-      closeAll();
-      return;
-    }
-    var chip = event.target.closest(chipSelector);
-    if (!chip) return;
-    event.preventDefault();
-    if (desktop.matches) return;
-    var pop = popoverOf(chip);
-    if (!pop) return;
-    var wasOpen = pop.classList.contains("is-open");
-    var overflowBefore = document.body.style.overflow;
-    closeAll();
-    if (!wasOpen) {
-      previousOverflow = overflowBefore;
-      pop.classList.add("is-open");
-      chip.setAttribute("aria-expanded", "true");
-      document.body.style.overflow = "hidden";
-      current = pop;
-      var btn = pop.querySelector("[data-shop-popover-close]");
-      if (btn) btn.focus();
-    }
-  });
-
-  document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape") closeAll();
-  });
-
-  window.addEventListener("resize", closeAll);
-  window.addEventListener("scroll", function () {
-    if (desktop.matches && current) closeAll();
-  }, true);
-
-  document.querySelectorAll(".shop-popover .shop-card_order-now-link").forEach(function (link) {
-    var href = link.getAttribute("href") || "";
-    if (!href || href === "#") link.style.display = "none";
-  });
-
-  document.querySelectorAll(".shop-card_map-link").forEach(function (link) {
-    var gbp = (link.getAttribute("data-google-map-link") || "").trim();
-    var directions = (link.getAttribute("data-directions-link") || "").trim();
-    var href = gbp || directions;
-    if (!href) {
-      link.style.display = "none";
-      return;
-    }
-    link.setAttribute("href", href);
-    link.setAttribute("target", "_blank");
-    link.setAttribute("rel", "noopener noreferrer");
-  });
-})();
-</script>

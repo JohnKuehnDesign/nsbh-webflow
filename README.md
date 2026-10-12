@@ -10,6 +10,7 @@ number in the Webflow custom code is bumped by hand.
 
 | Path | Purpose |
 |---|---|
+| `src/shop-card/shop-card.js` | The shop card: builds a card from the template, fills tags and distance, and opens it from list links. Loads before the map |
 | `src/map/map-embed.js`   | The CMS map component — markers, list sync, geo-search |
 | `src/map/map-embed.css`  | Minimal styles for the runtime-injected marker and popup DOM |
 | `webflow/head-code.html` | Copy-paste block for Page Settings → Inside `<head>` |
@@ -282,8 +283,10 @@ Switch by adding `data-map-filter-mode="filter"` to the map div.
 
 ### The popup
 
-The popup is a clone of the Collection Item, so a card designed once in Webflow
-works in both the list and the map. Two things differ in the popup.
+The popup is the shared shop card (see "The shop card" below) whenever
+`shop-card.js` and a `[data-map-template]` card are on the page. The rest of this
+section describes the older fallback, used only when they are not: a clone of the
+Collection Item. Two things differ in that popup.
 
 **Omitted elements.** The town name is dropped, because the address below it
 already contains the town. Controlled by `data-map-popup-omit`, which takes a
@@ -406,6 +409,47 @@ Popup content is a clone of the Collection Item's own HTML, so a card styled onc
 in Designer works in both the list and the popup.
 
 ---
+
+## The shop card
+
+`src/shop-card/shop-card.js` builds every shop card on the site from one designed
+template, so a card change is made once, in Designer, on the template. It has no map
+code and no dependencies, and loads on its own on pages without a map. On the map
+page it loads **before** `map-embed.js`, which uses it for the popup.
+
+**The template.** `[data-map-template="shop"]` in the card templates area: the
+panel marked `data-map-card`, its fields marked `data-map-slot` (see the head code's
+attribute map). It stays visible in Designer and is hidden on the live page.
+
+**Shop lists.** A list of shops that should open cards (the region lists on the map
+page today; the guide and destination pages next):
+
+| Attribute | On |
+|---|---|
+| `data-shop-card="source"` | The Collection Item |
+| `data-id` (Slug), `data-name`, `data-display-name`, `data-region-name`, `data-town-name`, `data-address`, `data-description`, `data-phone`, `data-website`, `data-google-map-link`, `data-directions-link`, `data-lat`, `data-lng` | The Collection Item, each bound to its CMS field (reference fields through their sub-field, e.g. Region > Name) |
+| `data-shop-card-open` | The link inside the item. No value needed: the card uses the item it sits in. A slug as the value uses another element's data instead |
+
+The item holds no popover. One shared popover is built on demand from the
+template's own `.shop-popover` wrapper and added to the end of the page:
+
+- Desktop (992px and up): opens on hover beside the link and stays open while the
+  pointer moves into it; also opens on click or Enter, with focus moved into the card.
+  Escape, tabbing out, scrolling or resizing closes it.
+- Tablet and below: opens full screen on tap over the backdrop, with focus on the
+  close button and the page scroll locked.
+- The link gets `aria-haspopup="dialog"`, `aria-expanded` and `aria-controls`; the
+  card is `role="dialog"`, named by its heading.
+- The distance flag shows once the visitor sets a place on the map, and the tags
+  row fills from the tag pages, as in the map popup.
+
+**For screen readers and search.** The card text is no longer in the page HTML, so
+each list item keeps the description and address as text with the `sr-only` class
+(visually hidden, still read and indexed). Keep them outside the link, so tabbing
+through the list reads only shop names.
+
+**API** (`window.NSBHShopCard`): `build`, `popupHtml`, `fillTags`, `loadTags`,
+`fillDistance`, `setOrigin`, `findSource`. Notes are at the top of the file.
 
 ## Making a change
 

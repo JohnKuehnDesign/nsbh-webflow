@@ -45,6 +45,18 @@
                       distance|distance-text|nearby|nearby-item"  fields the script fills; an empty value
                                            removes the slot
 
+     SHOP LISTS (region lists here; any page that loads shop-card.js)
+       Collection Item .................... data-shop-card="source" plus the shop's
+                                            data: data-id (Slug), data-name,
+                                            data-display-name, data-region-name,
+                                            data-town-name, data-address,
+                                            data-description, data-phone,
+                                            data-website, data-google-map-link,
+                                            data-directions-link, data-lat, data-lng
+       The link inside it ................. data-shop-card-open (no value needed)
+       Description and address text ....... class sr-only (screen readers only)
+       The card is built from the shop template above; no popover in the item.
+
      SEARCH UI (all optional; omit the whole search and it's skipped)
        Text input ......................... data-map-element="search-input"
        Miles <select> ..................... data-map-element="search-radius"
@@ -82,7 +94,7 @@
 
 <!-- 2. The map component's stylesheet, from GitHub via jsDelivr.
         Pinned to a release tag — bump the version to pick up changes. -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.8.1/src/map/map-embed.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.10.0/src/map/map-embed.css" />
 
 <!-- 3. Site-side styles. Yours to change without cutting a release. -->
 <style>

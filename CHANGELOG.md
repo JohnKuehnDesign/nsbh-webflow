@@ -6,6 +6,32 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.10.0 — 2026-10-12
+
+### Added
+
+- **`src/shop-card/shop-card.js`**, the shop card on its own. It builds a card from
+  the `[data-map-template="shop|destination"]` template, fills the tags row and the
+  distance flag, and opens cards from list links. It loads before `map-embed.js` on
+  the map page and alone on other pages. API: `window.NSBHShopCard`.
+- **Region lists use the template card.** A Collection Item marked
+  `data-shop-card="source"` and carrying the shop's data attributes, with its link
+  marked `data-shop-card-open`, opens one shared popover built from the template:
+  hover beside the link on desktop, full screen on tap below 992px. The 163 hidden
+  per-shop popovers and the inline footer script (Block 2b) go away; on staging that
+  is about 5,000 fewer elements and about 280 KB less HTML.
+- Keyboard: the list popover opens on Enter with focus in the card; Escape returns
+  focus to the link. The card is a named `role="dialog"`.
+- The list cards show the distance flag once a place is set on the map.
+
+### Changed
+
+- `map-embed.js` no longer builds cards, loads tag pages or measures card
+  distances itself; it calls `shop-card.js`. Without it the popup falls back to a
+  clone of the list item, as before templates existed.
+- The visitor's place is handed to the card with `setOrigin`. Card distances use a
+  built-in haversine (same result as Turf); Turf still runs the radius search.
+
 ## v1.9.0 — 2026-10-11
 
 ### Added
