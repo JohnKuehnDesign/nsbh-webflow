@@ -6,6 +6,14 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.8.1 — 2026-10-11
+
+### Added
+
+- **The GPS button names the place.** After it sets the pin, one Nominatim reverse
+  lookup replaces "Your location" in `locate-status` with "Town, ST" (the ZIP when there
+  is no town). If the lookup fails or is slow, the plain label stays.
+
 ## v1.8.0 — 2026-10-11
 
 ### Changed

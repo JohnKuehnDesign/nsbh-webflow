@@ -93,8 +93,10 @@ place. Neither moves the camera or runs the radius search; the search bar does t
 - **Pin:** a clone of `[data-map-template="location"]` (Designer's `my-location_pin`)
   is placed at the spot. Without that block a plain dot from the stylesheet is used.
   A second place moves the pin; Clear (`locate-clear`) removes it.
-- **Status:** `locate-status` shows what was typed, or `data-map-location-label` for
-  GPS, and its Designer text ("Not set") when nothing is chosen.
+- **Status:** `locate-status` shows what was typed. For GPS it shows
+  `data-map-location-label` at once, then "Town, ST" (or the ZIP when there is no town)
+  from one Nominatim reverse lookup; if that fails the label stays. Its Designer text
+  ("Not set") shows when nothing is chosen.
 - **Distance flag:** a card template element marked `data-map-slot="distance"` (with
   an optional `data-map-slot="distance-text"` inside it for the words) is hidden until
   a place is set, then reads "4.2 miles away" (straight line). It is filled each time a
@@ -193,7 +195,7 @@ Every value below can be set three ways. First match wins:
 | `data-map-searching-text` | `searchingText` | `Searching…` | Status while geocoding |
 | `data-map-empty-text` | `emptyText` | `No Beefs here. 😞` | Status when nothing is in range |
 | `data-map-item-noun` | `itemNoun` | `shop` | Noun in the result count. Pluralized with `s` |
-| `data-map-location-label` | `locationLabel` | `Your location` | Text shown in `locate-status` after "use my location" (GPS). A typed address shows what was typed |
+| `data-map-location-label` | `locationLabel` | `Your location` | Text shown in `locate-status` right after "use my location" (GPS), until the town name comes back. A typed address shows what was typed |
 | `data-map-tag-page-path` | `tagPagePath` | `/shop-tags/` | Path prefix of each Shop Tag's page; the tag's slug is added to the end |
 | `data-map-marker-image` | `markerImage` | stylesheet default | Marker icon. A bare URL, or any CSS image value |
 | `data-map-marker-size` | `markerSize` | `2rem` | Marker width and height |
@@ -425,7 +427,8 @@ route numbers and unit suffixes and need coordinates entered by hand in Designer
 ## Nominatim notes
 
 - **Rate limit:** ~1 req/sec. Live search is user-initiated, so it stays well
-  under in practice.
+  under in practice. The GPS button adds one `/reverse` call per press, to name the
+  place.
 - **User-Agent:** Nominatim's policy asks for a descriptive UA, but browsers
   forbid scripts from setting that header on `fetch` — it's dropped silently. The
   `Referer` header (the site domain) is what actually identifies this traffic.

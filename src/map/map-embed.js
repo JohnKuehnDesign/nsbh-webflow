@@ -34,6 +34,7 @@ const MAPLIBRE_URL = 'https://esm.sh/maplibre-gl@4.7.1';
 const TURF_DISTANCE_URL = 'https://esm.sh/@turf/distance@7.1.0';
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+const NOMINATIM_REVERSE_URL = 'https://nominatim.openstreetmap.org/reverse';
 
 // Where focus goes back to when a card that was opened from the keyboard closes.
 const popupFocus = { returnTo: null, quiet: false };
@@ -1497,7 +1498,9 @@ function wireSettingsControls(items, markers, map, config) {
       (pos) => {
         if (request !== locationState.request) return;
         if (locateInput) locateInput.value = '';
-        setUserLocation(ctx, { lat: pos.coords.latitude, lng: pos.coords.longitude }, config.locationLabel);
+        const point = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserLocation(ctx, point, config.locationLabel);
+        nameUserLocation(point, request);
       },
       () => {
         if (request === locationState.request) setLocateStatus('Could not get your location. Enter an address instead.');
@@ -1532,6 +1535,35 @@ function wireSettingsControls(items, markers, map, config) {
     if (locateInput) locateInput.value = '';
     clearUserLocation(ctx);
   });
+}
+
+// GPS gives numbers, not a name. One reverse lookup (made only after the visitor
+// presses the button) turns them into "Town, ST", or the ZIP when there is no town.
+// The place is already set by then, so a slow or failed lookup only leaves the plain
+// label; a newer place or Clear while it was out wins.
+async function nameUserLocation(point, request) {
+  try {
+    const label = await reverseLabel(point);
+    if (!label || request !== locationState.request || locationState.point !== point) return;
+    locationState.label = label;
+    showLocation();
+  } catch (err) {
+    console.warn('[cms-map] reverse lookup failed', err);
+  }
+}
+
+async function reverseLabel({ lat, lng }) {
+  const params = new URLSearchParams({
+    lat: String(lat), lon: String(lng), format: 'json', addressdetails: '1', zoom: '12',
+  });
+  const res = await fetch(`${NOMINATIM_REVERSE_URL}?${params}`, { headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error(`Nominatim HTTP ${res.status}`);
+  const a = (await res.json()).address;
+  if (!a) return null;
+  const town = a.city || a.town || a.village || a.hamlet || a.suburb || a.municipality;
+  const state = String(a['ISO3166-2-lvl4'] || '').replace(/^[A-Z]{2}-/, '') || a.state;
+  if (town) return state ? `${town}, ${state}` : town;
+  return a.postcode || null;
 }
 
 // Note: Nominatim's usage policy asks for a descriptive User-Agent, but browsers
