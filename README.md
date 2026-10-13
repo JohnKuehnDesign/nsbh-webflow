@@ -362,10 +362,11 @@ page it loads **before** `map-embed.js`, which uses it for the popup.
 
 ### Adding cards to a page (checklist)
 
-1. **Place `card-templates_component`** (Components panel, group "shop-cards") once,
-   anywhere on the page. It holds the shop and destination templates and a hidden
-   Shop Tags list for the tags row. Edit the card design inside the component; every
-   page updates.
+1. **Place `shop-card-template_component`** (Components panel, group "shop-cards")
+   once, anywhere on the page. It holds the shop template and a hidden Shop Tags list
+   for the tags row. Edit the shop card design inside the component; every page
+   updates. (The destination template is map-only and lives on the map page, in the
+   "Map templates" block.)
 2. **Load the script** in the page's Before `</body>` code (skip on the map page, where
    it is already loaded before `map-embed.js`):
    `<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@X.Y.Z/src/shop-card/shop-card.js"></script>`
@@ -378,7 +379,7 @@ page it loads **before** `map-embed.js`, which uses it for the popup.
 The component root carries `data-shop-card="templates"`, hidden by one site-wide
 head rule: `[data-shop-card="templates"] { display: none; }`.
 
-**The template.** `[data-map-template="shop"]` inside the component: the panel
+**The template.** `[data-map-template="shop"]` inside `shop-card-template_component`: the panel
 marked `data-map-card`, its fields marked `data-map-slot` (see the head code's
 attribute map). Optional: `data-shop-card-premium="all|cms|none"` on it sets the
 premium seal for every page (default `all`; the map's `data-map-premium` is only a

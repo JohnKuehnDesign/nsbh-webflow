@@ -28,8 +28,8 @@
 //                                         Its data is the [data-shop-card="source"] item
 //                                         it sits in; or set the value to a slug to use
 //                                         another element's data.
-//   [data-shop-card="tag"] with data-slug  Hidden Shop Tags list inside the card
-//                                         templates component: each item holds the
+//   [data-shop-card="tag"] with data-slug  Hidden Shop Tags list inside the shop
+//                                         card template component: each item holds the
 //                                         tag's SVG icon and name, reused in the card's
 //                                         tags row. The map's filter chips
 //                                         ([data-map-element="tag"]) count too. With
