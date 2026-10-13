@@ -20,7 +20,6 @@
          data-map-premium="all"             premium seal: all (every shop, the
                                             default), cms (only shops marked
                                             Premium), none
-         data-map-popup-actions="false"     keep false: links live in the card
 
      HIDDEN DATA — Collection Items, outside the visible page (Map data block)
        data-map-element="item"             REQUIRED on every item
@@ -94,11 +93,11 @@
 
 <!-- 2. The map component's stylesheet, from GitHub via jsDelivr.
         Pinned to a release tag — bump the version to pick up changes. -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.10.0/src/map/map-embed.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.11.0/src/map/map-embed.css" />
 
 <!-- 3. Site-side styles. Yours to change without cutting a release. -->
 <style>
-  /* The static card templates stay visible in Designer; hide them on the live page. */
+  /* The card templates and hidden map data stay visible in Designer; hide them on the live page. */
   [data-map-element="card-templates"] { display: none; }
 
   /* Map container — replace with Designer sizing on the map div's class. */
@@ -122,22 +121,6 @@
     [data-map-element="viewport"] { min-height: 320px; }
   }
 
-  /* ---- Popup-only content ----
-     Do NOT set Display: None on .map-item_show-modal in Designer. Style it there
-     however you like (flex, gap, padding) and hide it only in the LIST with the
-     rule below. The popup clone is the only copy carrying .cms-map-popup-card,
-     so :not() leaves the popup completely untouched — no override to undo. */
-  [data-map-element="item"]:not(.cms-map-popup-card) .map-item_show-modal {
-    display: none;
-  }
-
-  /* Active list item — JS toggles .is-active on both marker and list item. */
-  [data-map-element="item"].is-active {
-    outline: 2px solid currentColor;
-    outline-offset: -2px;
-    border-radius: 8px;
-  }
-
   /* Search status line. */
   [data-map-element="search-status"] {
     font-size: 0.875rem;
@@ -146,11 +129,4 @@
     opacity: 0.8;
   }
 
-  /* Inner padding for the popup card.
-     The popup shell is chrome-less now, so .map-item_wrapper is the only visible
-     edge — its contents need room inside it. Scoped to the clone, so list rows
-     keep their tighter spacing. Adjust to taste. */
-  .cms-map-popup-card .map-item_wrapper {
-    padding: 1.25rem 1.25rem .5rem 1.25rem;
-  }
 </style>

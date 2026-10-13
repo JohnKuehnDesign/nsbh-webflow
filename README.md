@@ -11,7 +11,7 @@ number in the Webflow custom code is bumped by hand.
 | Path | Purpose |
 |---|---|
 | `src/shop-card/shop-card.js` | The shop card: builds a card from the template, fills tags and distance, and opens it from list links. Loads before the map |
-| `src/map/map-embed.js`   | The CMS map component — markers, list sync, geo-search |
+| `src/map/map-embed.js`   | The CMS map component — markers, search, settings panel, region shapes |
 | `src/map/map-embed.css`  | Minimal styles for the runtime-injected marker and popup DOM |
 | `webflow/head-code.html` | Copy-paste block for Page Settings → Inside `<head>` |
 | `webflow/footer-code.html` | Copy-paste block for Page Settings → Before `</body>` |
@@ -224,11 +224,7 @@ Every value below can be set three ways. First match wins:
 | `data-map-marker-size` | `markerSize` | `2rem` | Marker width and height |
 | `data-map-marker-color` | `markerColor` | `--_primitives---colors--h-redwood` | Marker `color` |
 | `data-map-marker-active-scale` | `markerActiveScale` | `1.15` | Scale on hover / active |
-| `data-map-popup-omit` | `popupOmit` | `.map_town-name` | CSS selector for elements to drop from the popup |
-| `data-map-popup-actions` | `popupActions` | `true` | Render the Directions / Order Now links |
 | `data-map-popup-focus` | `popupFocus` | `false` | Move focus into the popup on open. Off, because it lands a focus ring on the first link; `true` restores the keyboard behaviour |
-| `data-map-directions-label` | `directionsLabel` | `Directions` | Directions link text |
-| `data-map-order-label` | `orderLabel` | `Order Now` | Order link text |
 
 An unparseable attribute logs a warning and falls through to the next source
 rather than breaking the map.
@@ -283,56 +279,11 @@ Switch by adding `data-map-filter-mode="filter"` to the map div.
 
 ### The popup
 
-The popup is the shared shop card (see "The shop card" below) whenever
-`shop-card.js` and a `[data-map-template]` card are on the page. The rest of this
-section describes the older fallback, used only when they are not: a clone of the
-Collection Item. Two things differ in that popup.
-
-**Omitted elements.** The town name is dropped, because the address below it
-already contains the town. Controlled by `data-map-popup-omit`, which takes a
-CSS selector and defaults to `.map_town-name`. Set it to something else to drop
-different elements, or blank it to drop nothing. A blank attribute is honored as
-written — it is not treated as unset.
-
-For anything long-lived, prefer tagging the element itself with
-`data-map-omit="popup"` in Designer. That survives class renames; the selector
-does not.
-
-**Popup-only content.** The clone (and only the clone) gets the
-`.cms-map-popup-card` class. Use that to hide things in the **list** rather than
-to reveal them in the popup — revealing means re-declaring `display`, which
-throws away the layout set in Designer.
-
-The site uses a `.map-item_show-modal` wrapper for pin-only fields — the address
-plus native Directions / Order Now link blocks bound to CMS fields, with the two
-Directions variants gated by Webflow conditional visibility. Style it freely in
-Designer (do **not** set Display: None on it); `webflow/head-code.html` hides it
-only in the list copy:
-
-```css
-[data-map-element="item"]:not(.cms-map-popup-card) .map-item_show-modal { display: none; }
-```
-
-When you build the links natively this way, turn the JS-generated buttons off
-with `data-map-popup-actions="false"` so they don't duplicate yours.
-
-**Action links (JS-generated alternative).** Instead of native link blocks, the
-component can append the two links for you, built from CMS fields bound as data
-attributes on the Collection Item:
-
-| Link | Source | Fallback |
-|---|---|---|
-| Directions | `data-google-map-link` (Google Business Map Link) | `data-directions-link` (Directions Link) |
-| Order Now | `data-website` (Website) | none |
-
-Both open in a new tab with `rel="noopener noreferrer"`. A link is omitted
-entirely when its field is empty, and the whole action bar is omitted when both
-are. Only `http://` and `https://` URLs are accepted — CMS fields are free text,
-and a `javascript:` URL in a popup would execute on click. Rejected values are
-logged as a warning.
-
-Label text is set with `data-map-directions-label` and `data-map-order-label`.
-Set `data-map-popup-actions="false"` to turn the whole feature off.
+The popup is the shared card from `shop-card.js` (see "The shop card" below),
+built from the `[data-map-template]` cards on the page. Without `shop-card.js` or
+a template, the popup shows the place's name only. Earlier versions copied the
+hidden Collection Item instead, with options to drop elements and to add
+Directions / Order Now buttons; those were removed in v1.11.0.
 
 ### Styling
 
@@ -340,7 +291,7 @@ Split deliberately:
 
 - **This repo** styles only what Webflow can't reach — the marker `<button>` and
   the MapLibre popup shell, both injected into the DOM at runtime. It does
-  **not** style the popup card: that's a clone of your Collection Item and
+  **not** style the popup card: that's a copy of the template card and
   carries your Designer classes, so anything set here would out-specify them.
   The one exception is resetting MapLibre's font on the map container, which
   otherwise leaks its own Helvetica/12px into the cloned card.
@@ -365,18 +316,10 @@ Marker and popup appearance is driven by CSS variables on the viewport element:
 | `--map-popup-close-inset` | `4px` |
 | `--map-popup-close-hover-bg` | `rgba(0,0,0,.06)` |
 
-The popup shell is deliberately chrome-less: the card inside is a clone of your
-Collection Item and already has a background, radius and shadow from Designer, so
+The popup shell is deliberately chrome-less: the card inside is a copy of the
+template card and already has a background, radius and shadow from Designer, so
 a styled shell reads as a second edge around it. Set the `--map-popup-*` values
 above if a card ever has no styling of its own.
-| `--map-action-gap` | `8px` |
-| `--map-action-margin-top` | `12px` |
-| `--map-action-padding` | `8px 12px` |
-| `--map-action-radius` | `8px` |
-| `--map-action-font-size` | `0.875rem` |
-| `--map-action-font-weight` | `700` |
-| `--map-action-directions-bg` / `-color` | redwood / `#fff` |
-| `--map-action-order-bg` / `-color` / `-border` | transparent / redwood / `1px solid currentColor` |
 
 The four marker variables also have `data-map-marker-*` attribute equivalents,
 because Webflow's style panel has no field for setting a custom property. Set
@@ -405,8 +348,8 @@ the element hidden. Swapping the pin is then just swapping the image in Designer
 no code, no URL. Priority: `data-map-marker-image` (or head config) wins if set,
 otherwise the element, otherwise the stylesheet default.
 
-Popup content is a clone of the Collection Item's own HTML, so a card styled once
-in Designer works in both the list and the popup.
+Popup content is a copy of the template card, so a card styled once in Designer
+works in the map popup and in every list that opens cards.
 
 ---
 

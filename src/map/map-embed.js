@@ -23,9 +23,8 @@
 //   3. built-in default                               (matches the original hard-coded value)
 //
 // Design decisions:
-//   - Popups use the shared shop card from shop-card.js (load it first); without
-//     it they fall back to a clone of the list item.
-//   - Two-way sync: list hover/click <-> marker state, via a shared .is-active class.
+//   - Popups use the shared card from shop-card.js (load it first); without it
+//     they show the place's name only.
 //   - Zero build step: dependencies are loaded dynamically from esm.sh.
 
 let maplibregl;
@@ -99,15 +98,11 @@ const CONFIG_SCHEMA = {
   'marker-active-scale': { key: 'markerActiveScale', parse: asString, default: null },
 
   // Popup content.
-  'popup-omit':       { key: 'popupOmit',       parse: asString, default: '.map_town-name' },
-  'popup-actions':    { key: 'popupActions',    parse: asBool,   default: true },
   'premium':          { key: 'premiumSeal',     parse: asString, default: 'all' },
   // MapLibre moves focus into the popup on open, which lands on the first link
   // and paints a focus ring on it for mouse users. Off by default; set true to
   // restore the keyboard-friendly behaviour.
   'popup-focus':      { key: 'popupFocus',      parse: asBool,   default: false },
-  'directions-label': { key: 'directionsLabel', parse: asString, default: 'Directions' },
-  'order-label':      { key: 'orderLabel',      parse: asString, default: 'Order Now' },
 };
 
 // CSS custom properties driven by config, so a Designer attribute can restyle
@@ -152,9 +147,8 @@ function readConfig(mapEl) {
     const attr = mapEl.getAttribute(`data-map-${suffix}`);
     let value;
 
-    // A present-but-empty attribute is deliberate: blanking data-map-popup-omit
-    // in Designer means "omit nothing", not "use the default". Parsers that
-    // can't make sense of an empty string return undefined and fall through.
+    // A present-but-empty attribute is taken as written. Parsers that can't make
+    // sense of an empty string return undefined and fall through.
     if (attr !== null) {
       value = spec.parse(attr.trim());
       if (value === undefined) {
@@ -239,7 +233,6 @@ function boot() {
     map.resize();
     const markers = addMarkers(map, items, config);
     wireEscapeToClose(mapEl, markers);
-    wireListSync(items, markers, map, config);
     wireGeoSearch(items, markers, map, config);
     wireSettingsControls(items, markers, map, config);
     if (items.length && config.fitOnLoad) fitToMarkers(map, items, config);
@@ -471,7 +464,7 @@ function addMarkers(map, items, config) {
       // assistive tool: move focus into the card, and back to the dot on close.
       const byKeyboard = e.detail === 0;
       entry.popup.options.focusAfterOpen = byKeyboard || config.popupFocus;
-      setActive({ items, markers: byId, activeId: entry.item.id, scrollList: true });
+      setActive({ markers: byId, activeId: entry.item.id });
       focusMarker(map, byId, entry, config);
       if (byKeyboard && entry.popup.isOpen()) popupFocus.returnTo = entry.markerEl;
     });
@@ -524,122 +517,21 @@ function openExclusive(markers, targetMarker) {
 // region lists and other pages, so the card is designed once.
 const shopCard = () => window.NSBHShopCard || null;
 
-// The popup is the shared shop card when shop-card.js and a template are on the
-// page, and a clone of the list item otherwise (the earlier behaviour, kept as a
-// fallback). In the
-// fallback, some elements are dropped and the action links are appended.
+// The popup is the shared card from shop-card.js. Without it (or without a
+// template on the page) the popup shows the place's name only.
 function buildPopupHtml(listItemEl, config) {
   const html = shopCard()?.popupHtml(listItemEl, { premium: config.premiumSeal, tagPagePath: config.tagPagePath });
   if (html) return html;
-
-  const clone = listItemEl.cloneNode(true);
-  clone.classList.add('cms-map-popup-card');
-
-  // Strip webflow-only wrapper artifacts so the card reads cleanly in the popup.
-  clone.removeAttribute('role');
-  clone.removeAttribute('data-id');
-  for (const attr of LINK_ATTRS) clone.removeAttribute(attr.attribute);
-
-  removeOmitted(clone, config.popupOmit);
-
-  if (config.popupActions) {
-    const actions = buildActions(listItemEl, config);
-    if (actions) clone.appendChild(actions);
-  }
-
-  return clone.outerHTML;
+  const name = document.createElement('div');
+  name.className = 'cms-map-popup-card';
+  name.textContent = listItemEl.dataset.displayName || listItemEl.dataset.name || '';
+  return name.outerHTML;
 }
 
-// Elements can be excluded from the popup two ways: a CSS selector in
-// data-map-popup-omit, or data-map-omit="popup" on the element itself. The
-// attribute survives class renames, so prefer it for anything long-lived.
-function removeOmitted(clone, selector) {
-  const selectors = ['[data-map-omit="popup"]'];
-  if (selector && selector.trim()) selectors.push(selector.trim());
-
-  for (const sel of selectors) {
-    let matches;
-    try {
-      matches = clone.querySelectorAll(sel);
-    } catch {
-      console.warn(`[cms-map] data-map-popup-omit is not a valid CSS selector: "${sel}"`);
-      continue;
-    }
-    for (const el of matches) el.remove();
-  }
-}
-
-// Where each action's URL comes from, in priority order. Bound to CMS fields as
-// data attributes on the Collection Item in Designer.
-const LINK_ATTRS = [
-  { attribute: 'data-google-map-link', dataset: 'googleMapLink' },
-  { attribute: 'data-directions-link', dataset: 'directionsLink' },
-  { attribute: 'data-website',         dataset: 'website' },
-];
-
-// Only http(s) links are allowed through — CMS fields are free text, and a
-// javascript: URL in a popup would run on click.
-function safeUrl(raw) {
-  if (!raw) return null;
-  const url = String(raw).trim();
-  if (!url) return null;
-  if (!/^https?:\/\//i.test(url)) {
-    console.warn(`[cms-map] ignoring non-http(s) link: "${url.slice(0, 60)}"`);
-    return null;
-  }
-  return url;
-}
-
-function buildActions(listItemEl, config) {
-  const d = listItemEl.dataset;
-  // Google Business listing wins; the plain directions link is the fallback.
-  const directionsHref = safeUrl(d.googleMapLink) || safeUrl(d.directionsLink);
-  const orderHref = safeUrl(d.website);
-  if (!directionsHref && !orderHref) return null;
-
-  const wrap = listItemEl.ownerDocument.createElement('div');
-  wrap.className = 'cms-map-popup-actions';
-
-  if (directionsHref) wrap.appendChild(buildAction(listItemEl, directionsHref, config.directionsLabel, 'is-directions'));
-  if (orderHref) wrap.appendChild(buildAction(listItemEl, orderHref, config.orderLabel, 'is-order'));
-
-  return wrap;
-}
-
-function buildAction(listItemEl, href, label, modifier) {
-  const a = listItemEl.ownerDocument.createElement('a');
-  a.className = `cms-map-popup-action ${modifier}`;
-  a.href = href;
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  a.textContent = label;
-  return a;
-}
-
-function setActive({ items, markers, activeId, scrollList }) {
+// The open card's dot gets .is-active (drawn larger by map-embed.css).
+function setActive({ markers, activeId }) {
   for (const { markerEl, item } of markers.values()) {
-    const on = item.id === activeId;
-    markerEl.classList.toggle('is-active', on);
-    item.el.classList.toggle('is-active', on);
-  }
-  if (scrollList && activeId) {
-    const entry = markers.get(activeId);
-    if (entry) entry.item.el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-}
-
-function wireListSync(items, markers, map, config) {
-  for (const { item } of markers.values()) {
-    const onEnter = () => setActive({ items, markers, activeId: item.id, scrollList: false });
-    const onLeave = () => setActive({ items, markers, activeId: null, scrollList: false });
-    item.el.addEventListener('mouseenter', onEnter);
-    item.el.addEventListener('mouseleave', onLeave);
-    item.el.addEventListener('focusin', onEnter);
-    item.el.addEventListener('click', (e) => {
-      if (e.target.closest('a, button')) return; // let real links/buttons through
-      setActive({ items, markers, activeId: item.id, scrollList: false });
-      focusMarker(map, markers, markers.get(item.id), config);
-    });
+    markerEl.classList.toggle('is-active', item.id === activeId);
   }
 }
 
@@ -843,7 +735,7 @@ function wireSuggestions({ input, items, markers, map, status, config }) {
     if (entry.kind === 'shop') {
       const found = markers.get(entry.item.id);
       if (!found) return;
-      setActive({ items, markers, activeId: entry.item.id, scrollList: true });
+      setActive({ markers, activeId: entry.item.id });
       // Focus moves into the card so its links are reachable, and Escape or the
       // close button brings focus back to the search. A dot that is already open
       // stays open; focusMarker would close it.

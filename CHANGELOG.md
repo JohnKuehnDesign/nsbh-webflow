@@ -6,6 +6,24 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.11.0 — 2026-10-12
+
+### Removed
+
+- **The list-item popup fallback.** Popups come only from the shared card in
+  `shop-card.js`; without it the popup shows the place's name. Gone with it:
+  `data-map-popup-omit`, `data-map-omit="popup"`, `data-map-popup-actions`,
+  `data-map-directions-label`, `data-map-order-label`, and the generated
+  Directions / Order Now buttons with their `--map-action-*` variables.
+- **List sync.** Hovering or clicking a hidden list item no longer drives the map,
+  and opening a dot no longer scrolls its list item into view. The list it served
+  is hidden. The open dot still gets `.is-active`.
+
+### Changed
+
+- Page head code: removed the CSS rules for `.map-item_show-modal`,
+  `.cms-map-popup-card .map-item_wrapper` and the active list item outline.
+
 ## v1.10.0 — 2026-10-12
 
 ### Added
