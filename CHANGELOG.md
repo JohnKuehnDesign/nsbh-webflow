@@ -6,6 +6,22 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.12.0 — 2026-10-12
+
+### Added
+
+- **Cards show tags on pages without a map.** `shop-card.js` also reads tag icons and
+  names from a hidden Shop Tags list marked `data-shop-card="tag"` (with `data-slug`)
+  inside the card templates component. The map's filter chips still count; the first
+  element per slug wins.
+- **`data-shop-card-premium`** on the shop template sets the premium seal (`all`,
+  `cms`, `none`) for every page. It wins over the map's `data-map-premium`.
+- README: "Adding cards to a page" checklist.
+
+### Unchanged
+
+- `map-embed.js` and `map-embed.css` are the same as v1.11.0.
+
 ## v1.11.0 — 2026-10-12
 
 ### Removed

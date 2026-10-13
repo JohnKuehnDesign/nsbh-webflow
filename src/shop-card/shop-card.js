@@ -28,9 +28,15 @@
 //                                         Its data is the [data-shop-card="source"] item
 //                                         it sits in; or set the value to a slug to use
 //                                         another element's data.
-//   [data-map-element="tag"] with data-slug  Tag chips. Their icon and name are reused
-//                                         in the card's tags row. Without chips the
-//                                         row stays hidden.
+//   [data-shop-card="tag"] with data-slug  Hidden Shop Tags list inside the card
+//                                         templates component: each item holds the
+//                                         tag's SVG icon and name, reused in the card's
+//                                         tags row. The map's filter chips
+//                                         ([data-map-element="tag"]) count too. With
+//                                         neither, the tags row stays hidden.
+//   [data-shop-card="templates"]          The component root. Hide it with one site-wide
+//                                         CSS rule: [data-shop-card="templates"] { display: none; }
+//   data-shop-card-premium="all|cms|none" Optional, on [data-map-template="shop"].
 //
 // Public API, for map-embed.js: window.NSBHShopCard
 //   build(source, options)       -> the filled card element, or null without a template
@@ -41,9 +47,11 @@
 //   setOrigin(point | null)      the visitor's place, { lat, lng }; refreshes an open card
 //   findSource(id)               -> the data element for a shop slug
 //
-// Options (all optional): premium ('all' | 'cms' | 'none'), tagPagePath. When left
-// out they come from data-map-premium / data-map-tag-page-path on the map div if the
-// page has one, then from the defaults below.
+// Options (all optional): premium ('all' | 'cms' | 'none'), tagPagePath.
+//   premium      data-shop-card-premium on the shop template wins; then the option
+//                passed in (the map passes its data-map-premium); then 'all'.
+//   tagPagePath  the option passed in; then data-map-tag-page-path on the map div;
+//                then '/shop-tags/'.
 
 (function () {
   if (window.NSBHShopCard) return;
@@ -53,8 +61,9 @@
 
   function options(opts = {}) {
     const viewport = document.querySelector('[data-map-element="viewport"]');
+    const onTemplate = templateOf('shop')?.getAttribute('data-shop-card-premium');
     return {
-      premium: opts.premium || viewport?.getAttribute('data-map-premium') || DEFAULTS.premium,
+      premium: onTemplate || opts.premium || viewport?.getAttribute('data-map-premium') || DEFAULTS.premium,
       tagPagePath: opts.tagPagePath || viewport?.getAttribute('data-map-tag-page-path') || DEFAULTS.tagPagePath,
     };
   }
@@ -252,7 +261,18 @@
     byShop: new Map(),    // shop id  -> [tag slug, ...] in chip order
   };
 
-  const tagChips = () => Array.from(document.querySelectorAll('[data-map-element="tag"]'));
+  // Where a tag's icon and name come from: the map's filter chips, and the hidden
+  // Shop Tags list inside the card templates component ([data-shop-card="tag"]), so
+  // cards show tags on pages without a map. The first element per slug wins.
+  function tagChips() {
+    const seen = new Set();
+    return Array.from(document.querySelectorAll('[data-map-element="tag"], [data-shop-card="tag"]')).filter((c) => {
+      const slug = c.dataset.slug;
+      if (!slug || seen.has(slug)) return false;
+      seen.add(slug);
+      return true;
+    });
+  }
 
   // A tag whose page cannot be read is skipped with a warning; if any failed, the
   // next use tries again.

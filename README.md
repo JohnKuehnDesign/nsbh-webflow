@@ -360,9 +360,33 @@ template, so a card change is made once, in Designer, on the template. It has no
 code and no dependencies, and loads on its own on pages without a map. On the map
 page it loads **before** `map-embed.js`, which uses it for the popup.
 
-**The template.** `[data-map-template="shop"]` in the card templates area: the
-panel marked `data-map-card`, its fields marked `data-map-slot` (see the head code's
-attribute map). It stays visible in Designer and is hidden on the live page.
+### Adding cards to a page (checklist)
+
+1. **Place `card-templates_component`** (Components panel, group "shop-cards") once,
+   anywhere on the page. It holds the shop and destination templates and a hidden
+   Shop Tags list for the tags row. Edit the card design inside the component; every
+   page updates.
+2. **Load the script** in the page's Before `</body>` code (skip on the map page, where
+   it is already loaded before `map-embed.js`):
+   `<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@X.Y.Z/src/shop-card/shop-card.js"></script>`
+3. **Mark the list:** on each Collection Item, `data-shop-card="source"` plus the 13
+   data attributes in the table below; on its link, `data-shop-card-open`; the
+   description and address as text with the `sr-only` class, outside the link.
+4. **Publish and check:** hover a link on desktop, tap one on a phone, and Tab + Enter
+   then Escape from the keyboard.
+
+The component root carries `data-shop-card="templates"`, hidden by one site-wide
+head rule: `[data-shop-card="templates"] { display: none; }`.
+
+**The template.** `[data-map-template="shop"]` inside the component: the panel
+marked `data-map-card`, its fields marked `data-map-slot` (see the head code's
+attribute map). Optional: `data-shop-card-premium="all|cms|none"` on it sets the
+premium seal for every page (default `all`; the map's `data-map-premium` is only a
+fallback).
+
+**Tags.** The tags row takes each tag's icon and name from the hidden Shop Tags list
+in the component (items marked `data-shop-card="tag"` with `data-slug`), or from the
+map's filter chips. Which shops carry a tag still comes from the tag pages.
 
 **Shop lists.** A list of shops that should open cards (the region lists on the map
 page today; the guide and destination pages next):
