@@ -360,6 +360,15 @@ template, so a card change is made once, in Designer, on the template. It has no
 code and no dependencies, and loads on its own on pages without a map. On the map
 page it loads **before** `map-embed.js`, which uses it for the popup.
 
+Where cards come from today:
+
+| Page | Cards | How |
+|---|---|---|
+| Beef Shops (map page) | Map popups and the region lists | `shop-card.js`, both footer scripts |
+| Fall Guide, Spring Guide | Nearby Beef Shops chips | `shop-card.js` (checklist below) |
+| Destinations Template | Nearby Beef Shops cards | Static Webflow markup in the template design (see "Inline cards" below) |
+| Directory | Directory cards | Old design, not converted |
+
 ### Adding cards to a page (checklist)
 
 1. **Place `shop-card-template_component`** (Components panel, group "shop-cards")
@@ -390,13 +399,25 @@ in the component (items marked `data-shop-card="tag"` with `data-slug`), or from
 map's filter chips. Which shops carry a tag still comes from the tag pages.
 
 **Shop lists.** A list of shops that should open cards (the region lists on the map
-page today; the guide and destination pages next):
+page and the guide chips):
 
 | Attribute | On |
 |---|---|
 | `data-shop-card="source"` | The Collection Item |
 | `data-id` (Slug), `data-name`, `data-display-name`, `data-region-name`, `data-town-name`, `data-address`, `data-description`, `data-phone`, `data-website`, `data-google-map-link`, `data-directions-link`, `data-lat`, `data-lng` | The Collection Item, each bound to its CMS field (reference fields through their sub-field, e.g. Region > Name) |
 | `data-shop-card-open` | The link inside the item. No value needed: the card uses the item it sits in. A slug as the value uses another element's data instead |
+
+`data-lat` and `data-lng` only feed the distance flag, which needs a place set on the
+map, so pages without a map can leave them off (the guides do). `data-directions-link`
+is empty for almost every shop; the Directions button falls back to
+`data-google-map-link` (bound to Google Business Map Link).
+
+Binding the attributes: in Designer, or through the Webflow MCP's element settings
+tool (`set_settings` with a CMS binding on the `attributes` key). Its `get_settings`
+(`all_raw_settings`) shows which field each attribute is bound to; the plain attribute
+read shows a bound value as `null`. In nested lists (one per guide section), bind one
+list, then paste its Collection List Wrapper into the other sections and check each
+list's source.
 
 The item holds no popover. One shared popover is built on demand from the
 template's own `.shop-popover` wrapper and added to the end of the page:
@@ -418,6 +439,22 @@ through the list reads only shop names.
 
 **API** (`window.NSBHShopCard`): `build`, `popupHtml`, `fillTags`, `loadTags`,
 `fillDistance`, `setOrigin`, `findSource`. Notes are at the top of the file.
+
+### Inline cards (Destinations Template)
+
+The destination pages show nearby shops as cards in the page, not popovers, so they
+use no script. The Collection Item markup copies the template's classes and order:
+name, Region / Town (separator in `text-color-lion`), `shop-card_address-row`, short
+description, tags row (`shop-card_tag` with the icon in `map-UI_svg-embed` and the
+Shop Tags name), then `shop-card_buttons-wrapper` with three `shop-card_order-now-link`
+links bound to Google Business Map Link (Directions), Phone Number (Call Now) and
+Website (Visit Site).
+
+A link bound to an empty CMS field renders `href="#"`. The Destinations Template's
+page head hides those buttons:
+`.related-shops_component .shop-card_buttons-wrapper a[href="#"]{display:none}`.
+
+A design change to the shop card template has to be copied here by hand.
 
 ## Making a change
 

@@ -6,6 +6,23 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## Rollout, no release — 2026-10-13
+
+No code change; the site still loads `@1.12.0`.
+
+- **Fall and Spring Guides** load `shop-card.js@1.12.0` and place
+  `shop-card-template_component`. Their Nearby Beef Shops chips are
+  `data-shop-card="source"` items with 11 bound attributes (no `data-lat`/`data-lng`)
+  and sr-only description/address. The old per-chip popovers (Fall 34, Spring 53) and
+  each page's inline popover script are gone. Fall page HTML 167.5 KB → 144.0 KB.
+- **Destinations Template** shop cards restyled in Webflow to the template design
+  (static markup, no script): Region / Town, address row, template tags, and
+  Directions / Call Now / Visit Site in place of Order Now. Page head hides buttons
+  whose CMS link is empty.
+- Site head comment names `shop-card-template_component` (was `card-templates_component`).
+- README: where cards come from per page, optional lat/lng, binding through the MCP,
+  "Inline cards (Destinations Template)".
+
 ## v1.12.0 — 2026-10-12
 
 ### Added
