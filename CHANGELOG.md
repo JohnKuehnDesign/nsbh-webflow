@@ -6,6 +6,468 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## Rollout, no release — 2026-10-13
+
+No code change; the site still loads `@1.12.0`.
+
+- **Fall and Spring Guides** load `shop-card.js@1.12.0` and place
+  `shop-card-template_component`. Their Nearby Beef Shops chips are
+  `data-shop-card="source"` items with 11 bound attributes (no `data-lat`/`data-lng`)
+  and sr-only description/address. The old per-chip popovers (Fall 34, Spring 53) and
+  each page's inline popover script are gone. Fall page HTML 167.5 KB → 144.0 KB.
+- **Destinations Template** shop cards restyled in Webflow to the template design
+  (static markup, no script): Region / Town, address row, template tags, and
+  Directions / Call Now / Visit Site in place of Order Now. Page head hides buttons
+  whose CMS link is empty.
+- Site head comment names `shop-card-template_component` (was `card-templates_component`).
+- README: where cards come from per page, optional lat/lng, binding through the MCP,
+  "Inline cards (Destinations Template)".
+
+## v1.12.0 — 2026-10-12
+
+### Added
+
+- **Cards show tags on pages without a map.** `shop-card.js` also reads tag icons and
+  names from a hidden Shop Tags list marked `data-shop-card="tag"` (with `data-slug`)
+  inside the card templates component. The map's filter chips still count; the first
+  element per slug wins.
+- **`data-shop-card-premium`** on the shop template sets the premium seal (`all`,
+  `cms`, `none`) for every page. It wins over the map's `data-map-premium`.
+- README: "Adding cards to a page" checklist.
+
+### Unchanged
+
+- `map-embed.js` and `map-embed.css` are the same as v1.11.0.
+
+## v1.11.0 — 2026-10-12
+
+### Removed
+
+- **The list-item popup fallback.** Popups come only from the shared card in
+  `shop-card.js`; without it the popup shows the place's name. Gone with it:
+  `data-map-popup-omit`, `data-map-omit="popup"`, `data-map-popup-actions`,
+  `data-map-directions-label`, `data-map-order-label`, and the generated
+  Directions / Order Now buttons with their `--map-action-*` variables.
+- **List sync.** Hovering or clicking a hidden list item no longer drives the map,
+  and opening a dot no longer scrolls its list item into view. The list it served
+  is hidden. The open dot still gets `.is-active`.
+
+### Changed
+
+- Page head code: removed the CSS rules for `.map-item_show-modal`,
+  `.cms-map-popup-card .map-item_wrapper` and the active list item outline.
+
+## v1.10.0 — 2026-10-12
+
+### Added
+
+- **`src/shop-card/shop-card.js`**, the shop card on its own. It builds a card from
+  the `[data-map-template="shop|destination"]` template, fills the tags row and the
+  distance flag, and opens cards from list links. It loads before `map-embed.js` on
+  the map page and alone on other pages. API: `window.NSBHShopCard`.
+- **Region lists use the template card.** A Collection Item marked
+  `data-shop-card="source"` and carrying the shop's data attributes, with its link
+  marked `data-shop-card-open`, opens one shared popover built from the template:
+  hover beside the link on desktop, full screen on tap below 992px. The 163 hidden
+  per-shop popovers and the inline footer script (Block 2b) go away; on staging that
+  is about 5,000 fewer elements and about 280 KB less HTML.
+- Keyboard: the list popover opens on Enter with focus in the card; Escape returns
+  focus to the link. The card is a named `role="dialog"`.
+- The list cards show the distance flag once a place is set on the map.
+
+### Changed
+
+- `map-embed.js` no longer builds cards, loads tag pages or measures card
+  distances itself; it calls `shop-card.js`. Without it the popup falls back to a
+  clone of the list item, as before templates existed.
+- The visitor's place is handed to the card with `setOrigin`. Card distances use a
+  built-in haversine (same result as Turf); Turf still runs the radius search.
+
+## v1.9.0 — 2026-10-11
+
+### Added
+
+- **Region boundary overlay.** Pressing a region tints its shape on the map (Harbor
+  Blue, `#35798c`, 20% opacity, with a thin outline) and fits the camera to the shape
+  instead of to its dots. The tint sits under the map's labels; pressing the region
+  again, Clear (`region-clear`) or choosing a region in the search suggestions all go
+  through the same path. Only the pressed region is drawn.
+- `src/map/regions.geojson` (62 KB, about 15 KB gzipped): the five region shapes, keyed
+  by region slug. It is fetched on the first press, or when a region button is hovered
+  or focused, so nothing is added to first paint. If the file cannot load, the region
+  fit falls back to the dots as before.
+- Config: `data-map-region-color` (default `#35798c`), `data-map-region-opacity`
+  (default `0.2`; `0` turns the overlay off), `data-map-region-shapes` (default: the
+  file beside the script).
+- `tools/regions/` rebuilds the shapes from MassGIS town boundaries and the town to
+  region list taken from the Towns CMS collection.
+
+## v1.8.1 — 2026-10-11
+
+### Added
+
+- **The GPS button names the place.** After it sets the pin, one Nominatim reverse
+  lookup replaces "Your location" in `locate-status` with "Town, ST" (the ZIP when there
+  is no town). If the lookup fails or is slow, the plain label stays.
+
+## v1.8.0 — 2026-10-11
+
+### Changed
+
+- **The address field beside Use my location no longer refocuses the map.** It, and the
+  GPS button, now set the visitor's own place only: a pin on the map, the
+  `locate-status` text and a distance flag on the cards. The camera stays put and the
+  radius search is not run. Clear (`locate-clear`) forgets the place only; it no longer
+  clears the search bar's results.
+- The status for a location lookup now shows in `locate-status`, not `search-status`.
+
+### Added
+
+- **Location pin:** a clone of `[data-map-template="location"]` is drawn at the place
+  (a plain dot when the template is missing).
+- **Distance flag on cards:** `data-map-slot="distance"` / `"distance-text"` in the shop
+  and destination templates, e.g. "4.2 miles away", hidden until a place is set.
+
+## v1.7.5 — 2026-10-11
+
+### Fixed
+
+- **Escape closes a card opened with a mouse click.** A click leaves focus on the page,
+  not the dot, so the key never reached the card. Escape on the map or the bare page
+  now closes the open card; Escape in a field or the suggestions is unchanged.
+
+## v1.7.4 — 2026-10-11
+
+### Fixed
+
+- **Closing a card with Escape no longer reopens the search suggestions** when focus
+  returns to the search input.
+
+## v1.7.3 — 2026-10-11
+
+### Fixed
+
+- **The suggestion list closes after an address search** (it stayed open over the map).
+- **A shop name typed in full wins on Enter** even when longer names contain it
+  ("110 Roast Beef" no longer ties with "Route 110 Roast Beef").
+
+### Accessibility
+
+- **Map dots leave the tab order** (they stay clickable). Tab now goes search, map,
+  settings instead of through every dot. Shops are reachable by keyboard through the
+  search suggestions and the list below the map.
+- **Cards opened from the keyboard** (the search, or Enter on a dot with a screen
+  reader) take focus, so Directions, Call and Visit are reachable. Escape or the
+  close button closes the card and returns focus to the search or the dot.
+- **Search, Clear, Use my location and Reset links** get `role="button"` and respond to
+  Space as well as Enter.
+
+## v1.7.2 — 2026-10-11
+
+### Changed
+
+- **Enter no longer picks a place on a partial match.** Typing "Boston" used to pick
+  Greater Boston. A region or town is now picked only when typed in full or when the
+  text starts exactly one place name; text that only matches shop addresses (a town
+  outside the CMS, a ZIP) goes to the address search. Shops matched on name still
+  open (one) or keep the list open (several). This replaces the digit rule.
+- **Up to 25 shop suggestions** (was 5), scrolling inside the list.
+
+## v1.7.1 — 2026-10-11
+
+### Fixed
+
+- **Shops with a number in the name** ("110 Roast Beef") now act as suggestions on
+  Enter. Text with a digit still goes to the address search, unless a region, town
+  or shop name matches it.
+
+## v1.7.0 — 2026-10-11
+
+### Added
+
+- **Search suggestions.** The search input is now a combobox: regions, then towns
+  that have shops, then shops matched on name or address (five of each at most),
+  with keyboard support and a screen-reader count. A region press goes through the
+  region button, a town fits its shops, a shop opens its card. Enter with no row
+  highlighted picks a place hit, opens a lone shop hit, keeps several shop hits in
+  the list, and sends no hits, or any text with a digit, to the address search as
+  before. Needs the `suggest`, `suggest-list` and `suggestion` template markup from
+  the README; without it search stays address-only.
+
+## v1.6.19 — 2026-10-11
+
+### Changed
+
+- **Shops outside a tag choice no longer get `is-tag-dim`.** The class was set on every
+  non-matching dot but carried no style, so it is gone. Highlight is unchanged
+  (`is-tag-match`); the class can come back with a rule if dimming is wanted later.
+
+## v1.6.18 — 2026-10-11
+
+### Added
+
+- **Tag names on the shop card.** Put `data-map-slot="tag-name"` on the text element
+  inside the card's `data-map-slot="tag"` element; each tag shows its own name from
+  the matching panel chip. With no tag-name element the tags stay icon-only and carry
+  the name as an accessible label and hover title instead.
+
+## v1.6.17 — 2026-10-11
+
+### Fixed
+
+- **Chips start unpressed.** On load every region button and tag chip is set to
+  not-pressed, so an `is-active` combo left on a button in Designer (to preview the
+  pressed look) no longer shows on every button until the first click.
+
+## v1.6.16 — 2026-10-11
+
+### Added
+
+- **`is-active` on pressed chips.** Tag chips and region buttons get an `is-active`
+  class together with `aria-pressed`, so the pressed look is a Designer combo class
+  (`map-UI_chip-button` + `is-active`). The code no longer paints a redwood background
+  on pressed chips.
+
+### Changed
+
+- **Highlight glow is mint.** Matching dots get a very light green ring
+  (`--map-marker-highlight-ring`, `#e6faef`) and a mint glow (`--map-marker-highlight`,
+  `#7ddfae`).
+- **An open card sits above every dot.** `.maplibregl-popup` has `z-index: 2`, above
+  highlighted dots (`z-index: 1`).
+
+### Fixed
+
+- **Card tag icons no longer depend on a class name.** The icon is the SVG the chip
+  holds, whatever its wrapper is called, so renaming `shop-tag_svg-embed` in Designer
+  no longer empties the card's tags.
+
+## v1.6.15 — 2026-10-11
+
+### Changed
+
+- **Tag highlight is a green ring and glow, not a fade.** Shops that carry every
+  chosen tag get a green ring and glow (`--map-marker-highlight`, default `#2f9e5b`)
+  and sit on top. Other dots are no longer faded; `is-tag-dim` is still set on them
+  as a hook but has no style.
+
+## v1.6.14 — 2026-10-11
+
+### Added
+
+- **Tag highlight.** The Highlight chips (`[data-map-element="tag"]`, each with
+  `data-slug` bound to the Shop Tag's slug) toggle `aria-pressed`; shop dots that do
+  not carry every chosen tag fade back (`is-tag-dim`). `tag-clear` drops them all.
+  No match shows the empty-text status.
+- **Tags in the shop popup.** The card's `data-map-slot="tags"` row is filled when the
+  popup opens: one copy of its `data-map-slot="tag"` element per tag, with the icon
+  and name copied from the chip with the same slug. Hidden when the shop has no tags.
+- **Where the shop-to-tag link comes from.** A multi-reference cannot bind to an
+  attribute, so each Shop Tag's page lists its shops in hidden Shops lists
+  (`[data-map-element="tag-shop"]`, `data-id` = shop slug; a second list starting at
+  item 101 covers tags with more than 100 shops). The script fetches those pages once,
+  on first use, from `data-map-tag-page-path` (default `/shop-tags/`).
+
+## v1.6.13 — 2026-10-10
+
+### Added
+
+- **"My Current Location" shows the place.** `[data-map-element="locate-status"]`
+  keeps whatever text it has in Designer ("Not set") until a place is chosen with
+  "use my location": the GPS button shows `data-map-location-label` (default
+  "Your location") and a typed address shows what was typed. Locate Clear, or a new
+  search from the search bar, puts "Not set" back.
+
+### Changed
+
+- **The results status can carry placeholder text in Designer.** On the published
+  page `[data-map-element="search-status"]` starts empty and is filled with search
+  results. The stylesheet hides it until the script has emptied it, so the
+  placeholder never flashes.
+- A new radius, Reset and Clear keep the "My Current Location" text in step with the
+  place the radius is measured from.
+
+## v1.6.12 — 2026-10-10
+
+### Added
+
+- **Regions Clear.** `[data-map-element="region-clear"]` deselects the region and
+  flies the map back to the view of everything, matching the Clear links on
+  Highlight and Use My Location.
+
+## v1.6.11 — 2026-10-10
+
+### Added
+
+- **Region buttons work.** `[data-map-element="region"]` (with `data-slug`) flies the
+  map to that region's dots and marks the button `aria-pressed`. Pressing the active
+  one again returns to everything.
+- **"Show Things To Do" switch works.** `[data-map-element="destinations-toggle"]`
+  hides only the destination dots (open destination cards close with them). It is
+  keyboard operable (Space or Enter). Searches and region fits leave destinations
+  out while it is off, and the "N shops within…" count is shops only.
+- **Use My Location.** `locate` asks the browser for a position only when pressed,
+  `locate-input` looks up an address on Enter, and `locate-clear` forgets the place
+  and shows everything again. Both fields measure the radius from the same place as
+  the search bar.
+- **Radius Reset.** `[data-map-element="radius-reset"]` puts the radius back to the
+  default.
+- Pressed and off states for the region buttons and the switch, driven by the ARIA
+  attributes (Designer cannot style on them).
+
+### Changed
+
+- **The default radius is shown.** Every radius `<select>` starts on
+  `data-map-search-radius` (set it to `10` on the map div) while the list keeps its
+  ascending order. The search bar's select and the panel's select now move together,
+  and changing the radius re-applies to the place already found instead of looking
+  it up again.
+- **An option with an empty value still works.** Its miles come from its label
+  ("10 miles"), so it no longer reads as `NaN`.
+
+## v1.6.10 — 2026-10-10
+
+### Changed
+
+- **Popup width is relative to the map, not the screen.** `data-map-popup-max-width`
+  now defaults to `min(30rem, calc(100% - 2.5rem))`. On a phone the card leaves
+  1.25rem on each side, enough for the close circle that overhangs its corner by
+  1rem, so the circle is no longer clipped by the map edge.
+- **Zoom buttons step aside on phones.** At 767px and below, the +/- control fades
+  while a card is open (it collided with the card's close circle) and returns when
+  the card closes. Pinch zooms on touch.
+
+## v1.6.9 — 2026-10-10
+
+### Added
+
+- **Settings panel opens.** At 991px and below, the settings button
+  (`data-map-element="quick-picks-open"`) opens the panel
+  (`data-map-element="quick-picks"` form's `.w-form` wrapper) as a dialog:
+  backdrop, a close button, focus moves in, Tab stays inside, Escape / backdrop /
+  close dismiss it and focus returns to the opener, page scroll is locked while
+  open, and `aria-expanded`, `aria-controls` and `role="dialog"` are kept in sync.
+  Growing past 991px closes it and restores the desktop column. The panel is only
+  hidden once JavaScript has tagged it, so it stays visible without JS.
+
+### Changed
+
+- **Popup cards use their own designed width.** `data-map-popup-max-width` now
+  defaults to `min(30rem, calc(100vw - 3rem))` instead of 320px, so the three shop
+  buttons (Directions, Call Now, Visit Site) sit on one row and only wrap under the
+  tags when there is no room.
+
+## v1.6.8 — 2026-10-10
+
+### Added
+
+- **Premium seal.** `data-map-premium` on the map div: `all` (default, the seal
+  shows on every shop card), `cms` (only shops marked Premium; the hidden item
+  holds a `[data-map-field="premium"]` element whose visibility is bound to the
+  Premium switch, because a switch cannot bind to an attribute), or `none`.
+
+### Changed
+
+- Reference head-code block rewritten for the current design: removed the rules
+  for list-item cards that the templates replaced (`.map-item_show-modal`, the
+  popup card padding, the active list outline).
+
+## v1.6.7 — 2026-10-10
+
+### Fixed
+
+- **Broken image on destinations with no Featured Image.** An empty CMS image falls
+  back to the asset the hidden element was created with, and the script treated
+  that as a real photo. Webflow marks the empty case with `w-dyn-bind-empty`, which
+  the script now checks; `data-map-placeholder` (the fallback asset id) is a second
+  check. With no image, the slot and its wrapper are removed.
+
+## v1.6.6 — 2026-10-10
+
+Includes everything in v1.6.5.
+
+### Changed
+
+- **Close button is a circle on the card's corner.** A white 32px circle centred on
+  the card's top-right corner point, in the cut-out of the rounded corner, so it
+  never overlaps anything inside the card (the premium badge). Variables:
+  `--map-popup-close-inset` (default half the size, negative), `-bg`, `-shadow`,
+  `-hover-bg`, `-radius`.
+
+### Added
+
+- **Destination images.** An image field cannot bind to an attribute, so the hidden
+  destination item carries `<img data-map-field="image">` bound to Featured Image.
+  Its `src` and alt go onto the template's `data-map-slot="image"`. With no image,
+  the slot and its empty wrapper are removed.
+
+## v1.6.5 — 2026-10-10
+
+Includes everything in v1.6.4.
+
+### Fixed
+
+- **Caret hidden under the card's shadow.** MapLibre puts the popup tip before the
+  card in the DOM and leaves it unpositioned, so the card and its large drop
+  shadow painted over it. The tip is now positioned with `z-index: 2` and nudged
+  up 1px to overlap the card edge. Its colour is `--map-popup-tip-color`
+  (default white, matching the card).
+
+## v1.6.4 — 2026-10-10
+
+Includes everything in v1.6.3.
+
+### Changed
+
+- **Clicking a dot centres the card.** The map flies to the dot and the card
+  opens centred in the map, with the dot just below it. The offset is measured
+  from the real card height, so a taller card sits correctly without tuning, and
+  the dot is kept inside the map on short maps. A non-zero
+  `data-map-focus-offset` still overrides the measured value. Clicking the dot
+  of an open card closes it and leaves the camera alone. Honors
+  `prefers-reduced-motion` (no flight).
+- **Card stays above the dot.** The popup anchor is fixed to the bottom, so the
+  card no longer flips below the dot while the map is moving.
+- List-row clicks use the same behavior.
+
+## v1.6.3 — 2026-10-10
+
+### Fixed
+
+- **Close button hidden under the card.** The shop card has its own `z-index: 1`
+  and painted over MapLibre's absolutely positioned close button, hiding it and
+  swallowing the click. The button now has `z-index: 2`.
+- **Dots announced as "Map marker".** MapLibre sets that label when a marker is
+  added, replacing the place name. The name is now applied after the marker is
+  added.
+
+## v1.6.2 — 2026-10-10
+
+Popups are built from static card templates instead of the list items.
+
+### Added
+
+- **Template cards.** `[data-map-template="shop"]` and `[data-map-template="destination"]`
+  blocks hold one designed card each, marked `data-map-card`, with fields marked
+  `data-map-slot`. The popup clones the card and fills the slots from data
+  attributes on the hidden Collection Item (`data-name`, `data-display-name`,
+  `data-region-name`, `data-town-name`, `data-description`, `data-address`,
+  `data-phone`, `data-website`, `data-google-map-link`, `data-directions-link`).
+  Empty values remove their slot. With no template on the page the old
+  list-item clone still runs.
+- **Marker names.** The marker's accessible name comes from `data-display-name` or
+  `data-name`.
+
+### Not yet filled
+
+Tags, the premium seal, destination images and nearby shops have no data source on
+the hidden items, so those slots are dropped from the popup.
+
+## v1.6.1 — 2026-10-10
+
+Shop-icon pins replaced by centered dots: Redwood for shops, Harbor Blue for
+items with `data-map-kind="destination"`. Popup offset default 18 -> 14.
+
 ## v1.6.0 — 2026-07-21
 
 Popup presentation fixes, all three visible in the card.

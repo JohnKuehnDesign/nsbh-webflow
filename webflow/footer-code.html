@@ -4,23 +4,40 @@
      Replaces the old Webflow asset .txt script tag.
      ============================================================================ -->
 
-<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.6.0/src/map/map-embed.js"></script>
+<!-- The shop card (used by the map popup and the region lists). Must come first. -->
+<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.12.0/src/shop-card/shop-card.js"></script>
+<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.12.0/src/map/map-embed.js"></script>
 
 
 <!-- ============================================================================
      Updating to a new version
 
-     The @1.6.0 in both URLs (here and in the head block) is a pinned release
+     The @1.12.0 in every URL (both script tags here and the head block) is a pinned release
      tag. jsDelivr caches it permanently, so the live site cannot change on its
      own — a deploy is always a deliberate act on your side.
 
-     Note the missing "v": the git tag is v1.6.0, but jsDelivr strips the
-     leading v from semver tags. Using @v1.6.0 in the URL returns a 404.
+     Note the missing "v": the git tag is v1.12.0, but jsDelivr strips the
+     leading v from semver tags. Using @v1.12.0 in the URL returns a 404.
      A freshly pushed tag takes a few minutes to appear on the CDN.
 
      To ship a change: a new tag gets pushed to GitHub, then you update the
-     version number in BOTH the head block and this one. They must match.
+     version number in the head block and in both script tags here. They must match.
 
      Tags are listed at:
      https://github.com/JohnKuehnDesign/nsbh-webflow/releases
+     ============================================================================ -->
+
+
+<!-- ============================================================================
+     BLOCK 2b — removed in v1.10.0
+
+     The inline popover script for the region lists is gone, and so are the 163
+     hidden popovers it opened. shop-card.js now opens one shared popover, built
+     from the shop card template, for every link marked data-shop-card-open. Delete
+     the old inline <script> from this box when moving to v1.10.0. Its last copy is
+     in git history (webflow/footer-code.html before v1.10.0).
+
+     Do NOT remove the is-preview combos on Shop popover / Shop popover panel in
+     the card template: the map popup clones the panel and needs them. The template
+     area is hidden on the live page, so visitors never see them.
      ============================================================================ -->

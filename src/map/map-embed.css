@@ -16,39 +16,38 @@
  * or globally in Site Settings head code. */
 
 [data-map-element="viewport"] {
-  --map-marker-size: 2rem;
-  --map-marker-image: url("https://cdn.prod.website-files.com/68b4a46bb22ee95bf92540a0/69ead1e714f98dd2030bbd22_9a16b1b139e96b274ed784173e4dc91c_PhMapPinFill.svg");
-  --map-marker-color: var(--_primitives---colors--h-redwood, currentColor);
-  --map-marker-active-scale: 1.15;
-  /* Popup shell — chrome-less by default. The card inside is a clone of your
-     Collection Item and already brings its own background, radius and shadow
+  --map-marker-size: 1rem;
+  --map-marker-image: none; /* optional: a url(...) swaps the dot for an image */
+  --map-marker-color: var(--_primitives---colors--h-redwood, #a65456);
+  --map-marker-destination-color: var(--_primitives---colors--h-harbor-blue, #35798c);
+  --map-marker-ring: #fff;
+  /* Shops matching the chosen tags: a very light green ring and a mint glow. */
+  --map-marker-highlight: #7ddfae;
+  --map-marker-highlight-ring: #e6faef;
+  --map-marker-active-scale: 1.3;
+  /* Popup shell — chrome-less by default. The card inside is a copy of the
+     template card and already brings its own background, radius and shadow
      from Designer, so a styled shell here would read as a second edge around it.
      Set these if your card has no styling of its own. */
   --map-popup-bg: transparent;
   --map-popup-radius: 0;
   --map-popup-shadow: none;
   --map-popup-padding: 0;
+  --map-popup-tip-color: #fff; /* match the card's background */
 
   /* Close button (MapLibre injects it, so Designer can't reach it) */
   --map-popup-close-size: 32px;
   --map-popup-close-font-size: 24px;
-  --map-popup-close-inset: 4px;
+  /* Negative: the circle is centred on the card's top-right corner point, so it
+     sits in the cut-out of the rounded corner and clear of anything inside the
+     card (the premium badge). Half the size centres it; 0 puts it flush. */
+  --map-popup-close-inset: calc(var(--map-popup-close-size) / -2);
   --map-popup-close-color: inherit;
-  --map-popup-close-radius: 6px;
-  --map-popup-close-hover-bg: rgba(0, 0, 0, 0.06);
+  --map-popup-close-radius: 50%;
+  --map-popup-close-bg: #fff;
+  --map-popup-close-shadow: 0 2px 6px rgba(20, 47, 56, 0.22);
+  --map-popup-close-hover-bg: #eef2f3;
 
-  /* Popup action links */
-  --map-action-gap: 8px;
-  --map-action-margin-top: 12px;
-  --map-action-padding: 8px 12px;
-  --map-action-radius: 8px;
-  --map-action-font-size: 0.875rem;
-  --map-action-font-weight: 700;
-  --map-action-directions-bg: var(--_primitives---colors--h-redwood, #7a2e2e);
-  --map-action-directions-color: #fff;
-  --map-action-order-bg: transparent;
-  --map-action-order-color: var(--_primitives---colors--h-redwood, #7a2e2e);
-  --map-action-order-border: 1px solid currentColor;
 
   position: relative; /* MapLibre requires a positioned container */
 
@@ -66,15 +65,25 @@
   width: var(--map-marker-size);
   height: var(--map-marker-size);
   padding: 0;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  display: block;
-  transform-origin: bottom center;
+  border: 2px solid var(--map-marker-ring);
+  border-radius: 50%;
+  box-sizing: border-box;
+  background-color: var(--map-marker-color);
   background-image: var(--map-marker-image);
   background-size: contain;
   background-repeat: no-repeat;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  display: block;
+  transform-origin: center;
   color: var(--map-marker-color);
+}
+
+/* Destinations (things to do). Color is not the only cue: the legend labels
+   both dots, and the popup card names the kind. */
+.cms-map-marker.is-destination {
+  background-color: var(--map-marker-destination-color);
+  color: var(--map-marker-destination-color);
 }
 
 /* Transition is suppressed while the map is animating (.is-moving is toggled by
@@ -121,9 +130,24 @@
   overflow: visible;
 }
 
-/* Close button. Sits inset inside the card rather than out in shell padding
-   (there isn't any now), and is large enough to be a comfortable tap target. */
+/* Caret pointing at the dot. MapLibre puts the tip before the card in the DOM
+   and leaves it unpositioned, so the card (and its large drop shadow) painted
+   over it and hid it. Positioned and lifted, it sits above the shadow; the 1px
+   nudge overlaps the card edge so no hairline shows between them. */
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  position: relative;
+  z-index: 2;
+  top: -1px;
+  border-top-color: var(--map-popup-tip-color);
+}
+
+/* Close button: a small circle centred on the card's top-right corner, outside
+   the rounded corner, so it never overlaps content inside the card. Large enough
+   to be a comfortable tap target. z-index lifts it above the card: a card that
+   is positioned with its own z-index (the shop panel has z-index 1) would
+   otherwise paint over it and swallow the click. */
 .maplibregl-popup-close-button {
+  z-index: 2;
   width: var(--map-popup-close-size);
   height: var(--map-popup-close-size);
   top: var(--map-popup-close-inset);
@@ -133,7 +157,8 @@
   line-height: 1;
   border-radius: var(--map-popup-close-radius);
   color: var(--map-popup-close-color);
-  background: transparent;
+  background: var(--map-popup-close-bg);
+  box-shadow: var(--map-popup-close-shadow);
 }
 
 .maplibregl-popup-close-button:hover,
@@ -141,52 +166,13 @@
   background: var(--map-popup-close-hover-bg);
 }
 
-/* The card is a clone of YOUR Collection Item and carries your Webflow classes,
-   so it is deliberately left unstyled — anything set here would beat Designer.
-   The one exception is a guard so an oversized image can't blow out the popup. */
+/* The card is a copy of the template card built in Webflow and carries its
+   Designer classes, so it is deliberately left unstyled here; anything set here
+   would beat Designer. The one exception is a guard so an oversized image can't
+   blow out the popup. */
 
 .cms-map-popup-card img {
   max-width: 100%;
-}
-
-/* ---- Popup action links ----
-   Built by JS (Directions / Order Now), so Designer can't reach them — restyle
-   by overriding the --map-action-* variables above, from a Webflow class on the
-   map div or from page head code. */
-
-.cms-map-popup-actions {
-  display: flex;
-  gap: var(--map-action-gap);
-  margin-top: var(--map-action-margin-top);
-}
-
-.cms-map-popup-action {
-  flex: 1 1 0;
-  text-align: center;
-  padding: var(--map-action-padding);
-  border-radius: var(--map-action-radius);
-  font-size: var(--map-action-font-size);
-  font-weight: var(--map-action-font-weight);
-  line-height: 1.2;
-  text-decoration: none;
-  cursor: pointer;
-  transition: opacity 120ms ease;
-}
-
-.cms-map-popup-action:hover {
-  opacity: 0.85;
-  text-decoration: none;
-}
-
-.cms-map-popup-action.is-directions {
-  background: var(--map-action-directions-bg);
-  color: var(--map-action-directions-color);
-}
-
-.cms-map-popup-action.is-order {
-  background: var(--map-action-order-bg);
-  color: var(--map-action-order-color);
-  border: var(--map-action-order-border);
 }
 
 /* ---- Radius filtering ----
@@ -196,4 +182,168 @@
 .cms-map-marker.is-hidden,
 [data-map-element="item"].is-hidden {
   display: none;
+}
+
+/* ---- Search status ----
+   The status element carries placeholder text in Designer so it can be styled.
+   map-embed.js empties it and marks it data-map-ready; until then it is hidden, so
+   the placeholder never flashes on the published page. */
+
+[data-map-element="search-status"]:not([data-map-ready]) {
+  visibility: hidden;
+}
+
+/* ---- Settings panel controls ----
+   Pressed and off states come from the ARIA attributes map-embed.js keeps in sync,
+   because Designer cannot style on them. */
+
+.cms-map-marker.is-layer-off {
+  display: none;
+}
+
+/* Tag highlight: shops that carry every chosen tag get a very light green ring and a
+   mint glow, and sit above the other dots (but under an open card). Other dots are
+   left alone. Nothing here applies until a tag is chosen. */
+.cms-map-marker.is-tag-match {
+  z-index: 1;
+  border-color: var(--map-marker-highlight-ring, #e6faef);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--map-marker-highlight, #7ddfae) 40%, transparent),
+    0 0 12px 5px color-mix(in srgb, var(--map-marker-highlight, #7ddfae) 65%, transparent);
+}
+
+/* An open card sits above every dot, highlighted or not. */
+.maplibregl-popup {
+  z-index: 2;
+}
+
+/* The visitor's own place. With a [data-map-template="location"] block the pin looks
+   like that block (Designer's); this plain dot is only the fallback without one. */
+.cms-map-location-pin:not([class*="my-location"]) {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--map-marker-color, #35798c);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--map-marker-color, #35798c) 35%, transparent);
+}
+
+/* The distance flag stays hidden until the visitor has set a place. */
+[data-map-distance][hidden] {
+  display: none;
+}
+
+/* The card's tag row stays out of the way until its tags are known. */
+[data-map-tags][hidden] {
+  display: none;
+}
+
+[data-map-element="tag"]:focus-visible {
+  outline: 2px solid var(--_primitives---colors--h-harbor-blue, #35798c);
+  outline-offset: 2px;
+}
+
+/* Pressed chips (tags and regions) are styled in Designer on a combo class named
+   is-active, which map-embed.js toggles together with aria-pressed. */
+
+[data-map-element="region"]:focus-visible,
+[data-map-element="destinations-toggle"]:focus-visible {
+  outline: 2px solid var(--_primitives---colors--h-harbor-blue, #35798c);
+  outline-offset: 2px;
+}
+
+[data-map-element="destinations-toggle"] {
+  cursor: pointer;
+}
+
+[data-map-element="destinations-toggle"][aria-checked="false"] {
+  background-color: #b9c3c7;
+}
+
+[data-map-element="destinations-toggle"][aria-checked="false"] .map-quick-picks_switch-dot {
+  margin-left: 0;
+}
+
+/* ---- Settings panel as a dialog (tablet and below) ----
+   map-embed.js marks the panel [data-map-panel], adds the backdrop and the close
+   button, and toggles .is-open. Above 991px none of this applies and the panel is
+   the normal column beside the map. */
+
+.cms-map-panel-close,
+.cms-map-panel-backdrop {
+  display: none;
+}
+
+.cms-map-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(24, 18, 12, 0.5);
+}
+
+html.cms-map-panel-open {
+  overflow: hidden;
+}
+
+@media (max-width: 991px) {
+  .cms-map-panel-backdrop:not([hidden]) {
+    display: block;
+  }
+
+  [data-map-panel] {
+    display: none;
+  }
+
+  [data-map-panel].is-open {
+    display: block;
+    position: fixed;
+    z-index: 10001;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-sizing: border-box;
+    width: min(26rem, calc(100vw - 2rem));
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+    padding: 1.75rem 1.25rem 1.25rem;
+    background: var(--map-panel-bg, #fff); /* set on :root or the panel to override */
+    border-radius: 0.5rem 2rem 0.5rem 0.5rem;
+    box-shadow: 0 12px 28px 0 rgba(20, 47, 56, 0.18), 0 28px 56px 0 rgba(53, 121, 140, 0.24);
+  }
+
+  [data-map-panel].is-open .cms-map-panel-close {
+    display: flex;
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 1;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #eef2f3;
+    color: inherit;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+}
+
+/* ---- Zoom buttons on narrow maps ----
+   On a phone the open card fills most of the map and the +/- control, pinned to
+   the top-right corner, collides with the card's close circle. Pinch zooms on
+   touch, so the buttons step aside while a card is open and return when it
+   closes. */
+@media (max-width: 767px) {
+  [data-map-element="viewport"] .maplibregl-ctrl-top-right {
+    transition: opacity 120ms ease;
+  }
+
+  [data-map-element="viewport"]:has(.maplibregl-popup) .maplibregl-ctrl-top-right {
+    opacity: 0;
+    pointer-events: none;
+  }
 }

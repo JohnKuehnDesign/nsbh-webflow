@@ -1,8 +1,7 @@
 <!-- ============================================================================
      NSBH CMS Map — BLOCK 1
-     Paste into: Page Settings → /map → Custom Code → Inside <head> tag
-     (Site Settings → Head Code also works, but page-level keeps it off every
-     other page. Must be in <head>, never a body Embed — load-order matters.)
+     Paste into: Page Settings → Beef Shops → Custom Code → Inside <head> tag
+     (Must be in <head>, never a body Embed — load-order matters.)
      ============================================================================ -->
 
 <!-- ============================================================================
@@ -11,31 +10,51 @@
      Full option list: github.com/JohnKuehnDesign/nsbh-webflow
 
      MAP DIV .............................. data-map-element="viewport"     REQUIRED
-       ALL data-map-* SETTINGS GO HERE — never on the Collection Item. Put one on
-       the item and it is silently ignored. Full list (~29) in the README.
+       ALL data-map-* SETTINGS GO HERE — never on a Collection Item.
          data-map-cooperative-gestures="true"  two-finger / ctrl to zoom (mobile)
          data-map-center="-70.95,42.55"     lng,lat
          data-map-zoom="9"
-         data-map-focus-offset="70"         drops the focused pin below centre
-                                            so the popup card has room above
-         data-map-popup-actions="false"     off when using native links in the card
-         data-map-popup-omit="<selector>"   CSS selector dropped from the popup.
-                                            Defaults to .map_town-name, a class
-                                            this site no longer uses, so it
-                                            currently matches nothing. Prefer the
-                                            per-element attribute below.
-       Do NOT add data-map-scroll-zoom alongside cooperative-gestures — gestures
-       win and the component logs a warning every load.
+         data-map-focus-offset="70"         optional override. By default the
+                                            card is centred in the map and the
+                                            offset is measured from its height.
+         data-map-premium="all"             premium seal: all (every shop, the
+                                            default), cms (only shops marked
+                                            Premium), none
 
-     COLLECTION ITEM ...................... data-map-element="item"         REQUIRED
-       Bind these three to CMS fields on the SAME element:
-         data-id   → Slug
-         data-lat  → Latitude
-         data-lng  → Longitude
-       Only if using the JS-generated buttons (not native link blocks):
-         data-google-map-link → Google Business Map Link   (Directions, preferred)
-         data-directions-link → Directions Link            (Directions, fallback)
-         data-website         → Website                    (Order Now)
+     HIDDEN DATA — Collection Items, outside the visible page (Map data block)
+       data-map-element="item"             REQUIRED on every item
+       data-map-kind="shop|destination"    destinations get the Harbor Blue dot
+       data-id (slug), data-lat, data-lng  REQUIRED
+       data-name, data-display-name, data-address, data-description, data-phone,
+       data-website, data-order, data-google-map-link, data-directions-link,
+       data-region / data-region-name, data-town / data-town-name
+         Reference fields bind through their sub-fields (Region > Name).
+       Premium: a child element data-map-field="premium" whose visibility is
+         bound to the Premium switch (a switch cannot bind to an attribute).
+       Destination image: a child <img data-map-field="image"> bound to Featured
+         Image. Webflow marks an empty one with w-dyn-bind-empty.
+
+     CARD TEMPLATES — static, outside every Collection List, visible in Designer
+       data-map-element="card-templates"   the section; hidden on the live page by
+                                           the rule below
+       data-map-template="shop|destination"  one block per card type
+       data-map-card                       the element that gets cloned
+       data-map-slot="name|region|town|separator|description|address|premium|
+                      tags|tag|tag-icon|directions|call|website|image|link|
+                      distance|distance-text|nearby|nearby-item"  fields the script fills; an empty value
+                                           removes the slot
+
+     SHOP LISTS (region lists here; any page that loads shop-card.js)
+       Collection Item .................... data-shop-card="source" plus the shop's
+                                            data: data-id (Slug), data-name,
+                                            data-display-name, data-region-name,
+                                            data-town-name, data-address,
+                                            data-description, data-phone,
+                                            data-website, data-google-map-link,
+                                            data-directions-link, data-lat, data-lng
+       The link inside it ................. data-shop-card-open (no value needed)
+       Description and address text ....... class sr-only (screen readers only)
+       The card is built from the shop template above; no popover in the item.
 
      SEARCH UI (all optional; omit the whole search and it's skipped)
        Text input ......................... data-map-element="search-input"
@@ -43,37 +62,26 @@
        Search button ...................... data-map-element="search-submit"
        Clear button ....................... data-map-element="search-clear"
        Result text block .................. data-map-element="search-status"
+       Settings toggle (tablet and below) . data-map-element="quick-picks-open"
 
-     PIN ICON .............................. set --map-marker-image in the CSS
-       below. That is the reliable route. (There is also a
-       data-map-element="marker-image" hidden Image element, unverified here.)
+     SEARCH SUGGESTIONS (optional; without them search is address-only)
+       Wrapper under the input ............ data-map-element="suggest" + hidden
+       Listbox inside it .................. data-map-element="suggest-list"
+       Sample rows (card templates area) .. data-map-template="suggestion", with
+                                            rows data-map-suggest="place|shop" and
+                                            slots data-map-slot="name|label|address"
+       The input needs role="combobox", aria-autocomplete="list", aria-controls
+       (the listbox id) and aria-expanded="false". Details in the README.
 
-     POPUP-ONLY CONTENT (inside the Collection Item)
-       .map-item_show-modal ............... wrapper for pin-only fields (address
-                                            + Directions / Order Now). Style it
-                                            normally in Designer — do NOT set
-                                            Display: None. The rule below hides
-                                            it in the list only, so the popup
-                                            keeps your Designer styling.
-
-     DROPPING SOMETHING FROM THE POPUP ONLY
-       data-map-omit="popup" .............. put this ON THE ELEMENT ITSELF, in
-                                            Designer's settings panel. It shows
-                                            in the list and is stripped from the
-                                            popup clone. Used here on the town
-                                            name (.map-item_town), which the
-                                            address underneath already contains.
-
-       Two similarly-named attributes, easy to mix up:
-         data-map-omit="popup" ......... ON THE ELEMENT to remove. No selector.
-                                         Survives class renames — preferred.
-         data-map-popup-omit="<sel>" ... ON THE MAP DIV. A CSS selector. Breaks
-                                         silently if you rename that class.
-
-     STYLING THE CARD
-       The popup card is a clone of the Collection Item and carries your Webflow
-       classes — style it in Designer, not here. Rules added here out-specify
-       Designer and you end up fighting them.
+     SETTINGS PANEL (all optional)
+       Regions: data-map-element="region" buttons with data-slug, "region-clear"
+       Tags: data-map-element="tag" buttons with data-slug, "tag-clear"
+       Things to do switch: data-map-element="destinations-toggle" (role="switch")
+       Radius select: "search-radius"; "radius-reset"
+       My location: "locate" (a <button>), "locate-input", "locate-clear", "locate-status";
+       pin template data-map-template="location"; card flag slots "distance"
+       (the flag) and "distance-text" (its words, optional)
+       Give each control an aria-label where its visible text is not enough.
 
      LAYOUT GOTCHA
        The map's flex-item ancestor (.map_panel here) needs min-width: 0 or the
@@ -85,29 +93,13 @@
 
 <!-- 2. The map component's stylesheet, from GitHub via jsDelivr.
         Pinned to a release tag — bump the version to pick up changes. -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.6.0/src/map/map-embed.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.12.0/src/map/map-embed.css" />
 
-<!-- 3. Optional config fallback.
-        Anything set here applies unless overridden by a data-map-* attribute on
-        the map div in Designer. Delete this block entirely if you only use
-        attributes. Full key list is in the repo README.
-<script>
-  window.NSBH_MAP_CONFIG = {
-    center: [-70.95, 42.55],
-    zoom: 9,
-    searchRadius: 25,
-  };
-</script>
--->
-
-<!-- 4. Site-side styles.
-        These live here (not in the repo) because they're yours to change without
-        a release. Each rule is a candidate to move onto a real Webflow class as
-        you rebuild the section in Designer — delete it here once you do.
-
-        Keep the .map-viewport sizing rules until the Designer class handles it:
-        a map container with no height renders as an invisible zero-height box. -->
+<!-- 3. Site-side styles. Yours to change without cutting a release. -->
 <style>
+  /* The card templates and hidden map data stay visible in Designer; hide them on the live page. */
+  [data-map-element="card-templates"] { display: none; }
+
   /* Map container — replace with Designer sizing on the map div's class. */
   [data-map-element="viewport"] {
     min-height: 420px;
@@ -120,58 +112,13 @@
      .map_panel is a flex child, and a flex item's default min-width:auto refuses
      to shrink below its content — the map canvas's pixel width then props the
      whole page wider than the phone screen. min-width:0 lets it shrink to fit.
-     If you rename .map_panel in Designer, update this selector to match the
-     map's flex-item ancestor. */
+     If you rename .map_panel in Designer, update this selector to match. */
   .map_panel {
     min-width: 0;
   }
 
   @media (max-width: 640px) {
     [data-map-element="viewport"] { min-height: 320px; }
-  }
-
-  /* ---- Popup card ----
-     The popup is a clone of your Collection Item, so it already carries your
-     Webflow classes. Nothing is styled here on purpose: any rule added would
-     out-specify your Designer styles and you'd be fighting it. Style the card
-     in Designer and it shows up the same in the popup.
-
-     ---- Popup-only content ----
-     Do NOT set Display: None on .map-item_show-modal in Designer. Style it there
-     however you like (flex, gap, padding) and hide it only in the LIST with the
-     rule below. The popup clone is the only copy carrying .cms-map-popup-card,
-     so :not() leaves the popup completely untouched — no override to undo. */
-  [data-map-element="item"]:not(.cms-map-popup-card) .map-item_show-modal {
-    display: none;
-  }
-
-  /* Inner padding for the popup card.
-     The popup shell is chrome-less, so .map-item_wrapper is the only visible
-     edge — its contents need room inside it. Scoped to the clone, so list rows
-     keep their tighter spacing. Adjust to taste. */
-  .cms-map-popup-card .map-item_wrapper {
-    padding: 16px 18px;
-  }
-
-  /* ---- Map pin ----
-     Swap the icon by changing the URL below to any asset URL. This wins over the
-     component's built-in default, so it is the one place to edit.
-
-     Note: --map-marker-color does NOT recolor the pin. The icon is drawn as a
-     background-image, and CSS colour can't reach inside an SVG loaded that way —
-     to change the pin colour, upload an SVG in the colour you want. */
-  [data-map-element="viewport"] {
-    --map-marker-image: url("https://cdn.prod.website-files.com/68b4a46bb22ee95bf92540a0/69ead1e714f98dd2030bbd22_9a16b1b139e96b274ed784173e4dc91c_PhMapPinFill.svg");
-    --map-marker-size: 2rem;
-    --map-marker-active-scale: 1.15;
-  }
-
-  /* Active list item — JS toggles .is-active on both the marker and the list
-     item. Best long-term home for this is a Webflow combo class. */
-  [data-map-element="item"].is-active {
-    outline: 2px solid currentColor;
-    outline-offset: -2px;
-    border-radius: 8px;
   }
 
   /* Search status line. */
@@ -181,4 +128,5 @@
     min-height: 1.4em;
     opacity: 0.8;
   }
+
 </style>
