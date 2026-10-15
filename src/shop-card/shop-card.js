@@ -13,12 +13,13 @@
 //     [data-map-slot="..."]               Fields to fill: name, region, town,
 //                                         separator, description, address, premium,
 //                                         tags, tag, tag-icon, tag-name, directions,
-//                                         call, website, image, link, distance,
+//                                         call, website, order, image, link, distance,
 //                                         distance-text, nearby. An empty value
-//                                         removes the slot.
+//                                         removes the slot. "order" shows only when
+//                                         the shop has no website.
 //   Shop data: an element carrying the shop's data-* attributes: data-id (slug),
 //   data-name, data-display-name, data-region-name, data-town-name, data-address,
-//   data-description, data-phone, data-website, data-google-map-link,
+//   data-description, data-phone, data-website, data-order-link, data-google-map-link,
 //   data-directions-link, data-lat, data-lng. The map's hidden items
 //   [data-map-element="item"] carry them; a list item that does is marked
 //   [data-shop-card="source"].
@@ -109,7 +110,11 @@
 
     if (kind === 'shop') {
       fillLink(card, 'directions', safeUrl(d.googleMapLink) || safeUrl(d.directionsLink));
-      fillLink(card, 'website', safeUrl(d.website));
+      // Visit Site when the shop has a website; otherwise the order button (a shop
+      // with only an online-ordering page); neither when both are empty.
+      const website = safeUrl(d.website);
+      fillLink(card, 'website', website);
+      fillLink(card, 'order', website ? null : safeUrl(d.orderLink));
       const digits = (d.phone || '').replace(/[^\d+]/g, '');
       fillLink(card, 'call', digits ? `tel:${digits}` : null, false);
     } else {
