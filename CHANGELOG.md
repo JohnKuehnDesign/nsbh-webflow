@@ -6,6 +6,22 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.13.0 — 2026-10-15
+
+### Added
+
+- **Order button when a shop has no website.** The shop template can hold a second
+  link button marked `data-map-slot="order"`, filled from `data-order-link` (bound to
+  **Order Link**). It shows only when `data-website` is empty; with a website, Visit
+  Site shows and the order button is removed; with neither, both are removed. Same
+  http(s)-only check as the other links.
+- Shop lists and the map's hidden shop items take `data-order-link` (14 attributes).
+
+### Unchanged
+
+- `map-embed.js` and `map-embed.css` are the same as v1.11.0. A template without the
+  order button behaves exactly as v1.12.0.
+
 ## Rollout, no release — 2026-10-13
 
 No code change; the site still loads `@1.12.0`.

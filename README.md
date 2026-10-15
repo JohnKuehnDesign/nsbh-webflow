@@ -55,6 +55,7 @@ these, so no IDs or classes are load-bearing.
 | `data-google-map-link` | Each Collection Item, bound to **Google Business Map Link** | Optional |
 | `data-directions-link` | Each Collection Item, bound to **Directions Link** | Optional |
 | `data-website` | Each Collection Item, bound to **Website** | Optional |
+| `data-order-link` | Each Collection Item, bound to **Order Link** | Optional |
 | `data-map-element="search-input"` | Address / zip text input | Optional |
 | `data-map-element="search-radius"` | `<select>` of miles (5/10/25/50/100) | Optional |
 | `data-map-element="search-submit"` | Search button | Optional |
@@ -379,7 +380,7 @@ Where cards come from today:
 2. **Load the script** in the page's Before `</body>` code (skip on the map page, where
    it is already loaded before `map-embed.js`):
    `<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@X.Y.Z/src/shop-card/shop-card.js"></script>`
-3. **Mark the list:** on each Collection Item, `data-shop-card="source"` plus the 13
+3. **Mark the list:** on each Collection Item, `data-shop-card="source"` plus the 14
    data attributes in the table below; on its link, `data-shop-card-open`; the
    description and address as text with the `sr-only` class, outside the link.
 4. **Publish and check:** hover a link on desktop, tap one on a phone, and Tab + Enter
@@ -404,13 +405,19 @@ page and the guide chips):
 | Attribute | On |
 |---|---|
 | `data-shop-card="source"` | The Collection Item |
-| `data-id` (Slug), `data-name`, `data-display-name`, `data-region-name`, `data-town-name`, `data-address`, `data-description`, `data-phone`, `data-website`, `data-google-map-link`, `data-directions-link`, `data-lat`, `data-lng` | The Collection Item, each bound to its CMS field (reference fields through their sub-field, e.g. Region > Name) |
+| `data-id` (Slug), `data-name`, `data-display-name`, `data-region-name`, `data-town-name`, `data-address`, `data-description`, `data-phone`, `data-website`, `data-order-link`, `data-google-map-link`, `data-directions-link`, `data-lat`, `data-lng` | The Collection Item, each bound to its CMS field (reference fields through their sub-field, e.g. Region > Name) |
 | `data-shop-card-open` | The link inside the item. No value needed: the card uses the item it sits in. A slug as the value uses another element's data instead |
 
 `data-lat` and `data-lng` only feed the distance flag, which needs a place set on the
 map, so pages without a map can leave them off (the guides do). `data-directions-link`
 is empty for almost every shop; the Directions button falls back to
 `data-google-map-link` (bound to Google Business Map Link).
+
+**Visit Site or Order.** The template holds both a Visit Site button
+(`data-map-slot="website"`) and an order button (`data-map-slot="order"`). A shop with
+a Website shows Visit Site only. A shop with no Website but an Order Link shows the
+order button instead. With neither, both are removed. A template without the order
+button behaves as before v1.13.0.
 
 Binding the attributes: in Designer, or through the Webflow MCP's element settings
 tool (`set_settings` with a CMS binding on the `attributes` key). Its `get_settings`
@@ -446,9 +453,11 @@ The destination pages show nearby shops as cards in the page, not popovers, so t
 use no script. The Collection Item markup copies the template's classes and order:
 name, Region / Town (separator in `text-color-lion`), `shop-card_address-row`, short
 description, tags row (`shop-card_tag` with the icon in `map-UI_svg-embed` and the
-Shop Tags name), then `shop-card_buttons-wrapper` with three `shop-card_order-now-link`
-links bound to Google Business Map Link (Directions), Phone Number (Call Now) and
-Website (Visit Site).
+Shop Tags name), then `shop-card_buttons-wrapper` with `shop-card_order-now-link`
+links bound to Google Business Map Link (Directions), Phone Number (Call Now),
+Website (Visit Site) and Order Link (the order button). The order button's conditional
+visibility is "Website is not set", so it stands in for Visit Site the way the script
+does on the other pages.
 
 A link bound to an empty CMS field renders `href="#"`. The Destinations Template's
 page head hides those buttons:

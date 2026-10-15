@@ -26,7 +26,7 @@
        data-map-kind="shop|destination"    destinations get the Harbor Blue dot
        data-id (slug), data-lat, data-lng  REQUIRED
        data-name, data-display-name, data-address, data-description, data-phone,
-       data-website, data-order, data-google-map-link, data-directions-link,
+       data-website, data-order-link, data-google-map-link, data-directions-link,
        data-region / data-region-name, data-town / data-town-name
          Reference fields bind through their sub-fields (Region > Name).
        Premium: a child element data-map-field="premium" whose visibility is
@@ -40,9 +40,10 @@
        data-map-template="shop|destination"  one block per card type
        data-map-card                       the element that gets cloned
        data-map-slot="name|region|town|separator|description|address|premium|
-                      tags|tag|tag-icon|directions|call|website|image|link|
+                      tags|tag|tag-icon|directions|call|website|order|image|link|
                       distance|distance-text|nearby|nearby-item"  fields the script fills; an empty value
-                                           removes the slot
+                                           removes the slot; "order" shows only when
+                                           the shop has no website
 
      SHOP LISTS (region lists here; any page that loads shop-card.js)
        Collection Item .................... data-shop-card="source" plus the shop's
@@ -50,7 +51,8 @@
                                             data-display-name, data-region-name,
                                             data-town-name, data-address,
                                             data-description, data-phone,
-                                            data-website, data-google-map-link,
+                                            data-website, data-order-link,
+                                            data-google-map-link,
                                             data-directions-link, data-lat, data-lng
        The link inside it ................. data-shop-card-open (no value needed)
        Description and address text ....... class sr-only (screen readers only)
