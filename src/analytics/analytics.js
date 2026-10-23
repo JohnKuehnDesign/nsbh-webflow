@@ -9,29 +9,31 @@
 // window.gtag doesn't exist and clicks are ignored.
 //
 // Expects on the page:
-//   [data-track-card="shop|destination"]  The card. data-track-name is the shop or
-//                                         destination name. shop-card.js sets both
-//                                         on every card it builds; static cards
-//                                         (Destinations Template) carry them as
-//                                         custom attributes bound in Designer.
+//   [data-track-card="shop|destination"]  The card. data-track-id is its CMS slug
+//                                         (the stable key: it doesn't change when the
+//                                         name is edited); data-track-name is its Name.
+//                                         shop-card.js sets all three on every card it
+//                                         builds; static cards (Destinations Template)
+//                                         carry them as custom attributes bound in
+//                                         Designer.
 //   [data-track-link="..."]               Each button inside the card: website, call,
 //                                         order, directions (shops); explore,
 //                                         website (destinations).
 //
 // Events (register each parameter as an event-scoped custom dimension in GA4):
-//   shop_click         link_type, shop_name
-//   destination_click  link_type, destination_name
-//   shop_order         shop_name   } sent alongside shop_click for Order, Call and
-//   shop_call          shop_name   } Visit Site; GA4 key events, registered
-//   shop_website       shop_name   } "with code"
+//   shop_click         link_type, shop_id, shop_name
+//   destination_click  link_type, destination_id, destination_name
+//   shop_order         shop_id, shop_name  } sent alongside shop_click for Order,
+//   shop_call          shop_id, shop_name  } Call and Visit Site; GA4 key events,
+//   shop_website       shop_id, shop_name  } registered "with code"
 //
 // link_type comes from which button was clicked, never from its URL, so Visit Site
 // and Order Now stay distinct even if a shop shows both later.
 
 (function () {
   const EVENTS = {
-    shop: { name: 'shop_click', param: 'shop_name' },
-    destination: { name: 'destination_click', param: 'destination_name' },
+    shop: { name: 'shop_click', id: 'shop_id', param: 'shop_name' },
+    destination: { name: 'destination_click', id: 'destination_id', param: 'destination_name' },
   };
   // Key events get their own event name: GA4 marks whole events as key events, and
   // its no-code event builder can't derive them from shop_click's link_type.
@@ -46,10 +48,13 @@
     const event = card && EVENTS[card.getAttribute('data-track-card')];
     if (!event) return;
     const linkType = link.getAttribute('data-track-link');
-    const name = (card.getAttribute('data-track-name') || '').trim() || '(not set)';
-    window.gtag('event', event.name, { link_type: linkType, [event.param]: name });
+    const who = {
+      [event.id]: (card.getAttribute('data-track-id') || '').trim() || '(not set)',
+      [event.param]: (card.getAttribute('data-track-name') || '').trim() || '(not set)',
+    };
+    window.gtag('event', event.name, { link_type: linkType, ...who });
     if (event.name === 'shop_click' && KEY_EVENTS[linkType]) {
-      window.gtag('event', KEY_EVENTS[linkType], { shop_name: name });
+      window.gtag('event', KEY_EVENTS[linkType], who);
     }
   }
 
