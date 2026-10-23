@@ -6,6 +6,19 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.14.2 — 2026-10-23
+
+### Added
+
+- **`shop_website` key event.** A Visit Site click also sends `shop_website` (with
+  `shop_name`). Most shops show Visit Site as their main link, and Order Now only
+  replaces it for shops with no website, so both count as key actions. Directions
+  stays a plain `shop_click`.
+
+### Unchanged
+
+- `shop-card.js`, `map-embed.js`, `map-embed.css`: same as v1.14.0.
+
 ## v1.14.1 — 2026-10-23
 
 ### Added

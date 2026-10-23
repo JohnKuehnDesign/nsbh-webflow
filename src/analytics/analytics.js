@@ -21,8 +21,9 @@
 // Events (register each parameter as an event-scoped custom dimension in GA4):
 //   shop_click         link_type, shop_name
 //   destination_click  link_type, destination_name
-//   shop_order         shop_name   } sent alongside shop_click for Order and Call;
-//   shop_call          shop_name   } GA4 key events, registered "with code"
+//   shop_order         shop_name   } sent alongside shop_click for Order, Call and
+//   shop_call          shop_name   } Visit Site; GA4 key events, registered
+//   shop_website       shop_name   } "with code"
 //
 // link_type comes from which button was clicked, never from its URL, so Visit Site
 // and Order Now stay distinct even if a shop shows both later.
@@ -34,7 +35,7 @@
   };
   // Key events get their own event name: GA4 marks whole events as key events, and
   // its no-code event builder can't derive them from shop_click's link_type.
-  const KEY_EVENTS = { order: 'shop_order', call: 'shop_call' };
+  const KEY_EVENTS = { order: 'shop_order', call: 'shop_call', website: 'shop_website' };
 
   function track(e) {
     if (typeof window.gtag !== 'function') return;
