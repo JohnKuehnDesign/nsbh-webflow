@@ -6,6 +6,20 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.14.1 — 2026-10-23
+
+### Added
+
+- **Key events sent directly.** An Order click also sends `shop_order`, a Call click
+  also sends `shop_call` (both with `shop_name`), next to the usual `shop_click`.
+  GA4's no-code "Create an event" only triggers on `page_view` and `form_submit`, so
+  it can't derive these from `shop_click`'s `link_type`; both are registered in GA4
+  "with code" and marked as key events.
+
+### Unchanged
+
+- `shop-card.js`, `map-embed.js`, `map-embed.css`: same as v1.14.0.
+
 ## v1.14.0 — 2026-10-23
 
 ### Added
