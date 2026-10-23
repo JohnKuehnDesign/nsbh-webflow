@@ -6,6 +6,19 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.14.4 — 2026-10-23
+
+### Removed
+
+- **`destination_click`.** The map's destination card has one button, Explore, which
+  opens the Hub's own destination page. GA4 already counts that as a page view with
+  the map as referrer, so the event only duplicated it. Destination cards keep their
+  `data-track-*` attributes; `analytics.js` ignores them.
+
+### Unchanged
+
+- `shop-card.js`, `map-embed.js`, `map-embed.css`: same as v1.14.3.
+
 ## v1.14.3 — 2026-10-23
 
 ### Added

@@ -1,4 +1,4 @@
-// NSBH analytics — GA4 click events for shop and destination card buttons.
+// NSBH analytics — GA4 click events for shop card buttons.
 //
 // Hosted on GitHub, served to Webflow via jsDelivr as a classic deferred script,
 // site-wide (Site settings → Custom code → Footer code):
@@ -9,7 +9,7 @@
 // window.gtag doesn't exist and clicks are ignored.
 //
 // Expects on the page:
-//   [data-track-card="shop|destination"]  The card. data-track-id is its CMS slug
+//   [data-track-card="shop"]              The card. data-track-id is its CMS slug
 //                                         (the stable key: it doesn't change when the
 //                                         name is edited); data-track-name is its Name.
 //                                         shop-card.js sets all three on every card it
@@ -17,12 +17,13 @@
 //                                         carry them as custom attributes bound in
 //                                         Designer.
 //   [data-track-link="..."]               Each button inside the card: website, call,
-//                                         order, directions (shops); explore,
-//                                         website (destinations).
+//                                         order, directions.
+//   Destination cards carry the same attributes (shop-card.js marks every card) but
+//   send nothing: Explore goes to the Hub's own destination page, which GA4 already
+//   counts as a page view with the map as its referrer.
 //
 // Events (register each parameter as an event-scoped custom dimension in GA4):
 //   shop_click         link_type, shop_id, shop_name
-//   destination_click  link_type, destination_id, destination_name
 //   shop_order         shop_id, shop_name  } sent alongside shop_click for Order,
 //   shop_call          shop_id, shop_name  } Call and Visit Site; GA4 key events,
 //   shop_website       shop_id, shop_name  } registered "with code"
@@ -33,7 +34,6 @@
 (function () {
   const EVENTS = {
     shop: { name: 'shop_click', id: 'shop_id', param: 'shop_name' },
-    destination: { name: 'destination_click', id: 'destination_id', param: 'destination_name' },
   };
   // Key events get their own event name: GA4 marks whole events as key events, and
   // its no-code event builder can't derive them from shop_click's link_type.
