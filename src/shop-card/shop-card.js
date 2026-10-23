@@ -96,9 +96,10 @@
     const d = source.dataset;
 
     // Click tracking (analytics.js): which card this is and whose. The buttons get
-    // data-track-link in fillLink.
+    // data-track-link in fillLink. Name, not Display Name: Name carries the town,
+    // so each location of a chain reports separately (and matches the static cards).
     card.setAttribute('data-track-card', kind);
-    const trackName = (SLOT_TEXT[kind].name(d) || '').trim();
+    const trackName = (d.name || d.displayName || '').trim();
     if (trackName) card.setAttribute('data-track-name', trackName);
 
     // Text slots. An empty value removes the slot so no placeholder text is left.

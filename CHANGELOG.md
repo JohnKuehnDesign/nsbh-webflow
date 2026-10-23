@@ -6,6 +6,20 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.14.3 — 2026-10-23
+
+### Changed
+
+- **`data-track-name` is the shop's Name, not its Display Name.** Display Name repeats
+  across a chain's locations (124 unique for 163 shops on staging); Name carries the
+  town and is unique, so each location reports separately in GA4. Matches the static
+  Destinations Template cards, which bind the attribute to Name. Falls back to Display
+  Name when a source has no `data-name`.
+
+### Unchanged
+
+- `analytics.js`, `map-embed.js`, `map-embed.css`: same as v1.14.2.
+
 ## v1.14.2 — 2026-10-23
 
 ### Added
