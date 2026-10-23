@@ -469,14 +469,32 @@ A design change to the shop card template has to be copied here by hand.
 
 ## Making a change
 
-1. Edit the file in `src/map/`.
-2. Commit and push to `main`.
-3. Tag a release: `git tag v1.1.0 && git push origin v1.1.0`.
-4. In Webflow, update the version in **both** `head-code.html` and
-   `footer-code.html` blocks — they must match.
+1. Edit the file in `src/`.
+2. Commit and push.
+3. Tag a release: `git tag v1.1.0 && git push origin v1.1.0`. Wait ~4 minutes
+   before anything requests the new version (see the note below).
+4. In Webflow, change the version in **every** place below. They must all match.
 5. Publish to staging (`nsbh.webflow.io`) and test before the custom domain.
 
-Pushing to `main` alone changes nothing on the live site. Only step 4 deploys.
+Pushing alone changes nothing on the live site. Only step 4 deploys.
+
+**Where the version lives** (6 URLs in 4 places, checked 2026-10-23):
+
+| Where in Webflow | What it loads |
+|---|---|
+| Site settings → Custom code → Footer code | `analytics/analytics.js` (every page) |
+| The Map page (`/beef-country-map`) → Page settings → Inside `<head>` | `map/map-embed.css` |
+| The Map page → Page settings → Before `</body>` | `shop-card/shop-card.js`, `map/map-embed.js` |
+| Fall Guide → Page settings → Before `</body>` | `shop-card/shop-card.js` |
+| Spring Guide → Page settings → Before `</body>` | `shop-card/shop-card.js` |
+
+A page that starts loading `shop-card.js` (e.g. the Regions Template, once its cards are
+rebuilt) joins this list. To check what staging actually loads, search each page's
+source for `nsbh-webflow@`.
+
+**Push the tag before changing the versions.** If a page requests `@X.Y.Z` before the
+tag is on the CDN, jsDelivr caches the 404. Clear it per file with
+`https://purge.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@X.Y.Z/<path>`.
 
 **The URL drops the `v`.** The git tag is `v1.1.0`, but jsDelivr strips the
 leading `v` from semver tags, so the CDN path is `@1.1.0`. Using `@v1.1.0`
