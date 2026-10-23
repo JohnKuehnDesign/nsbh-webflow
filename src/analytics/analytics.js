@@ -4,9 +4,10 @@
 // site-wide (Site settings → Custom code → Footer code):
 //   <script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@X.Y.Z/src/analytics/analytics.js"></script>
 //
-// Sends nothing by itself. gtag comes from the consent-gated snippet in
-// webflow/site-analytics.html, so until the visitor accepts analytics cookies
-// window.gtag doesn't exist and clicks are ignored.
+// Sends nothing by itself. gtag comes from the consent snippet in
+// webflow/site-analytics.html (consent.js), so for a visitor who declined
+// window.gtag doesn't exist and clicks are ignored; one who declines mid-page is
+// covered by ga-disable.
 //
 // Expects on the page:
 //   [data-track-card="shop"]              The card. data-track-id is its CMS slug

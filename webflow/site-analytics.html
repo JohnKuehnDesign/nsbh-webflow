@@ -1,35 +1,49 @@
 <!-- ============================================================================
      NSBH Analytics — SITE-WIDE, two blocks
      Not Webflow's native Google Analytics field (Apps & Integrations): that one
-     can't be held back until the visitor consents.
+     can't be switched off when the visitor declines.
      ============================================================================ -->
 
 <!-- ============================================================================
      BLOCK A — Paste into: Site settings → Custom code → Head code
-     Below the Finsweet cookie consent script.
+     Replaces the Finsweet cookie consent script and the old fs-cc gtag block:
+     delete those, then paste this at the top.
 
-     type="fs-cc" keeps the browser from running these. Finsweet swaps them in
-     once the visitor allows the "analytics" category (opt-in mode), or runs them
-     straight away unless the visitor denies it (opt-out mode). Switching modes is
-     only the fs-cc-mode attribute on the Finsweet script; nothing here changes.
+     consent.js decides whether analytics is on (opt-out: on unless the visitor
+     declines or their browser sends Global Privacy Control) and runs the
+     nsbhConsent.on() callback now and on every change. On: gtag loads. Off:
+     gtag never loads, or if it already has on this page, ga-disable stops it
+     sending and the _ga cookies are removed. PostHog hooks in the same way.
+
+     consent.js must stay a plain script (no async/defer) above the callback.
 
      On the staging domain (*.webflow.io) every hit carries debug_mode, so it
      shows in GA4 DebugView and the "Developer traffic" data filter keeps it out
      of the reports. Omitted entirely on the live domain: GA treats
      debug_mode: false as on.
      ============================================================================ -->
-<script type="fs-cc" fs-cc-categories="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-XK1038NE6D"></script>
-<script type="fs-cc" fs-cc-categories="analytics">
-  window.dataLayer = window.dataLayer || [];
-  window.gtag = function () { window.dataLayer.push(arguments); };
-  window.gtag('js', new Date());
-  window.gtag('config', 'G-XK1038NE6D',
-    location.hostname.endsWith('.webflow.io') ? { debug_mode: true } : {});
+<script src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.15.0/src/consent/consent.js"></script>
+<script>
+  nsbhConsent.on(function (granted) {
+    var id = 'G-XK1038NE6D';
+    window['ga-disable-' + id] = !granted;
+    if (!granted) return nsbhConsent.clearCookies(/^_ga/);
+    if (window.gtag) return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + id;
+    document.head.appendChild(s);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window.gtag('config', id,
+      location.hostname.endsWith('.webflow.io') ? { debug_mode: true } : {});
+  });
 </script>
 
 <!-- ============================================================================
      BLOCK B — Paste into: Site settings → Custom code → Footer code
      Click events for shop card buttons (shop_click and the shop_order / shop_call / shop_website key events).
-     Sends nothing until Block A has run.
+     Sends nothing while analytics is off (no gtag, or ga-disable set).
      ============================================================================ -->
-<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.14.4/src/analytics/analytics.js"></script>
+<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.15.0/src/analytics/analytics.js"></script>

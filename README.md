@@ -15,8 +15,9 @@ number in the Webflow custom code is bumped by hand.
 | `src/map/map-embed.css`  | Minimal styles for the runtime-injected marker and popup DOM |
 | `webflow/head-code.html` | Copy-paste block for Page Settings → Inside `<head>` |
 | `webflow/footer-code.html` | Copy-paste block for Page Settings → Before `</body>` |
-| `src/analytics/analytics.js` | GA4 click events for card buttons (`shop_click`, `destination_click`). Site-wide; sends nothing until consent loads gtag |
-| `webflow/site-analytics.html` | Copy-paste blocks for Site settings → Custom code: consent-gated gtag (head) and `analytics.js` (footer) |
+| `src/consent/consent.js` | Opt-out analytics consent: the cookie banner, Decline, Cookie Settings, Global Privacy Control. Site-wide, top of head code |
+| `src/analytics/analytics.js` | GA4 click events for shop card buttons (`shop_click` + key events). Site-wide; sends nothing while analytics is off |
+| `webflow/site-analytics.html` | Copy-paste blocks for Site settings → Custom code: `consent.js` + gtag (head) and `analytics.js` (footer) |
 
 This repo is public because jsDelivr only serves public repos — and because the
 JavaScript is already public regardless, served to every visitor of the site.
@@ -478,17 +479,19 @@ A design change to the shop card template has to be copied here by hand.
 
 Pushing alone changes nothing on the live site. Only step 4 deploys.
 
-**Where the version lives** (6 URLs in 4 places, checked 2026-10-23):
+**Where the version lives** (7 URLs in 5 places, updated 2026-10-23):
 
 | Where in Webflow | What it loads |
 |---|---|
+| Site settings → Custom code → Head code | `consent/consent.js` (every page) |
 | Site settings → Custom code → Footer code | `analytics/analytics.js` (every page) |
 | The Map page (`/beef-country-map`) → Page settings → Inside `<head>` | `map/map-embed.css` |
 | The Map page → Page settings → Before `</body>` | `shop-card/shop-card.js`, `map/map-embed.js` |
 | Fall Guide → Page settings → Before `</body>` | `shop-card/shop-card.js` |
 | Spring Guide → Page settings → Before `</body>` | `shop-card/shop-card.js` |
 
-A page that starts loading `shop-card.js` (e.g. the Regions Template, once its cards are
+The versions don't have to match: a file that didn't change in a release can stay on
+the older tag (the CHANGELOG lists what changed). A page that starts loading `shop-card.js` (e.g. the Regions Template, once its cards are
 rebuilt) joins this list. To check what staging actually loads, search each page's
 source for `nsbh-webflow@`.
 

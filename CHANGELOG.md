@@ -6,6 +6,30 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.15.0 — 2026-10-23
+
+### Added
+
+- **`src/consent/consent.js`: our own cookie consent, replacing Finsweet Cookie
+  Consent.** Opt-out (the client's call, 2026-10-23): analytics is on unless the
+  visitor clicks Decline or their browser sends Global Privacy Control. One category,
+  so no Preferences modal: the footer Cookie Settings link reopens the banner, which
+  then says whether analytics is on and marks the current button (`is-current`).
+  Decline stops GA on the current page (`ga-disable-<ID>`), removes the `_ga` cookies,
+  and keeps gtag from loading on later pages. Banner hooks are `data-consent="..."`
+  attributes; see the file header.
+- `webflow/site-analytics.html` Block A rewritten around `nsbhConsent.on()`: delete the
+  Finsweet script and the old `type="fs-cc"` gtag block when pasting it.
+
+### Changed
+
+- `analytics.js`: header comment only (opt-out). Same behavior as v1.14.4.
+
+### Unchanged
+
+- `shop-card.js`, `map-embed.js`, `map-embed.css`: same as v1.14.4; the map and guide
+  pages can stay on `@1.14.4`.
+
 ## v1.14.4 — 2026-10-23
 
 ### Removed
