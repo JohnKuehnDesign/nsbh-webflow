@@ -6,6 +6,28 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.14.0 — 2026-10-23
+
+### Added
+
+- **GA4 click tracking.** New `src/analytics/analytics.js`, loaded site-wide: one
+  capture-phase listener for `click` and middle-click that sends `shop_click`
+  (`link_type`, `shop_name`) or `destination_click` (`link_type`, `destination_name`)
+  when a `[data-track-link]` inside a `[data-track-card]` is clicked. Does nothing
+  while `window.gtag` is missing, so it sends nothing before consent.
+- `shop-card.js` marks every card it builds: `data-track-card` (shop / destination)
+  and `data-track-name` on the card, `data-track-link` on each filled button
+  (directions, call, website, order; the destination link is `explore`). Map popups,
+  guide popovers and region lists all get them.
+- `webflow/site-analytics.html`: gtag behind Finsweet (`type="fs-cc"`,
+  `fs-cc-categories="analytics"`), with `debug_mode` on `*.webflow.io` only so
+  staging stays out of reports; plus the footer tag for `analytics.js`.
+
+### Unchanged
+
+- `map-embed.js` and `map-embed.css`. Card markup and behaviour are the same apart
+  from the new attributes.
+
 ## v1.13.0 — 2026-10-15
 
 ### Added

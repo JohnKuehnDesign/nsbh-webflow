@@ -95,6 +95,12 @@
     card.removeAttribute('id');
     const d = source.dataset;
 
+    // Click tracking (analytics.js): which card this is and whose. The buttons get
+    // data-track-link in fillLink.
+    card.setAttribute('data-track-card', kind);
+    const trackName = (SLOT_TEXT[kind].name(d) || '').trim();
+    if (trackName) card.setAttribute('data-track-name', trackName);
+
     // Text slots. An empty value removes the slot so no placeholder text is left.
     for (const [slot, read] of Object.entries(SLOT_TEXT[kind])) {
       for (const el of card.querySelectorAll(`[data-map-slot="${slot}"]`)) {
@@ -221,6 +227,7 @@
       a.style.removeProperty('display');
       if (!href) { a.remove(); continue; }
       a.setAttribute('href', href);
+      a.setAttribute('data-track-link', slot === 'link' ? 'explore' : slot);
       if (external) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
     }
   }

@@ -1,0 +1,35 @@
+<!-- ============================================================================
+     NSBH Analytics — SITE-WIDE, two blocks
+     Not Webflow's native Google Analytics field (Apps & Integrations): that one
+     can't be held back until the visitor consents.
+     ============================================================================ -->
+
+<!-- ============================================================================
+     BLOCK A — Paste into: Site settings → Custom code → Head code
+     Below the Finsweet cookie consent script.
+
+     type="fs-cc" keeps the browser from running these. Finsweet swaps them in
+     once the visitor allows the "analytics" category (opt-in mode), or runs them
+     straight away unless the visitor denies it (opt-out mode). Switching modes is
+     only the fs-cc-mode attribute on the Finsweet script; nothing here changes.
+
+     On the staging domain (*.webflow.io) every hit carries debug_mode, so it
+     shows in GA4 DebugView and the "Developer traffic" data filter keeps it out
+     of the reports. Omitted entirely on the live domain: GA treats
+     debug_mode: false as on.
+     ============================================================================ -->
+<script type="fs-cc" fs-cc-categories="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-XK1038NE6D"></script>
+<script type="fs-cc" fs-cc-categories="analytics">
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function () { window.dataLayer.push(arguments); };
+  window.gtag('js', new Date());
+  window.gtag('config', 'G-XK1038NE6D',
+    location.hostname.endsWith('.webflow.io') ? { debug_mode: true } : {});
+</script>
+
+<!-- ============================================================================
+     BLOCK B — Paste into: Site settings → Custom code → Footer code
+     Click events for shop and destination card buttons (shop_click,
+     destination_click). Sends nothing until Block A has run.
+     ============================================================================ -->
+<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.14.0/src/analytics/analytics.js"></script>

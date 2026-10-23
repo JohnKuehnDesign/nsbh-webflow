@@ -15,6 +15,8 @@ number in the Webflow custom code is bumped by hand.
 | `src/map/map-embed.css`  | Minimal styles for the runtime-injected marker and popup DOM |
 | `webflow/head-code.html` | Copy-paste block for Page Settings → Inside `<head>` |
 | `webflow/footer-code.html` | Copy-paste block for Page Settings → Before `</body>` |
+| `src/analytics/analytics.js` | GA4 click events for card buttons (`shop_click`, `destination_click`). Site-wide; sends nothing until consent loads gtag |
+| `webflow/site-analytics.html` | Copy-paste blocks for Site settings → Custom code: consent-gated gtag (head) and `analytics.js` (footer) |
 
 This repo is public because jsDelivr only serves public repos — and because the
 JavaScript is already public regardless, served to every visitor of the site.
