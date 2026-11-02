@@ -1,0 +1,14 @@
+<!-- ============================================================================
+     NSBH Nav — SITE-WIDE
+     Paste into: Site settings → Custom code → Footer code, below the analytics.js line.
+
+     Drives the R2 Nav component: the pill bar on scroll up past the hero (is-visible)
+     and the phone and tablet menu (is-open). It does nothing on pages without the
+     R2 Nav, so it's safe to add before the old header_component is swapped out.
+
+     When pasting, delete the old inline logo-shrink script from the same box: the one
+     starting  var logos = document.querySelectorAll('.navbar_logo-link');
+     It targets a class that no longer exists, so it does nothing. Leave the year
+     script (.year) alone.
+     ============================================================================ -->
+<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.16.0/src/nav/nav.js"></script>

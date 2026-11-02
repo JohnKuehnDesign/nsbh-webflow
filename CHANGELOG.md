@@ -6,6 +6,26 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.16.0 — 2026-11-02
+
+### Added
+
+- **`src/nav/nav.js`: scroll and menu behavior for the R2 Nav component.** Adds
+  `is-visible` to the pill bar on scroll up past the hero, and `is-open` to the phone
+  and tablet menu from either menu button. The menu works as a dialog: Escape and the
+  close button close it, focus stays inside and goes back to the opener, page scroll
+  is locked, and it closes on widening to desktop. The pill stays shown while it holds
+  keyboard focus, and fades without sliding under Reduce Motion. Hooks are
+  `data-nav-r2="bar|open|menu|close"`; see the README.
+- `webflow/site-nav.html`: the Site settings footer line. Replaces the old inline
+  logo-shrink script, which targeted `.navbar_logo-link` and matches nothing on the
+  site any more.
+
+### Unchanged
+
+- Every other file is the same as v1.15.0; `consent.js` and `analytics.js` can stay on
+  `@1.15.0`, and the map and guide pages on `@1.14.4`.
+
 ## v1.15.0 — 2026-10-23
 
 ### Added

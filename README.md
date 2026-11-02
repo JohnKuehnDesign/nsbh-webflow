@@ -18,6 +18,8 @@ number in the Webflow custom code is bumped by hand.
 | `src/consent/consent.js` | Opt-out analytics consent: the cookie banner, Decline, Cookie Settings, Global Privacy Control. Site-wide, top of head code |
 | `src/analytics/analytics.js` | GA4 click events for shop card buttons (`shop_click` + key events). Site-wide; sends nothing while analytics is off |
 | `webflow/site-analytics.html` | Copy-paste blocks for Site settings → Custom code: `consent.js` + gtag (head) and `analytics.js` (footer) |
+| `src/nav/nav.js` | The R2 Nav: pill bar on scroll up, phone and tablet menu. Site-wide |
+| `webflow/site-nav.html` | Copy-paste line for Site settings → Custom code → Footer code: `nav.js` |
 
 This repo is public because jsDelivr only serves public repos — and because the
 JavaScript is already public regardless, served to every visitor of the site.
@@ -468,6 +470,40 @@ page head hides those buttons:
 
 A design change to the shop card template has to be copied here by hand.
 
+---
+
+## The nav
+
+`src/nav/nav.js` drives the R2 **Nav** component (Webflow, group R2). The styling is
+all Webflow classes; the script only adds and removes two combo classes:
+
+- `is-visible` on the pill bar: scrolling up past the hero shows it, scrolling down
+  or back into the hero hides it. Movements under 6px are ignored. It stays shown
+  while it holds keyboard focus (`:focus-visible`; mouse and touch focus don't count).
+  With Reduce Motion on, the pill fades instead of sliding.
+- `is-open` on the phone and tablet menu: the menu buttons open it; the close button,
+  Escape, a menu link or widening to desktop close it. While open, page scroll is
+  locked, focus moves to the close button and stays inside, and it returns to the
+  button that opened it.
+
+The hero ends at the bottom of the first `.section_hero-r2`; pages without one use
+twice the top bar's height.
+
+### Page hooks
+
+| Attribute | On |
+|---|---|
+| `data-nav-r2="bar"` | The pill bar (`nav-r2_bar`) |
+| `data-nav-r2="open"` | Both menu buttons (top bar and pill) |
+| `data-nav-r2="menu"` | The menu (`nav-r2_menu`, `#nav-r2-menu`) |
+| `data-nav-r2="close"` | The menu's close button |
+
+Classes can be renamed freely as long as these stay. One Nav per page.
+
+`is-visible` and `is-open` are also on a hidden "Nav R2 class keeper" block on the
+COMPONENTS page, so Style Manager Clean Up never deletes them. The Nav component's
+description in Webflow says how to preview them in the Designer.
+
 ## Making a change
 
 1. Edit the file in `src/`.
@@ -479,12 +515,12 @@ A design change to the shop card template has to be copied here by hand.
 
 Pushing alone changes nothing on the live site. Only step 4 deploys.
 
-**Where the version lives** (7 URLs in 5 places, updated 2026-10-23):
+**Where the version lives** (8 URLs in 5 places, updated 2026-11-02):
 
 | Where in Webflow | What it loads |
 |---|---|
 | Site settings → Custom code → Head code | `consent/consent.js` (every page) |
-| Site settings → Custom code → Footer code | `analytics/analytics.js` (every page) |
+| Site settings → Custom code → Footer code | `analytics/analytics.js`, `nav/nav.js` (every page) |
 | The Map page (`/beef-country-map`) → Page settings → Inside `<head>` | `map/map-embed.css` |
 | The Map page → Page settings → Before `</body>` | `shop-card/shop-card.js`, `map/map-embed.js` |
 | Fall Guide → Page settings → Before `</body>` | `shop-card/shop-card.js` |
