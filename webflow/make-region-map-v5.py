@@ -93,7 +93,8 @@ svg = svg.replace(
 )
 svg = re.sub(
     r'<text x="2069" y="3950.2" font-size="70" text-anchor="middle" class="rm-label">BOSTON</text>',
-    '<text x="2069" y="3950.2" font-size="84" text-anchor="middle" class="rm-boston-label">BOSTON</text>',
+    # Smaller and nudged right, off the Greater Boston edge and a little into the water.
+    '<text x="2180" y="3950.2" font-size="70" text-anchor="middle" class="rm-boston-label">BOSTON</text>',
     svg,
 )
 

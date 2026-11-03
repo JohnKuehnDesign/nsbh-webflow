@@ -6,6 +6,14 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.17.2 — 2026-11-03
+
+### Changed
+
+- **`region-map-v5.svg`: BOSTON label** is smaller (70, was 84) and centred further
+  right, so it clears the Greater Boston edge and runs a letter into the water.
+- `webflow/regions-section-embed.html` loads `@1.17.2`.
+
 ## v1.17.1 — 2026-11-03
 
 ### Fixed
