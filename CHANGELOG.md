@@ -6,6 +6,24 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.17.0 — 2026-11-03
+
+### Added
+
+- **`webflow/region-map-v5.svg`: map-only Regions map for the R2 Regions section.**
+  The title block and the in-map legend are gone (the heading and legend rows are
+  Webflow HTML beside the map now), and so are the region names on the map. Town
+  outlines are white, the BOSTON label uses the Eyebrow style, the background is the
+  R2 Ground colour, and the viewBox is cropped to the map and ocean. Region links and
+  hover/focus dimming are unchanged.
+- `webflow/make-region-map-v5.py`: rebuilds v5 from v4, so the change is repeatable.
+
+### Unchanged
+
+- `region-map-v4.svg` is untouched. The archive site and anything still on the old
+  embed keep loading v4 from commit `fc194b6`.
+- Every other file is the same as v1.16.0.
+
 ## v1.16.0 — 2026-11-02
 
 ### Added
