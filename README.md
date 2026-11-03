@@ -20,6 +20,7 @@ number in the Webflow custom code is bumped by hand.
 | `webflow/site-analytics.html` | Copy-paste blocks for Site settings → Custom code: `consent.js` + gtag (head) and `analytics.js` (footer) |
 | `src/nav/nav.js` | The R2 Nav: pill bar on scroll up, phone and tablet menu. Site-wide |
 | `webflow/site-nav.html` | Copy-paste line for Site settings → Custom code → Footer code: `nav.js` |
+| `src/seasonal/seasonal.js` | The R2 Seasonal Guides: opens the current season on scroll-in, hover/focus on desktop, chevron toggles on tablet and phone. Loaded by an embed inside the component |
 
 This repo is public because jsDelivr only serves public repos — and because the
 JavaScript is already public regardless, served to every visitor of the site.
@@ -504,6 +505,30 @@ Classes can be renamed freely as long as these stay. One Nav per page.
 COMPONENTS page, so Style Manager Clean Up never deletes them. The Nav component's
 description in Webflow says how to preview them in the Designer.
 
+## The seasonal guides
+
+`src/seasonal/seasonal.js` drives the R2 **Seasonal Guides** component (Webflow, group
+R2; four **Seasonal Panel** instances live inside it). It only moves one combo class,
+`is-open`, between panels. The open, closed and stacked styles are in the component's
+own style embed, and the script tag is in its hidden embed, so any page with the
+section gets both (no page or site code to add).
+
+- Nothing is open on load. When the panel row is 35% on screen, the panel whose
+  `data-season` matches the section's `data-current` (the **Current season** prop,
+  case-insensitive) opens.
+- Desktop (992px and up): hovering or tabbing into a panel opens it; leaving the row
+  with the pointer goes back to the current season.
+- Tablet and phone: panels stack; the chevron button on a Live panel opens it and
+  closes the others, and closes it on a second press. `aria-expanded` follows.
+
+### Page hooks
+
+| Attribute | On |
+|---|---|
+| `data-seasonal` | The section (`section_seasonal-guides`), with `data-current` |
+| `data-seasonal-panel` | Each panel (`seasonal-panel_component`), with `data-season` |
+| `data-seasonal-toggle` | The chevron button in a Live panel |
+
 ## Making a change
 
 1. Edit the file in `src/`.
@@ -525,6 +550,7 @@ Pushing alone changes nothing on the live site. Only step 4 deploys.
 | The Map page → Page settings → Before `</body>` | `shop-card/shop-card.js`, `map/map-embed.js` |
 | Fall Guide → Page settings → Before `</body>` | `shop-card/shop-card.js` |
 | Spring Guide → Page settings → Before `</body>` | `shop-card/shop-card.js` |
+| Seasonal Guides component → hidden embed | `seasonal/seasonal.js` (every page with the section) |
 
 The versions don't have to match: a file that didn't change in a release can stay on
 the older tag (the CHANGELOG lists what changed). A page that starts loading `shop-card.js` (e.g. the Regions Template, once its cards are

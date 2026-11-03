@@ -6,6 +6,18 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.18.0 — 2026-11-03
+
+### Added
+
+- **`src/seasonal/seasonal.js`: behavior for the R2 Seasonal Guides.** Opens the
+  current season's panel (`data-current` on the section, matched to each panel's
+  `data-season`) when the row scrolls into view; on desktop, hover or keyboard focus
+  opens a panel and leaving the row returns to the current season; on tablet and
+  phone, the chevron button toggles a Live panel (`aria-expanded` kept in sync). It
+  only adds and removes `is-open`; the styles are in the component's style embed.
+  Loaded by a hidden embed inside the component.
+
 ## v1.17.2 — 2026-11-03
 
 ### Changed
