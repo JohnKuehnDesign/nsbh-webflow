@@ -6,6 +6,18 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.17.1 — 2026-11-03
+
+### Fixed
+
+- **`region-map-v5.svg`: town lines no longer double up.** Neighbouring towns don't
+  share exact edges in the source, so stroking each town drew two offset white lines
+  with a sliver of colour between them. Town fills now keep a seam stroke in their own
+  colour (as in v4), and a separate outline layer on top draws each town edge once,
+  1px wide at any map size (`vector-effect: non-scaling-stroke`). The file grows from
+  123 KB to 237 KB (the outline layer repeats the town paths).
+- `webflow/regions-section-embed.html` loads `@1.17.1`.
+
 ## v1.17.0 — 2026-11-03
 
 ### Added

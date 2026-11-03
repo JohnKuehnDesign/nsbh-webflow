@@ -29,7 +29,7 @@
 <script>
   document.querySelectorAll('[data-region-map]:not([data-loaded])').forEach(function (el) {
     el.setAttribute('data-loaded', '');
-    fetch('https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.17.0/webflow/region-map-v5.svg')
+    fetch('https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.17.1/webflow/region-map-v5.svg')
       .then(function (r) { return r.text(); })
       .then(function (svg) { el.innerHTML = svg; el.removeAttribute('aria-busy'); });
   });
