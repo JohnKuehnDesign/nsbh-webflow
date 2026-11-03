@@ -1,0 +1,36 @@
+<!-- R2 Regions section: map embed (inside the "Regions Section" component, .regions_map).
+     Loads the map-only SVG, and links the HTML legend rows to the map with CSS only:
+     hovering or focusing a row dims the other regions, and a map region nudges its row's arrow.
+     Pinned to a release tag; bump the version here when the SVG changes. -->
+<div class="regions_map-svg" data-region-map aria-busy="true"></div>
+<style>
+  .regions_map-svg svg { display: block; width: 100%; height: auto; }
+  .regions_legend-link:hover .regions_legend-arrow,
+  .regions_legend-link:focus-visible .regions_legend-arrow { transform: translateX(0.25rem); }
+  @media (hover: hover) {
+    .regions_component:has([data-region="merrimack-valley"]:hover) .rm-region:not(.rm-region--merrimack-valley),
+    .regions_component:has([data-region="seacoast"]:hover) .rm-region:not(.rm-region--seacoast),
+    .regions_component:has([data-region="cape-ann"]:hover) .rm-region:not(.rm-region--cape-ann),
+    .regions_component:has([data-region="north-shore"]:hover) .rm-region:not(.rm-region--north-shore),
+    .regions_component:has([data-region="greater-boston"]:hover) .rm-region:not(.rm-region--greater-boston) { --rm-mix: var(--rm-dim); }
+    .regions_component:has(.rm-region--merrimack-valley:hover) [data-region="merrimack-valley"] .regions_legend-arrow,
+    .regions_component:has(.rm-region--seacoast:hover) [data-region="seacoast"] .regions_legend-arrow,
+    .regions_component:has(.rm-region--cape-ann:hover) [data-region="cape-ann"] .regions_legend-arrow,
+    .regions_component:has(.rm-region--north-shore:hover) [data-region="north-shore"] .regions_legend-arrow,
+    .regions_component:has(.rm-region--greater-boston:hover) [data-region="greater-boston"] .regions_legend-arrow { transform: translateX(0.25rem); }
+  }
+  .regions_component:has([data-region="merrimack-valley"]:focus-visible) .rm-region:not(.rm-region--merrimack-valley),
+  .regions_component:has([data-region="seacoast"]:focus-visible) .rm-region:not(.rm-region--seacoast),
+  .regions_component:has([data-region="cape-ann"]:focus-visible) .rm-region:not(.rm-region--cape-ann),
+  .regions_component:has([data-region="north-shore"]:focus-visible) .rm-region:not(.rm-region--north-shore),
+  .regions_component:has([data-region="greater-boston"]:focus-visible) .rm-region:not(.rm-region--greater-boston) { --rm-mix: var(--rm-dim); }
+  @media (prefers-reduced-motion: reduce) { .regions_legend-arrow { transition: none; } }
+</style>
+<script>
+  document.querySelectorAll('[data-region-map]:not([data-loaded])').forEach(function (el) {
+    el.setAttribute('data-loaded', '');
+    fetch('https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.17.0/webflow/region-map-v5.svg')
+      .then(function (r) { return r.text(); })
+      .then(function (svg) { el.innerHTML = svg; el.removeAttribute('aria-busy'); });
+  });
+</script>
