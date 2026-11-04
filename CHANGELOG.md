@@ -6,6 +6,14 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## Destination intro Preview refinement — 2026-11-04 (inline embed, no release tag)
+
+- Hide only the embed marked `data-destination-code`, replacing script-parent hiding
+  that could target a different wrapper in Designer Preview. Preview cause remains
+  unverified until checked in Designer.
+- Preserve John's shared `text-rich-text` About class and remove intro-specific About
+  paragraph/heading overrides. No CMS copy was edited.
+
 ## Destination intro staging fixes — 2026-11-04 (inline embed, no release tag)
 
 - Use data attributes for generated list labels, values, and formatted state.

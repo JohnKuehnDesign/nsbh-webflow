@@ -610,8 +610,12 @@ The template requires these wrapper attributes (classes identify the Designer ta
 
 The Rich Text fields retain `data-destination-about`, `data-destination-list="visit"`,
 and `data-destination-list="glance"`. Generated labels, values, and formatted rows
-also use data attributes. The inline embed hides its own wrapper so it adds no flex gap.
-Verify these hooks in the published DOM; a local fixture does not prove Webflow saved them.
+also use data attributes. The inline embed has `data-destination-code="true"`; scoped CSS hides only that wrapper
+so it adds no flex gap. Do not infer the wrapper from `document.currentScript.parentElement`,
+whose placement can differ in Designer Preview.
+About uses the shared `text-rich-text` class; the intro embed does not override its
+paragraph or heading typography. Verify these hooks in the published DOM; a local fixture
+does not prove Webflow saved them.
 
 The formatter wraps each first bold label and its remaining rich text for layout.
 It supports any number of rows, preserves links and inline formatting, removes empty

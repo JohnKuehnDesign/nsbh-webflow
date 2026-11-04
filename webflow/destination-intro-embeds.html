@@ -1,10 +1,7 @@
 <style>
 /* R2 Destination intro: rich text stays readable before formatting runs. */
-[data-destination-intro][hidden],[data-destination-intro] [hidden]{display:none!important}
-[data-destination-intro] [data-destination-about] p{margin:0 0 1.25rem;font-size:inherit;line-height:inherit}
-[data-destination-intro] [data-destination-about]>:last-child{margin-bottom:0}
-[data-destination-intro] [data-destination-about] h2{margin:2.5rem 0 1.25rem;font-size:2rem;line-height:1.15}
-[data-destination-intro] [data-destination-about] h3{margin:2rem 0 .75rem}
+[data-destination-intro][hidden],[data-destination-intro] [hidden],
+[data-destination-intro] [data-destination-code]{display:none!important}
 [data-destination-intro] a:focus-visible{outline:2px solid var(--_primitives---colors--h-lion);outline-offset:4px}
 [data-destination-intro] [data-destination-list]{width:100%;min-width:0}
 [data-destination-intro] [data-destination-list] p{margin:0}
@@ -47,8 +44,6 @@
 <script>
 /* First bold phrase = label; remaining rich text = value. No CMS content is fetched or changed. */
 (function () {
-  var embed = document.currentScript && document.currentScript.parentElement;
-  if (embed && embed.closest("[data-destination-intro]")) embed.hidden = true;
   function meaningful(node) {
     return !!node && (!!node.textContent.replace(/[\s\u200b-\u200d\ufeff]/g, "") || !!node.querySelector("img,video,audio,iframe"));
   }
