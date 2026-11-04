@@ -22,6 +22,7 @@ number in the Webflow custom code is bumped by hand.
 | `webflow/site-nav.html` | Copy-paste line for Site settings → Custom code → Footer code: `nav.js` |
 | `src/seasonal/seasonal.js` | The R2 Seasonal Guides: opens the current season on scroll-in, hover/focus on desktop, chevron toggles on tablet and phone. Loaded by an embed inside the component |
 | `src/places/places.js` | The R2 Destinations Index on Things to Do: region filter (chips, phone select, `?region=`), "Show more destinations", count and status. Loaded by an embed inside the component |
+| `src/faq/faq.js` | The R2 Guide FAQ on the Log post template: turns the FAQ Rich Text (H3 questions) into a `<details>` accordion, first open. Loaded by an embed inside the component |
 
 This repo is public because jsDelivr only serves public repos — and because the
 JavaScript is already public regardless, served to every visitor of the site.
@@ -562,6 +563,31 @@ CMS slug.
 | `data-places-status` | The status text (`aria-live="polite"`) |
 | `data-region` | Each card's Link Block (`destination-card_link`), bound to Region > Slug |
 
+## The guide FAQ
+
+`src/faq/faq.js` drives the R2 **Guide FAQ** component (Webflow, group R2) on the Log
+post template. The title is its own CMS field (FAQ Heading (H2)), bound to the H2 under
+the "Good to know" eyebrow. The questions stay one editable Rich Text field: an H3 per
+question with its answer paragraphs. The accordion CSS is in the component's style
+embed; the script tag is in its hidden embed.
+
+- A leftover H2 at the top of the rich text (older posts) is removed; its text is used
+  for the title only if the title field is empty.
+- Each H3 and everything up to the next H3 becomes
+  `<details class="faq_item"><summary class="faq_question">H3 + icon</summary><div class="faq_answer">…</div></details>`.
+  The first item is open.
+- Answers stay in the DOM, so the FAQPage JSON-LD (the post's FAQ Schema field) still
+  matches the visible questions.
+- Without the script the rich text shows as written.
+
+### Page hooks
+
+| Attribute | On |
+|---|---|
+| `data-faq` | The section (`section_faq`) |
+| `data-faq-heading` | The H2 title under the eyebrow (bound to FAQ Heading (H2)) |
+| `data-faq-source` | The Rich Text bound to FAQ Rich Text |
+
 ## Making a change
 
 1. Edit the file in `src/`.
@@ -585,6 +611,7 @@ Pushing alone changes nothing on the live site. Only step 4 deploys.
 | Spring Guide → Page settings → Before `</body>` | `shop-card/shop-card.js` |
 | Seasonal Guides component → hidden embed | `seasonal/seasonal.js` (every page with the section) |
 | Destinations Index component → hidden embed | `places/places.js` (Things to Do) |
+| Guide FAQ component → hidden embed | `faq/faq.js` (Blog Posts template) |
 
 The versions don't have to match: a file that didn't change in a release can stay on
 the older tag (the CHANGELOG lists what changed). A page that starts loading `shop-card.js` (e.g. the Regions Template, once its cards are

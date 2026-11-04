@@ -6,6 +6,16 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.20.0 — 2026-11-04
+
+### Added
+
+- **`src/faq/faq.js`: accordion for the R2 Guide FAQ** (Log post template). Wraps each
+  H3 question in the FAQ Rich Text and its answer in `<details>`/`<summary>`, first item
+  open. The title comes from its own CMS field; a leftover H2 in the rich text is
+  removed (used as the title only if that field is empty). Answers stay in the DOM for the FAQPage
+  schema. Loaded by a hidden embed inside the component.
+
 ## v1.19.1 — 2026-11-04
 
 ### Fixed
