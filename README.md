@@ -21,6 +21,7 @@ number in the Webflow custom code is bumped by hand.
 | `src/nav/nav.js` | The R2 Nav: pill bar on scroll up, phone and tablet menu. Site-wide |
 | `webflow/site-nav.html` | Copy-paste line for Site settings → Custom code → Footer code: `nav.js` |
 | `src/seasonal/seasonal.js` | The R2 Seasonal Guides: opens the current season on scroll-in, hover/focus on desktop, chevron toggles on tablet and phone. Loaded by an embed inside the component |
+| `src/places/places.js` | The R2 Destinations Index on Things to Do: region filter (chips, phone select, `?region=`), "Show more places", count and status. Loaded by an embed inside the component |
 
 This repo is public because jsDelivr only serves public repos — and because the
 JavaScript is already public regardless, served to every visitor of the site.
@@ -529,6 +530,38 @@ section gets both (no page or site code to add).
 | `data-seasonal-panel` | Each panel (`seasonal-panel_component`), with `data-season` |
 | `data-seasonal-toggle` | The chevron button in a Live panel |
 
+## The places index
+
+`src/places/places.js` drives the R2 **Destinations Index** component (Webflow, group
+R2) on Things to Do (`/destinations`). The page's Destinations Collection List sits in
+the component's Cards slot with Webflow pagination on (12 per page). The chips, the
+phone select and their CSS are in the component's two visible embeds (source:
+`webflow/places-index-embeds.html`); the script tag is in its hidden embed.
+
+- Webflow renders page 1. The script hides Webflow's pagination and, once the page is
+  idle, fetches the other pages by following each Next link, adding their items to
+  the list hidden. Then the count ("30 places") and status ("Showing 12 of 30") appear.
+- "Show more places" reveals the next 12 matching places and focuses the first new card.
+- A chip (tablet and up) or the select (phone) filters the whole list by region and
+  resets to the first 12. The choice is kept as `?region=<slug>`, so
+  `/destinations?region=cape-ann` opens filtered.
+- Without the script, page 1 still shows; the count and status keep their placeholder text.
+
+To add a region, add a chip and an `<option>` in the controls embed with the region's
+CMS slug.
+
+### Page hooks
+
+| Attribute | On |
+|---|---|
+| `data-places` | The section (`section_places`, id `places`) |
+| `data-places-filter="all\|<slug>"` | Each chip button (controls embed) |
+| `data-places-select` | The phone `<select>` (controls embed) |
+| `data-places-count` | The count text |
+| `data-places-more` | The div around the "Show more places" R2 Button |
+| `data-places-status` | The status text (`aria-live="polite"`) |
+| `data-region` | Each card's Link Block (`destination-card_link`), bound to Region > Slug |
+
 ## Making a change
 
 1. Edit the file in `src/`.
@@ -540,7 +573,7 @@ section gets both (no page or site code to add).
 
 Pushing alone changes nothing on the live site. Only step 4 deploys.
 
-**Where the version lives** (8 URLs in 5 places, updated 2026-11-02):
+**Where the version lives** (updated 2026-11-03):
 
 | Where in Webflow | What it loads |
 |---|---|
@@ -551,6 +584,7 @@ Pushing alone changes nothing on the live site. Only step 4 deploys.
 | Fall Guide → Page settings → Before `</body>` | `shop-card/shop-card.js` |
 | Spring Guide → Page settings → Before `</body>` | `shop-card/shop-card.js` |
 | Seasonal Guides component → hidden embed | `seasonal/seasonal.js` (every page with the section) |
+| Destinations Index component → hidden embed | `places/places.js` (Things to Do) |
 
 The versions don't have to match: a file that didn't change in a release can stay on
 the older tag (the CHANGELOG lists what changed). A page that starts loading `shop-card.js` (e.g. the Regions Template, once its cards are

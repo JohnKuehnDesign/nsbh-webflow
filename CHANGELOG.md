@@ -6,6 +6,18 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.19.0 — 2026-11-03
+
+### Added
+
+- **`src/places/places.js`: region filter and load more for the R2 Destinations
+  Index** (Things to Do). Hides Webflow's pagination, fetches the remaining list
+  pages in the background, then filters by region (chips, the phone select, or
+  `?region=<slug>`) and reveals 12 places at a time with a count and an
+  `aria-live` status. "Show more places" moves focus to the first new card.
+- **`webflow/places-index-embeds.html`**: source for the component's three embeds
+  (filter controls, styles, script tag).
+
 ## v1.18.0 — 2026-11-03
 
 ### Added
