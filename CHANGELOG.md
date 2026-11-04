@@ -6,6 +6,18 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## Guide FAQ style isolation — 2026-11-04 (inline embed, no release tag)
+
+- Scope R2 accordion styles to `data-faq` and clear inherited legacy gradients,
+  rounded borders, coral icon color, and flex-row answer layout. Preserve CMS text,
+  headings, and native details/summary interaction.
+- Match the Figma item padding, question/answer gap, full-width answers, and exact
+  plus/minus SVG exports. Add no Webflow classes.
+- Hide only the style embed marked `data-faq-code` to remove an extra flex gap.
+  The existing one-third/two-thirds column ratio is preserved.
+- Source: `webflow/guide-faq-styles.html`; installed inline in Guide FAQ. No script
+  change, CDN version switch, or agent publish.
+
 ## Destination intro Preview refinement — 2026-11-04 (inline embed, no release tag)
 
 - Hide only the embed marked `data-destination-code`, replacing script-parent hiding

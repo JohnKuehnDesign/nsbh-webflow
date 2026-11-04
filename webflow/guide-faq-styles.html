@@ -1,0 +1,24 @@
+<style>
+/* R2 Guide FAQ. Scoped to data-faq so legacy accordions keep their own styles.
+   Figma: Log post FAQ 9810:380072; original 20px icons exported unchanged. */
+[data-faq] [data-faq-code] { display: none; }
+[data-faq] .faq_heading { margin: 0; }
+[data-faq] .faq_rich-text > :first-child { margin-top: 0; }
+[data-faq] .faq_item { padding: 1.5rem 0; border-bottom: 1px solid var(--_primitives---white-mix--h-harbor-blue-80, #d7e4e8); }
+[data-faq] .faq_question { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 0; margin: 0; border: 0; border-radius: 0; background: none; color: inherit; cursor: pointer; list-style: none; }
+[data-faq] .faq_question::-webkit-details-marker { display: none; }
+[data-faq] .faq_question:focus-visible { outline: 2px solid var(--_primitives---colors--h-lion, #c79853); outline-offset: 4px; }
+[data-faq] .faq_question-text { flex: 1 1 0%; min-width: 0; margin: 0; padding: 0; font-size: 1.375rem; line-height: 1.2; text-wrap: wrap; }
+[data-faq] .faq_icon { display: block; position: static; flex: 0 0 1.25rem; width: 1.25rem; height: 1.25rem; color: inherit; background: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEwIDNWMTdNMyAxMEgxNyIgc3Ryb2tlPSIjMTQyRjM4IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=") center / contain no-repeat; }
+[data-faq] .faq_icon::before, [data-faq] .faq_icon::after { content: none; }
+[data-faq] .faq_item[open] .faq_icon { background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMgMTBIMTciIHN0cm9rZT0iIzE0MkYzOCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K"); }
+[data-faq] .faq_answer { display: block; position: static; height: auto; overflow: visible; margin: .75rem 0 0; padding: 0; background: none; transition: none; }
+[data-faq] .faq_answer p { margin: 0 0 .75rem; }
+[data-faq] .faq_answer > :last-child { margin-bottom: 0; }
+@media screen and (max-width: 767px) {
+  [data-faq] .faq_question-text { font-size: 1.25rem; }
+}
+/* Back link: preserve the existing hover/focus behavior. */
+.back-link_link:hover .back-link_arrow, .back-link_link:focus-visible .back-link_arrow { transform: translateX(-0.25rem); }
+@media (prefers-reduced-motion: reduce) { .back-link_arrow { transition: none; } }
+</style>

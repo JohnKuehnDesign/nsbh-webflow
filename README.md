@@ -569,7 +569,12 @@ CMS slug.
 post template. The title is its own CMS field (FAQ Heading (H2)), bound to the H2 under
 the "Good to know" eyebrow. The questions stay one editable Rich Text field: an H3 per
 question with its answer paragraphs. The accordion CSS is in the component's style
-embed; the script tag is in its hidden embed.
+embed (source: `webflow/guide-faq-styles.html`); the script tag is in its hidden embed.
+The styles are scoped to `[data-faq]` because the old accordions also use
+`faq_question`, `faq_icon`, and `faq_answer`. The style embed needs
+`data-faq-code="true"` so its wrapper does not add a third flex child and extra gap.
+Keep corrections scoped; do not change the legacy classes site-wide. The plus/minus
+SVGs in `webflow/faq-icons/` are exact Figma exports embedded as data URLs.
 
 - A leftover H2 at the top of the rich text (older posts) is removed; its text is used
   for the title only if the title field is empty.
