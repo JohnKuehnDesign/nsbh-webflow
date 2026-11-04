@@ -1,0 +1,94 @@
+<style>
+/* R2 Destination intro: rich text stays readable before formatting runs. */
+[data-destination-intro] [hidden]{display:none!important}
+[data-destination-intro] [data-destination-about] p{margin:0 0 1.25rem;font-size:inherit;line-height:inherit}
+[data-destination-intro] [data-destination-about]>:last-child{margin-bottom:0}
+[data-destination-intro] [data-destination-about] h2{margin:2.5rem 0 1.25rem;font-size:2rem;line-height:1.15}
+[data-destination-intro] [data-destination-about] h3{margin:2rem 0 .75rem}
+[data-destination-intro] a:focus-visible{outline:2px solid var(--_primitives---colors--h-lion);outline-offset:4px}
+[data-destination-intro] [data-destination-list]{width:100%;min-width:0}
+[data-destination-intro] [data-destination-list] p{margin:0}
+[data-destination-intro] [data-destination-list] a{color:inherit;text-decoration:underline;text-underline-offset:.15em;overflow-wrap:anywhere}
+[data-destination-intro] [data-destination-section="visit"]:has(.w-dyn-bind-empty),
+[data-destination-intro] [data-destination-section="glance"]:has(.w-dyn-bind-empty),
+[data-destination-intro] [data-destination-section="about"]:has([data-destination-about].w-dyn-bind-empty){display:none}
+[data-destination-intro] .destination-intro_actions a[href="#"],
+[data-destination-intro] .destination-intro_actions>:has(a[href="#"]),
+[data-destination-intro] .destination-intro_actions:not(:has(a[href]:not([href="#"]))){display:none}
+[data-destination-intro] .is-formatted>ul,
+[data-destination-intro] .is-formatted>ol{list-style:none;padding:0;margin:0;width:100%}
+[data-destination-intro] .is-formatted>ol{counter-reset:destination-glance var(--destination-start,0)}
+[data-destination-intro] .is-formatted>ol>li{counter-increment:destination-glance}
+[data-destination-intro] .destination-intro_item-label{font-size:.75rem;line-height:1.2;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--_primitives---colors--h-harbor-blue-text)}
+[data-destination-intro] .destination-intro_item-value{min-width:0;overflow-wrap:anywhere}
+[data-destination-intro] [data-destination-list="visit"]>ul>.destination-intro_list-item,
+[data-destination-intro] [data-destination-list="visit"]>ol>.destination-intro_list-item{display:flex;flex-direction:column;gap:.375rem;padding:1.125rem 0;border-bottom:1px solid var(--_primitives---white-mix--h-deep-atlantic-20)}
+[data-destination-intro] [data-destination-list="visit"]>ul>li:last-child,
+[data-destination-intro] [data-destination-list="visit"]>ol>li:last-child{border-bottom:0}
+[data-destination-intro] [data-destination-list="visit"] .destination-intro_item-value{font-size:1.0625rem;line-height:1.6}
+[data-destination-intro] [data-destination-list="glance"]>ol>.destination-intro_list-item,
+[data-destination-intro] [data-destination-list="glance"]>ul>.destination-intro_list-item{display:grid;grid-template-columns:2rem 9rem minmax(0,1fr);gap:.5rem 1.5rem;align-items:baseline;padding:1.5rem 0;border-bottom:1px solid var(--_primitives---white-mix--h-deep-atlantic-20)}
+[data-destination-intro] [data-destination-list="glance"]>ol>li:before{content:counter(destination-glance,decimal-leading-zero);font-size:.75rem;line-height:1.2;font-weight:700;letter-spacing:.14em;color:var(--_primitives---colors--h-lion)}
+[data-destination-intro] [data-destination-list="glance"]>ul>li:before{content:""}
+[data-destination-intro] [data-destination-list="glance"]>ol>li:last-child,
+[data-destination-intro] [data-destination-list="glance"]>ul>li:last-child{border-bottom:0}
+[data-destination-intro] [data-destination-list="glance"] .destination-intro_item-value{font-size:1.25rem;line-height:1.5}
+@media(min-width:1280px){[data-destination-intro] [data-destination-list="glance"]>ol>.destination-intro_list-item,[data-destination-intro] [data-destination-list="glance"]>ul>.destination-intro_list-item{grid-template-columns:2rem 12.5rem minmax(0,1fr);column-gap:2rem}}
+@media(max-width:767px){[data-destination-intro] [data-destination-list="glance"]>ol>.destination-intro_list-item,[data-destination-intro] [data-destination-list="glance"]>ul>.destination-intro_list-item{grid-template-columns:2rem minmax(0,1fr);column-gap:1rem;padding:1.25rem 0}[data-destination-intro] [data-destination-list="glance"] .destination-intro_item-value{grid-column:1/-1;font-size:1.0625rem;line-height:1.6}}
+
+/* Destination hero keeps the existing multi-town Collection List. */
+.destination-hero_location .w-dyn-empty{display:none}
+.destination-hero_location:has(.w-dyn-empty) [data-location-divider]{display:none}
+.destination-hero_towns>.w-dyn-item{display:flex;align-items:baseline;gap:.25rem}
+.destination-hero_towns>.w-dyn-item+.w-dyn-item:before{content:","}
+</style>
+<script>
+/* First bold phrase = label; remaining rich text = value. No CMS content is fetched or changed. */
+(function () {
+  function meaningful(node) {
+    return !!node && (!!node.textContent.replace(/[\s\u200b-\u200d\ufeff]/g, "") || !!node.querySelector("img,video,audio,iframe"));
+  }
+  function format(scope) {
+    scope.querySelectorAll("[data-destination-list]").forEach(function (field) {
+      field.querySelectorAll(":scope > ul, :scope > ol").forEach(function (list) {
+        if (list.tagName === "OL") list.style.setProperty("--destination-start", String(list.start - 1));
+        Array.from(list.children).filter(function (item) { return item.tagName === "LI"; }).forEach(function (item) {
+          if (!meaningful(item)) { item.remove(); return; }
+          if (item.classList.contains("destination-intro_list-item")) return;
+          var label = item.querySelector("strong,b");
+          if (!label || !label.textContent.trim()) return;
+          var before = document.createRange();
+          before.setStart(item, 0); before.setEndBefore(label);
+          if (before.toString().replace(/[\s\u200b-\u200d\ufeff]/g, "")) return;
+          var title = document.createElement("span");
+          title.className = "destination-intro_item-label";
+          title.textContent = label.textContent.trim().replace(/[:\uFF1A]\s*$/, "");
+          label.remove();
+          var value = document.createElement("div");
+          value.className = "destination-intro_item-value";
+          while (item.firstChild) value.appendChild(item.firstChild);
+          var walker = document.createTreeWalker(value, NodeFilter.SHOW_TEXT);
+          var text = walker.nextNode();
+          if (text) text.nodeValue = text.nodeValue.replace(/^[\s\u200b-\u200d\ufeff]*[:\uFF1A]?[\s\u200b-\u200d\ufeff]*/, "");
+          while (value.firstChild && value.firstChild.nodeName === "BR") value.firstChild.remove();
+          item.append(title, value);
+          item.classList.add("destination-intro_list-item");
+        });
+      });
+      field.classList.add("is-formatted");
+    });
+    ["visit", "glance", "about"].forEach(function (name) {
+      var section = scope.querySelector('[data-destination-section="' + name + '"]');
+      var field = name === "about" ? scope.querySelector("[data-destination-about]") : scope.querySelector('[data-destination-list="' + name + '"]');
+      if (section) section.hidden = !meaningful(field);
+    });
+    var aboutRow = scope.querySelector(".destination-intro_about-row");
+    if (aboutRow) aboutRow.hidden = Array.from(aboutRow.querySelectorAll("[data-destination-section]")).every(function (section) { return section.hidden; });
+    var sections = Array.from(scope.querySelectorAll("[data-destination-section]"));
+    scope.hidden = sections.length > 0 && sections.every(function (section) { return section.hidden; });
+  }
+  function init() { document.querySelectorAll("[data-destination-intro]").forEach(format); }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, {once:true});
+  else init();
+})();
+</script>

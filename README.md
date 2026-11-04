@@ -588,6 +588,28 @@ embed; the script tag is in its hidden embed.
 | `data-faq-heading` | The H2 title under the eyebrow (bound to FAQ Heading (H2)) |
 | `data-faq-source` | The Rich Text bound to FAQ Rich Text |
 
+## Destination intro
+
+`webflow/destination-intro-embeds.html` is the inline style/script source for the R2
+Destination intro on the Destinations CMS template. It does not need a jsDelivr tag.
+
+The **Destination Intro** CMS group has three rich-text fields:
+
+- **About the Place:** paragraphs, links, and optional subheadings.
+- **Plan Your Visit:** a bulleted list; begin each item with a **bold label**, followed by its value.
+- **At a Glance:** a numbered list using the same bold-label convention.
+
+The formatter wraps each first bold label and its remaining rich text for layout.
+It supports any number of rows, preserves links and inline formatting, removes empty
+list items, and hides empty sections. Ordered-list numbers follow the current order.
+Unformatted content remains readable if the script does not run. The hero Category
+Line and optional Website URL action are separate fields. Original Full Description
+and Practical info are retained; the unused fixed-row draft fields are grouped apart.
+
+The current Shopify Merch section is retained as a reference beside a static R2
+Merch CTA. Shopify integration for the new CTA remains a follow-up across the pages
+that use it. Destination/Regions shop cards wait for the final Map card pattern.
+
 ## Making a change
 
 1. Edit the file in `src/`.

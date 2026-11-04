@@ -6,6 +6,15 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## Destination intro rollout — 2026-11-04 (inline embed, no release tag)
+
+- Added the R2 Destination intro style/script source in `webflow/destination-intro-embeds.html`.
+- About the Place, Plan Your Visit, and At a Glance are editable rich-text fields.
+  Lists support variable row counts, first-bold labels, automatic numbering, links,
+  and empty-section hiding. Original CMS fields and draft states are retained.
+- Existing Shopify section and nearby shop cards remain; an R2 static Merch CTA is
+  placed beside the Shopify reference pending integration. Nothing published.
+
 ## v1.20.0 — 2026-11-04
 
 ### Added
