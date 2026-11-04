@@ -6,6 +6,15 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## Destination intro staging fixes — 2026-11-04 (inline embed, no release tag)
+
+- Use data attributes for generated list labels, values, and formatted state.
+- Hide the inline embed wrapper to prevent an extra flex gap; align the visit card's
+  first-row padding with Figma and enforce hidden state on an entirely empty intro.
+- Document four required wrapper hooks. In Webflow, remove three empty placeholder
+  blocks that had added extra gaps around the About copy and glance heading.
+- Intro only; no Shopify or shop-card code changes. Agent publishes nothing.
+
 ## Destination intro rollout — 2026-11-04 (inline embed, no release tag)
 
 - Added the R2 Destination intro style/script source in `webflow/destination-intro-embeds.html`.

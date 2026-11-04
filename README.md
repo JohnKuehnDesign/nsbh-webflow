@@ -599,6 +599,20 @@ The **Destination Intro** CMS group has three rich-text fields:
 - **Plan Your Visit:** a bulleted list; begin each item with a **bold label**, followed by its value.
 - **At a Glance:** a numbered list using the same bold-label convention.
 
+The template requires these wrapper attributes (classes identify the Designer target only):
+
+| Designer target | Attribute | Value |
+|---|---|---|
+| section_destination-intro | data-destination-intro | true |
+| destination-intro_about-column | data-destination-section | about |
+| destination-intro_visit | data-destination-section | visit |
+| destination-intro_glance | data-destination-section | glance |
+
+The Rich Text fields retain `data-destination-about`, `data-destination-list="visit"`,
+and `data-destination-list="glance"`. Generated labels, values, and formatted rows
+also use data attributes. The inline embed hides its own wrapper so it adds no flex gap.
+Verify these hooks in the published DOM; a local fixture does not prove Webflow saved them.
+
 The formatter wraps each first bold label and its remaining rich text for layout.
 It supports any number of rows, preserves links and inline formatting, removes empty
 list items, and hides empty sections. Ordered-list numbers follow the current order.
