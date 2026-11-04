@@ -6,6 +6,23 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.19.1 — 2026-11-04
+
+### Fixed
+
+- **`places.js`: "Show more destinations" no longer jumps to the top of the section.**
+  The button is an R2 Button link to `#places`, and Webflow's same-page smooth
+  scroll caught the click. The handler now stops the click from reaching it, so
+  the page stays put and focus moves to the first new card.
+- `webflow/places-index-embeds.html`: the Eyebrow sits inline with the chips
+  (`.places_filter-main > .eyebrow_component { width: auto }`); the script embed
+  loads `@1.19.1`.
+
+### Changed
+
+- **Wording: "destinations", not "places".** The count reads "30 destinations"
+  ("1 destination"), and the button label (set in Webflow) is "Show more destinations".
+
 ## v1.19.0 — 2026-11-03
 
 ### Added

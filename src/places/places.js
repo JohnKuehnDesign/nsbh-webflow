@@ -1,4 +1,4 @@
-// NSBH places index — region filter and "Show more places" for the R2 Destinations Index
+// NSBH places index — region filter and "Show more destinations" for the R2 Destinations Index
 // (Webflow, group R2), used on Things to Do (/destinations).
 //
 // Hosted on GitHub, served to Webflow via jsDelivr. It is loaded by the hidden embed
@@ -11,8 +11,8 @@
 //     Webflow pagination on (12 per page). Webflow renders page 1 and a Next link.
 //   - The script hides Webflow's pagination, then quietly fetches the remaining pages
 //     (following each Next link) and adds their items to the list, hidden. Once every
-//     page is in, the count ("30 places") and status ("Showing 12 of 30") appear.
-//   - "Show more places" reveals the next 12 matching places and moves focus to the
+//     page is in, the count ("30 destinations") and status ("Showing 12 of 30") appear.
+//   - "Show more destinations" reveals the next 12 matching places and moves focus to the
 //     first new card, so keyboard users land on what was added.
 //   - A region chip (desktop and tablet) or the region select (phone) filters the whole
 //     list, including places not shown yet, and resets to the first 12. The choice is
@@ -24,8 +24,8 @@
 //   [data-places]               The section (section_places).
 //   [data-places-filter="…"]    A chip button: "all" or a region slug. Inside the filter embed.
 //   [data-places-select]        The phone <select>; option values as the chips.
-//   [data-places-count]         "30 places" text (hidden until every page is in).
-//   [data-places-more]          The wrapper around the "Show more places" R2 Button.
+//   [data-places-count]         "30 destinations" text (hidden until every page is in).
+//   [data-places-more]          The wrapper around the "Show more destinations" R2 Button.
 //   [data-places-status]        "Showing 12 of 30" text (aria-live).
 //   [data-region]               On each card's link (destination-card_link), bound to
 //                               Region > Slug in the Collection List.
@@ -123,7 +123,7 @@
       if (complete) {
         var n = match.length;
         if (count) {
-          count.textContent = n + (n === 1 ? ' place' : ' places');
+          count.textContent = n + (n === 1 ? ' destination' : ' destinations');
           count.style.visibility = '';
         }
         if (status) {
@@ -165,6 +165,9 @@
     if (more) {
       more.addEventListener('click', function (e) {
         e.preventDefault();
+        // The button is a link to #places; stop Webflow's same-page smooth scroll
+        // (a delegated document click handler) from jumping back to the section top.
+        e.stopPropagation();
         var before = matching().slice(0, shown);
         shown += step;
         loadAll().then(function () {

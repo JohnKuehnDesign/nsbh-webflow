@@ -27,6 +27,7 @@
 <!-- 2. Styles (visible embed, last child of places_component) -->
 <style>
 /* R2 Destinations Index (Figma 9897:583290). Chips and the phone select live in an embed so they are real <button>/<select>. (2026-11-03) */
+.places_filter-main > .eyebrow_component { width: auto; flex: 0 0 auto; } /* the Eyebrow root is width 100% (for the Rule styles); keep it inline with the chips */
 .places_controls { display: flex; align-items: center; }
 .places_chips { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
 .places_chip { display: inline-flex; align-items: center; margin: 0; padding: .625rem 1.125rem; border: 1px solid var(--_primitives---white-mix--h-harbor-blue-80, #d7e4e8); border-radius: 999px; background-color: #fff; color: var(--_primitives---colors--h-deep-atlantic, #142f38); font-family: inherit; font-size: .875rem; font-weight: 600; line-height: 1.2; cursor: pointer; transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease; }
@@ -45,4 +46,4 @@
 </style>
 
 <!-- 3. Script (hidden embed, class hide, last child of places_component) -->
-<script src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.19.0/src/places/places.js" defer></script>
+<script src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.19.1/src/places/places.js" defer></script>

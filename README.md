@@ -21,7 +21,7 @@ number in the Webflow custom code is bumped by hand.
 | `src/nav/nav.js` | The R2 Nav: pill bar on scroll up, phone and tablet menu. Site-wide |
 | `webflow/site-nav.html` | Copy-paste line for Site settings → Custom code → Footer code: `nav.js` |
 | `src/seasonal/seasonal.js` | The R2 Seasonal Guides: opens the current season on scroll-in, hover/focus on desktop, chevron toggles on tablet and phone. Loaded by an embed inside the component |
-| `src/places/places.js` | The R2 Destinations Index on Things to Do: region filter (chips, phone select, `?region=`), "Show more places", count and status. Loaded by an embed inside the component |
+| `src/places/places.js` | The R2 Destinations Index on Things to Do: region filter (chips, phone select, `?region=`), "Show more destinations", count and status. Loaded by an embed inside the component |
 
 This repo is public because jsDelivr only serves public repos — and because the
 JavaScript is already public regardless, served to every visitor of the site.
@@ -540,8 +540,8 @@ phone select and their CSS are in the component's two visible embeds (source:
 
 - Webflow renders page 1. The script hides Webflow's pagination and, once the page is
   idle, fetches the other pages by following each Next link, adding their items to
-  the list hidden. Then the count ("30 places") and status ("Showing 12 of 30") appear.
-- "Show more places" reveals the next 12 matching places and focuses the first new card.
+  the list hidden. Then the count ("30 destinations") and status ("Showing 12 of 30") appear.
+- "Show more destinations" reveals the next 12 matching places and focuses the first new card.
 - A chip (tablet and up) or the select (phone) filters the whole list by region and
   resets to the first 12. The choice is kept as `?region=<slug>`, so
   `/destinations?region=cape-ann` opens filtered.
@@ -558,7 +558,7 @@ CMS slug.
 | `data-places-filter="all\|<slug>"` | Each chip button (controls embed) |
 | `data-places-select` | The phone `<select>` (controls embed) |
 | `data-places-count` | The count text |
-| `data-places-more` | The div around the "Show more places" R2 Button |
+| `data-places-more` | The div around the "Show more destinations" R2 Button |
 | `data-places-status` | The status text (`aria-live="polite"`) |
 | `data-region` | Each card's Link Block (`destination-card_link`), bound to Region > Slug |
 
