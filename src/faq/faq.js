@@ -13,7 +13,7 @@
 //     the title only if the title field is empty;
 //   - wraps each H3 and everything up to the next H3 in <details class="faq_item">,
 //     with the H3 inside <summary class="faq_question"> and the answer in .faq_answer;
-//   - opens the first item (Figma 9759:243086).
+//   - opens the first item (Figma 9759:243086), then keeps at most one item open.
 // Answers stay in the DOM, so the FAQPage schema (FAQ Schema field) still matches.
 // Without the script the rich text shows as written (H2, H3s, paragraphs).
 //
@@ -25,7 +25,7 @@
 (function () {
   var sections = document.querySelectorAll('[data-faq]');
 
-  Array.prototype.forEach.call(sections, function (section) {
+  Array.prototype.forEach.call(sections, function (section, sectionIndex) {
     if (section.hasAttribute('data-faq-ready')) return;
     section.setAttribute('data-faq-ready', '');
 
@@ -52,6 +52,7 @@
       if (isQuestion) {
         var item = document.createElement('details');
         item.className = 'faq_item';
+        item.setAttribute('name', 'nsbh-guide-faq-' + sectionIndex);
         if (count === 0) item.open = true;
         var summary = document.createElement('summary');
         summary.className = 'faq_question';
@@ -77,6 +78,15 @@
     if (!count) return;
     source.innerHTML = '';
     source.appendChild(list);
+    // The native name group closes siblings immediately. Keep the same behavior
+    // in browsers without named details support; toggle needs capture.
+    source.addEventListener('toggle', function (event) {
+      var opened = event.target;
+      if (opened.tagName !== 'DETAILS' || opened.parentNode !== source || !opened.open) return;
+      Array.prototype.forEach.call(source.children, function (item) {
+        if (item !== opened && item.tagName === 'DETAILS') item.open = false;
+      });
+    }, true);
     section.classList.add('is-ready');
   });
 })();

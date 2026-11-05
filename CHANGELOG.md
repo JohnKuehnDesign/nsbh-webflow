@@ -6,6 +6,14 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.20.1 — 2026-11-04
+
+### Changed
+
+- Keep only one answer open per R2 Guide FAQ. The first opens on load; opening
+  another question closes its siblings, including keyboard activation. Separate
+  FAQ sections remain independent, and the active answer can be collapsed.
+
 ## Guide FAQ style isolation — 2026-11-04 (inline embed, no release tag)
 
 - Scope R2 accordion styles to `data-faq` and clear inherited legacy gradients,

@@ -580,7 +580,8 @@ SVGs in `webflow/faq-icons/` are exact Figma exports embedded as data URLs.
   for the title only if the title field is empty.
 - Each H3 and everything up to the next H3 becomes
   `<details class="faq_item"><summary class="faq_question">H3 + icon</summary><div class="faq_answer">…</div></details>`.
-  The first item is open.
+  The first item is open on load. Opening another question closes the previous
+  answer in that FAQ section; closing the active question can leave all collapsed.
 - Answers stay in the DOM, so the FAQPage JSON-LD (the post's FAQ Schema field) still
   matches the visible questions.
 - Without the script the rich text shows as written.
