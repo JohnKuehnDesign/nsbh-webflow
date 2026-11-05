@@ -566,9 +566,14 @@ CMS slug.
 ## The guide FAQ
 
 `src/faq/faq.js` drives the R2 **Guide FAQ** component (Webflow, group R2) on the Log
-post template. The title is its own CMS field (FAQ Heading (H2)), bound to the H2 under
-the "Good to know" eyebrow. The questions stay one editable Rich Text field: an H3 per
-question with its answer paragraphs. The accordion CSS is in the component's style
+post template and For Shop Owners. On posts, the title comes from FAQ Heading (H2)
+and the questions stay one editable Rich Text field: an H3 per question followed by
+its answer paragraphs. **Use FAQ field** is on by default. For static pages, turn
+it off and put a questions component in the **Questions** slot; that component's
+root carries `data-faq-source`, with H3/answer siblings. **Shop Owner Questions**
+holds the nine original Q&As and their inline links. Both sources use the same script
+and styles. Base keeps the blog spacing; **Standalone** adds top spacing and the
+Figma 480px/remaining desktop columns. The accordion CSS is in the component's style
 embed (source: `webflow/guide-faq-styles.html`); the script tag is in its hidden embed.
 The styles are scoped to `[data-faq]` because the old accordions also use
 `faq_question`, `faq_icon`, and `faq_answer`. The style embed needs

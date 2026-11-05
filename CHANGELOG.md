@@ -6,6 +6,14 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## Guide FAQ static content support — 2026-11-04 (Webflow only)
+
+- Reuse Guide FAQ on For Shop Owners through a Questions slot and a **Use FAQ field**
+  toggle (on by default for existing CMS instances). Static questions use the same
+  `data-faq-source` hook, styles, and v1.20.1 interaction.
+- Add Standalone component variants for FAQ and Note band spacing; no new CSS classes
+  or script release. The nine existing owner questions, paragraphs, and links are preserved.
+
 ## v1.20.1 — 2026-11-04
 
 ### Changed
