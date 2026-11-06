@@ -40,6 +40,11 @@
   [data-merch-grid] [data-shopify-id] .shopify-buy__btn { padding: .625rem .875rem; font-size: .6875rem; }
 }
 [data-merch-featured] { display: none; }
+/* While the product modal is open the SDK adds .shopify-buy-modal-is-active to html and body with
+   height: 100%; overflow: auto, which makes body the scroller and snaps the page to the top behind the modal.
+   Keep the window as the scroller: lock it in place (no jump, no background scroll) and reserve the scrollbar. */
+html.shopify-buy-modal-is-active { height: auto; overflow: hidden; scrollbar-gutter: stable; }
+body.shopify-buy-modal-is-active { height: auto; overflow: visible; }
 </style>
 <script>
 (function () {
@@ -195,8 +200,25 @@
       buy.addEventListener('click', function (e) {
         e.preventDefault();
         product.openModal();
+        returnFocusOnClose(buy);
       });
     }
+  }
+
+  // The Polaroid's product component lives in a hidden stash, so the SDK can't hand focus back on close.
+  // Watch for the modal class to leave <html> and refocus the Buy link without scrolling.
+  function returnFocusOnClose(el) {
+    var root = document.documentElement;
+    var seen = false;
+    var mo = new MutationObserver(function () {
+      var open = root.classList.contains('shopify-buy-modal-is-active');
+      if (open) { seen = true; return; }
+      if (!seen) return;
+      mo.disconnect();
+      try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+    });
+    mo.observe(root, { attributes: true, attributeFilter: ['class'] });
+    if (root.classList.contains('shopify-buy-modal-is-active')) seen = true;
   }
 
   function hasProducts() {
