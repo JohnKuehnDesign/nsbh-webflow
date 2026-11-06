@@ -6,6 +6,24 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.20.2 — 2026-11-05
+
+### Fixed
+
+- `shop-card.js`: on desktop, a shop card opened from a link near the right side of
+  the window slid left over its own link (every Fall and Spring Guide chip, and the
+  right-hand column of Shops by region). The card now opens beside the link on the
+  right when it fits, else on the left, still overlapping the link by half a rem so
+  the pointer can cross into it. If neither side fits, it opens below the link (or
+  above). Phone and tablet modals are unchanged.
+
+### Unchanged
+
+- Every other file, including `map-embed.js` and `map-embed.css`, is the same as
+  v1.14.4. To ship: on the map page move the head CSS link and both footer scripts
+  from `@1.14.4` to `@1.20.2` (versions stay matched); on the Fall and Spring Guides,
+  move `shop-card.js` to `@1.20.2`.
+
 ## Guide FAQ static content support — 2026-11-04 (Webflow only)
 
 - Reuse Guide FAQ on For Shop Owners through a Questions slot and a **Use FAQ field**

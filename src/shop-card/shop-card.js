@@ -460,8 +460,10 @@
     p.style.overflow = flagShown ? 'visible' : '';
   }
 
-  // Desktop: beside the link, its left edge overlapping the link by half a rem,
-  // kept inside the window with room for the flag above.
+  // Desktop: beside the link, overlapping it by half a rem so the pointer can
+  // cross into the card. Right of the link when it fits, else left of it. When
+  // neither side fits, it goes below the link (or above), so it never covers the
+  // link it came from. Always kept inside the window, with room for the flag above.
   function place() {
     const { panel, trigger } = pop;
     panel.style.position = 'fixed';
@@ -473,13 +475,31 @@
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
     const flag = panel.querySelector('[data-map-distance]:not([hidden])');
     const pad = 12;
+    const lap = 0.5 * rem;
     const top0 = pad + (flag ? flag.offsetHeight : 0);
-    let left = t.right - 0.5 * rem;
-    let top = t.top;
-    if (left + r.width > window.innerWidth - pad) left = Math.max(pad, window.innerWidth - pad - r.width);
-    if (top + r.height > window.innerHeight - pad) top = Math.max(top0, window.innerHeight - pad - r.height);
-    panel.style.left = `${Math.max(pad, left)}px`;
-    panel.style.top = `${Math.max(top0, top)}px`;
+    const maxLeft = window.innerWidth - pad - r.width;
+    const maxTop = window.innerHeight - pad - r.height;
+    const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), Math.max(lo, hi));
+    const right = t.right - lap;
+    const leftSide = t.left + lap - r.width;
+    let left;
+    let top;
+    if (right <= maxLeft) {
+      left = right;
+      top = clamp(t.top, top0, maxTop);
+    } else if (leftSide >= pad) {
+      left = leftSide;
+      top = clamp(t.top, top0, maxTop);
+    } else {
+      left = clamp(t.left, pad, maxLeft);
+      const below = t.bottom - lap;
+      const above = t.top + lap - r.height;
+      if (below <= maxTop) top = below;
+      else if (above >= top0) top = above;
+      else top = clamp(t.top, top0, maxTop);
+    }
+    panel.style.left = `${clamp(left, pad, maxLeft)}px`;
+    panel.style.top = `${clamp(top, top0, maxTop)}px`;
   }
 
   function open(trigger, { focus = false } = {}) {
