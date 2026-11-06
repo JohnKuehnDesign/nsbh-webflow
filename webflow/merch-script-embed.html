@@ -1,0 +1,237 @@
+<!-- merch-script_component (Webflow HtmlEmbed). Source of truth: nsbh-webflow/webflow/merch-script-embed.html
+     (the repo copy has a SHOPIFY_STOREFRONT_TOKEN placeholder; keep the embed's real token when pasting).
+     1) Renders a Shopify Buy Button card into every [data-shopify-id] (Merch CMS) in the page DOM (iframe: false).
+     2) Fills the R2 Merch CTA Polaroids ([data-merch-polaroid="1|2|3"]) from the Featured Merch source list
+        ([data-merch-featured] [data-merch-id]): photo, name, price; Buy opens the Shopify product modal.
+     3) On any other page (it sits in the R2 Footer), if the visitor already has a cart, loads the SDK only to show
+        the cart toggle. No cart and no products: it does nothing and loads nothing.
+     Styles are scoped by attribute, not Webflow classes. Place once per page; safe twice. -->
+<style>
+[data-shopify-id] { height: 100%; }
+[data-shopify-id] .shopify-buy__product { display: flex; flex-direction: column; height: 100%; margin: 0; text-align: center; font-family: var(--_typography---font-styles--body, Montserrat, sans-serif); }
+[data-shopify-id] .shopify-buy__product-img-wrapper { aspect-ratio: 1 / 1; overflow: hidden; margin: 0 0 1rem; border-radius: var(--_ui-styles---radius--small, .5rem); background: #fff; }
+[data-shopify-id] .shopify-buy__product__variant-img { display: block; width: 100%; height: 100%; max-width: none; margin: 0; object-fit: cover; }
+[data-shopify-id] .shopify-buy__product__title { margin: 0 0 .375rem; min-height: 2.4em; font-family: var(--_typography---font-styles--heading, sans-serif); font-size: 1.125rem; font-weight: 700; line-height: 1.2; color: var(--_primitives---colors--h-deep-atlantic, #142f38); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+[data-shopify-id] .shopify-buy__product__price { margin: 0 0 1rem; font-size: .9375rem; color: var(--_primitives---white-mix--h-deep-atlantic-20, #435960); }
+[data-shopify-id] .shopify-buy__product__compare-price { margin-left: .5em; text-decoration: line-through; opacity: .6; }
+[data-shopify-id] .shopify-buy__btn-wrapper { margin-top: auto; }
+[data-shopify-id] .shopify-buy__btn { width: 100%; padding: .75rem 1rem; border: 0; cursor: pointer; border-radius: var(--_ui-styles---radius--small, .5rem); background-color: var(--_primitives---colors--h-deep-atlantic, #142f38); color: var(--_primitives---colors--h-lemon-chiffon, #f9f4e2); font-family: var(--_typography---font-styles--heading, sans-serif); font-size: 1rem; line-height: 1.2; transition: background-color .2s; }
+[data-shopify-id] .shopify-buy__btn:hover { background-color: var(--_primitives---colors--h-harbor-blue, #35798c); }
+[data-shopify-id] .shopify-buy__btn:focus-visible { outline: 2px solid var(--_primitives---colors--h-harbor-blue, #35798c); outline-offset: 2px; }
+[data-shopify-id] .visuallyhidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0; white-space: nowrap; }
+@media (max-width: 479px) {
+  [data-shopify-id] .shopify-buy__product-img-wrapper { margin-bottom: .75rem; }
+  [data-shopify-id] .shopify-buy__product__title { font-size: 1rem; }
+  [data-shopify-id] .shopify-buy__product__price { margin-bottom: .75rem; font-size: .875rem; }
+  [data-shopify-id] .shopify-buy__btn { padding: .625rem .5rem; font-size: .875rem; white-space: nowrap; }
+}
+/* R2 Merch grid (/merch, Figma Product card Style=Simple 9860:469961). The card box (white, border, radius) is the
+   Webflow class merch_card; these rules only shape Shopify's markup inside [data-merch-grid]. */
+[data-merch-grid] [data-shopify-id] .shopify-buy__product { text-align: left; }
+[data-merch-grid] [data-shopify-id] .shopify-buy__product-img-wrapper { margin: 0; border-radius: 0; }
+[data-merch-grid] [data-shopify-id] .shopify-buy__product__title { margin: 0; padding: 1.5rem 1.5rem 0; min-height: 0; font-size: 1.375rem; font-weight: 400; line-height: 1.2; text-wrap: balance; }
+[data-merch-grid] [data-shopify-id] .shopify-buy__product__price { margin: .375rem 1.5rem 0; font-size: 1.0625rem; line-height: 1.6; color: var(--_primitives---colors--h-harbor-blue-text, #2e6a7a); }
+[data-merch-grid] [data-shopify-id] .shopify-buy__btn-wrapper { padding: 1.25rem 1.5rem 1.5rem; }
+[data-merch-grid] [data-shopify-id] .shopify-buy__btn { padding: .625rem .875rem; border-radius: .375rem; border-bottom: 2px solid var(--_primitives---colors--h-lion, #c79853); color: var(--_primitives---white-mix--h-harbor-blue-95, #f5f8f9); font-family: var(--_typography---font-styles--body, Montserrat, sans-serif); font-size: .6875rem; font-weight: 700; letter-spacing: .08em; line-height: 1; text-transform: uppercase; transition: opacity .2s ease-in-out; }
+[data-merch-grid] [data-shopify-id] .shopify-buy__btn:hover { background-color: var(--_primitives---colors--h-deep-atlantic, #142f38); opacity: .85; }
+@media (max-width: 479px) {
+  [data-merch-grid] [data-shopify-id] .shopify-buy__product__title { font-size: 1.25rem; }
+  [data-merch-grid] [data-shopify-id] .shopify-buy__product__price { font-size: 1rem; }
+  [data-merch-grid] [data-shopify-id] .shopify-buy__btn { padding: .625rem .875rem; font-size: .6875rem; }
+}
+[data-merch-featured] { display: none; }
+</style>
+<script>
+(function () {
+  if (window.nsbhMerch) return;
+  window.nsbhMerch = true;
+
+  var SHOP = {
+    domain: 'threewaynorthshorebeef.myshopify.com',
+    storefrontAccessToken: 'SHOPIFY_STOREFRONT_TOKEN' // public Buy Button token; the real value is only in the Webflow embed
+  };
+  // Modal and cart still render in Shopify iframes, so they're styled here.
+  var BTN = {
+    'background-color': '#142F38',
+    'color': '#F9F4E2',
+    'font-family': 'Helvetica Neue, Arial, sans-serif',
+    ':hover': { 'background-color': '#142F38', 'color': '#F9F4E2' },
+    ':focus': { 'background-color': '#142F38', 'color': '#F9F4E2' }
+  };
+  var OPTIONS = {
+    product: {
+      iframe: false,
+      buttonDestination: 'modal',
+      contents: { options: false },
+      text: { button: 'View product' },
+      templates: {
+        title: '<h3 class="{{data.classes.product.title}}" data-element="product.title">{{data.title}}</h3>'
+      },
+      // Not used by the in-page cards, but the SDK drops modalProduct.styles unless product.styles exists.
+      styles: { button: BTN }
+    },
+    modalProduct: {
+      buttonDestination: 'cart',
+      contents: { img: false, imgWithCarousel: true, button: false, buttonWithQuantity: true },
+      styles: {
+        product: { '@media (min-width: 601px)': { 'max-width': '100%', 'margin-left': '0px', 'margin-bottom': '0px' } },
+        button: BTN
+      },
+      text: { button: 'Add to cart' }
+    },
+    cart: {
+      styles: { button: BTN },
+      text: {
+        total: 'Subtotal',
+        button: 'Checkout',
+        notice: 'Checkout is through our sister site, 3WAYS North Shore Beef.'
+      }
+    },
+    toggle: {
+      styles: {
+        toggle: { 'background-color': '#142F38', ':hover': { 'background-color': '#142F38' }, ':focus': { 'background-color': '#142F38' } },
+        count: { color: '#F9F4E2' },
+        iconPath: { fill: '#F9F4E2' }
+      }
+    }
+  };
+  var MONEY = '%24%7B%7Bamount%7D%7D';
+  // Where the SDK keeps the visitor's cart (see localStorageCheckoutKey in the SDK). It stays after the cart is
+  // emptied, so we also keep our own item count (updated on every cart render) and skip the SDK when it's '0'.
+  var CART_KEY = SHOP.storefrontAccessToken + '.' + SHOP.domain + '.checkoutId';
+  var COUNT_KEY = 'nsbh-cart-items';
+
+  function store(key, value) {
+    try { if (value === null) window.localStorage.removeItem(key); else window.localStorage.setItem(key, value); } catch (e) {}
+  }
+
+  function hasCart() {
+    try {
+      return !!window.localStorage.getItem(CART_KEY) && window.localStorage.getItem(COUNT_KEY) !== '0';
+    } catch (e) { return false; }
+  }
+
+  OPTIONS.cart.events = {
+    afterRender: function (cart) {
+      var items = (cart && (cart.lineItems || (cart.model && cart.model.lineItems))) || [];
+      store(COUNT_KEY, String(items.length));
+    }
+  };
+
+  function digits(v) { return String(v || '').replace(/\D/g, ''); }
+
+  // "$36.00" -> "$36", "$36.50" stays. The SDK's MoneyV2 is { amount: "36.0", currencyCode }.
+  function price(product) {
+    var v = product && product.selectedVariant;
+    var p = v && v.price;
+    var amount = p && typeof p === 'object' ? p.amount : p;
+    var n = parseFloat(amount);
+    if (isNaN(n)) return '';
+    return '$' + (n % 1 === 0 ? n.toFixed(0) : n.toFixed(2));
+  }
+
+  function sized(src, width) {
+    try { var u = new URL(src); u.searchParams.set('width', width); return u.toString(); } catch (e) { return src; }
+  }
+
+  function fillPolaroids(ui) {
+    var slots = Array.prototype.slice.call(document.querySelectorAll('[data-merch-polaroid]'))
+      .sort(function (a, b) { return (+a.getAttribute('data-merch-polaroid') || 0) - (+b.getAttribute('data-merch-polaroid') || 0); });
+    // Source items: only Featured items render (visibility bound to Featured); order by Sort Order, then page order.
+    var ids = Array.prototype.map.call(document.querySelectorAll('[data-merch-featured] [data-merch-id]'), function (n, i) {
+      var o = parseFloat(n.getAttribute('data-merch-order'));
+      return { id: digits(n.getAttribute('data-merch-id')), order: isNaN(o) ? Infinity : o, i: i };
+    }).filter(function (x) { return x.id; })
+      .sort(function (a, b) { return a.order - b.order || a.i - b.i; })
+      .map(function (x) { return x.id; });
+    if (!slots.length || !ids.length) return;
+
+    var stash = document.createElement('div');
+    stash.hidden = true;
+    stash.setAttribute('data-merch-stash', '');
+    document.body.appendChild(stash);
+
+    slots.slice(0, ids.length).forEach(function (slot, i) {
+      var node = document.createElement('div');
+      stash.appendChild(node);
+      var done = false;
+      // createComponent returns nothing in this SDK version; afterRender hands over the loaded component.
+      var options = Object.assign({}, OPTIONS, {
+        product: Object.assign({}, OPTIONS.product, {
+          events: { afterRender: function (product) { if (!done) { done = true; fill(slot, product); } } }
+        })
+      });
+      try {
+        ui.createComponent('product', { id: ids[i], node: node, moneyFormat: MONEY, options: options });
+      } catch (e) { /* keep the Designer content and the /merch link */ }
+    });
+  }
+
+  function fill(slot, product) {
+    var m = product && product.model;
+    if (!m || !m.title) return;
+    var img = slot.querySelector('[data-merch-slot="photo"]');
+    var src = m.images && m.images[0] && m.images[0].src;
+    if (img && src) {
+      // Preload, then swap, so the Designer photo stays until Shopify's is ready (no blank frame).
+      var next = new Image();
+      next.onload = function () {
+        img.removeAttribute('srcset');
+        img.removeAttribute('sizes');
+        img.src = next.src;
+      };
+      next.src = sized(src, 640);
+      img.alt = m.title;
+    }
+    var name = slot.querySelector('[data-merch-slot="name"]');
+    if (name) name.textContent = m.title;
+    var cost = slot.querySelector('[data-merch-slot="price"]');
+    var p = price(product);
+    if (cost && p) cost.textContent = p;
+    var buy = slot.querySelector('[data-merch-slot="buy"] a') || slot.querySelector('a[data-merch-slot="buy"]');
+    if (buy && typeof product.openModal === 'function') {
+      buy.setAttribute('aria-haspopup', 'dialog');
+      buy.setAttribute('aria-label', 'Buy ' + m.title);
+      buy.addEventListener('click', function (e) {
+        e.preventDefault();
+        product.openModal();
+      });
+    }
+  }
+
+  function hasProducts() {
+    return !!(document.querySelector('[data-shopify-id]') ||
+      (document.querySelector('[data-merch-polaroid]') && document.querySelector('[data-merch-featured] [data-merch-id]')));
+  }
+
+  function render() {
+    var client = ShopifyBuy.buildClient(SHOP);
+    ShopifyBuy.UI.onReady(client).then(function (ui) {
+      document.querySelectorAll('[data-shopify-id]').forEach(function (node) {
+        var id = digits(node.getAttribute('data-shopify-id'));
+        if (!id) return;
+        ui.createComponent('product', { id: id, node: node, moneyFormat: MONEY, options: OPTIONS });
+      });
+      fillPolaroids(ui);
+      // No products on this page: product components normally create the cart, so create it directly
+      // to bring back the cart toggle for a visitor who already has items in their cart.
+      if (!hasProducts() && hasCart()) {
+        ui.createComponent('cart', { moneyFormat: MONEY, options: OPTIONS });
+      }
+    });
+  }
+
+  function start() {
+    if (!hasProducts() && !hasCart()) return;
+    if (window.ShopifyBuy && window.ShopifyBuy.UI) return render();
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
+    s.onload = render;
+    document.head.appendChild(s);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})();
+</script>

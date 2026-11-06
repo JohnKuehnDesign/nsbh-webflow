@@ -373,10 +373,33 @@ Where cards come from today:
 
 | Page | Cards | How |
 |---|---|---|
-| Beef Shops (map page) | Map popups and the region lists | `shop-card.js`, both footer scripts |
+| The Map | Map popups and the Shops by region popovers | `shop-card.js`, both footer scripts |
 | Fall Guide, Spring Guide | Nearby Beef Shops chips | `shop-card.js` (checklist below) |
-| Destinations Template | Nearby Beef Shops cards | Static Webflow markup in the template design (see "Inline cards" below) |
-| Directory | Directory cards | Old design, not converted |
+| Destinations Template | Nearby Beef Shops cards | Static Webflow markup, no script (see "Inline cards" below) |
+| Regions Template | The region's shop cards | Static Webflow markup, no script |
+| Blog Posts Template (Log post) | Related Beef Shops cards | Static Webflow markup, no script |
+
+**Why some pages need the script and some don't.** It comes down to whether the
+card already exists in the published HTML or has to be built when someone clicks.
+
+- **Built on demand (needs `shop-card.js`): The Map, Fall Guide, Spring Guide.**
+  These pages carry only a list of links plus hidden per-shop data
+  (`data-shop-card="source"` items) and **one** hidden card template. On click or
+  hover the script fills the template with that shop's data, then does what static
+  HTML can't: places the card beside the link on desktop (right if it fits, else left,
+  else below) or as a modal on phone/tablet, handles Escape and focus return, fetches
+  the shop's tags from the Shop Tag pages (a multi-reference can't be bound to an
+  attribute), adds the distance flag once a location is set, and feeds the map's pin
+  popups. One shared card keeps 163 shops (or 53 guide chips) from each shipping a
+  full card in the HTML.
+- **Static (no script): Destinations, Regions and Log post templates.** Each card is
+  a real Collection List item with every field bound in Designer, so Webflow writes
+  the finished card at publish time. The little logic they need is handled without
+  JavaScript: two attribute-only rules in each template's page head code hide links
+  bound to an empty field (`href="#"`) and hide Order now when Visit site has a real
+  link; tags are a nested Shop Tags Collection List; the Premium seal's visibility is
+  bound to Premium?; and `analytics.js` (site-wide) tracks clicks from the
+  `data-track-*` attributes bound on the card, the same as script-built cards.
 
 ### Adding cards to a page (checklist)
 
@@ -455,23 +478,48 @@ through the list reads only shop names.
 **API** (`window.NSBHShopCard`): `build`, `popupHtml`, `fillTags`, `loadTags`,
 `fillDistance`, `setOrigin`, `findSource`. Notes are at the top of the file.
 
-### Inline cards (Destinations Template)
+### Inline cards (Destinations, Regions and Log post templates)
 
-The destination pages show nearby shops as cards in the page, not popovers, so they
-use no script. The Collection Item markup copies the template's classes and order:
-name, Region / Town (separator in `text-color-lion`), `shop-card_address-row`, short
-description, tags row (`shop-card_tag` with the icon in `map-UI_svg-embed` and the
-Shop Tags name), then `shop-card_buttons-wrapper` with `shop-card_order-now-link`
-links bound to Google Business Map Link (Directions), Phone Number (Call Now),
-Website (Visit Site) and Order Link (the order button). The order button's conditional
-visibility is "Website is not set", so it stands in for Visit Site the way the script
-does on the other pages.
+These pages show shops as cards in the page, not popovers, so they use no script (see
+"Why some pages need the script" above). Each template's Collection Item copies the
+component's `shop-card-r2_*` classes and order, with the `is-inline` combo on
+`_card` (border, radius, `height: 100%`), `_layout` (`flex-grow: 1`) and `_actions`
+(`margin-top: auto`) for equal-height cards with the buttons at the bottom:
 
-A link bound to an empty CMS field renders `href="#"`. The Destinations Template's
-page head hides those buttons:
-`.related-shops_component .shop-card_buttons-wrapper a[href="#"]{display:none}`.
+1. `_seal` (visibility bound to Premium?) with `_seal-image` (Lion submark)
+2. `_eyebrow` > `_eyebrow-group` (Region / Name, `_eyebrow-sep` "/"), then Town / Name
+3. `_title` > `_name` (H3, Display Name) + `_address`
+4. `_note` (Short Description)
+5. `_tags` > nested Shop Tags list > `_tag` (icon in `map-UI_svg-embed` + Name)
+6. `_actions` > `_links` (Directions → Google Business Map Link, Call now → Phone
+   Number, as `_link`), then Visit site → Website and Order now → Order Link (both
+   `_button`). Order now must sit **directly after** Visit site.
 
-A design change to the shop card template has to be copied here by hand.
+Attributes: the card carries `data-track-card="shop"`, `data-track-id` (Slug) and
+`data-track-name` (Name); each link carries `data-track-link`
+(`directions`/`call`/`website`/`order`); Visit site and Order now also carry
+`data-shop-link` (`website`/`order`).
+
+Each template's page head code has the same two rules, attribute selectors only so a
+class rename can't break them:
+
+```html
+<style>[data-track-card="shop"] a[href="#"]{display:none}</style>
+<style>[data-track-card="shop"] a[data-shop-link="website"]:not([href="#"]) + a[data-shop-link="order"]{display:none}</style>
+```
+
+**A design change to the shop card has to be made in four places:** the component
+(`shop-card-template_component`, which covers The Map and the guides) and, by hand,
+the three inline copies (Destinations, Regions, Log post). The `shop-card-r2_*`
+classes are shared, so a class style change reaches all of them at once; a change to
+structure, bindings, attributes or copy does not. The same goes for a new Shop Tag:
+it shows on inline cards automatically (nested list), but script-built cards read
+tags from the tag pages (see "Tags: highlight and card tags").
+
+Known Designer-only gap: the head CSS doesn't run in the Designer, so there every
+inline card shows both buttons and any empty links, and the tag icons show as tall
+embed placeholders. Published pages are correct. Planned cleanup: conditional
+visibility instead of the head CSS, and a fixed size on the icon embed.
 
 ---
 
