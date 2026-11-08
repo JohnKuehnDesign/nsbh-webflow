@@ -23,6 +23,7 @@ number in the Webflow custom code is bumped by hand.
 | `src/seasonal/seasonal.js` | The R2 Seasonal Guides: opens the current season on scroll-in, hover/focus on desktop, chevron toggles on tablet and phone. Loaded by an embed inside the component |
 | `src/places/places.js` | The R2 Destinations Index on Things to Do: region filter (chips, phone select, `?region=`), "Show more destinations", count and status. Loaded by an embed inside the component |
 | `src/faq/faq.js` | The R2 Guide FAQ on the Log post template: turns the FAQ Rich Text (H3 questions) into a `<details>` accordion, first open. Loaded by an embed inside the component |
+| `src/guide-menu/guide-menu.js` + `.css` | Seasonal guides, tablet and phone: the floating section menu. Built from the "In this guide" contents nav, shows from the first numbered section to the end of the last, tracks the current section, sits below the R2 Nav pill. Loads its own CSS. Page footer code on each guide |
 
 This repo is public because jsDelivr only serves public repos — and because the
 JavaScript is already public regardless, served to every visitor of the site.

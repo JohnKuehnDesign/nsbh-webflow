@@ -6,6 +6,25 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.21.0 — 2026-11-08
+
+### Added
+
+- `src/guide-menu/guide-menu.js` + `guide-menu.css`: the floating section menu on the
+  seasonal guides (991px and below; Figma 9657:1285). It copies the page's "In this
+  guide" contents nav into a fixed dropdown that appears when the first numbered
+  section reaches the top and leaves after the last one. The closed bar shows the
+  current section ("03 Farms") with a chevron; opening it lists every section over a
+  scrim with the current one highlighted. A row scrolls to its section, closes the
+  list and moves focus there; Escape and the scrim close it. It sits below the R2 Nav
+  pill bar while that bar shows. The script loads the CSS from the same version.
+
+### Unchanged
+
+- Every other file. To ship: add one line to the Before </body> code of the Fall and
+  Spring Guides:
+  `<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.21.0/src/guide-menu/guide-menu.js"></script>`
+
 ## v1.20.2 — 2026-11-05
 
 ### Fixed

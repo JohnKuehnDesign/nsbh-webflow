@@ -1,0 +1,218 @@
+/* NSBH guide menu — styles for the floating section menu built by guide-menu.js.
+   Loaded by the script; tablet and phone only (991px and below).
+   Figma: "Desktop + phone" 9657:1285. Colors are the site's Webflow variables. */
+
+.guide-menu {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  .guide-menu {
+    display: block;
+    position: fixed;
+    z-index: 90; /* under the R2 Nav pill (100) and its menu */
+    top: calc(var(--guide-menu-top, 0px) + 0.75rem);
+    left: 5%; /* lines up with padding-global */
+    right: 5%;
+    font-family: inherit;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s;
+  }
+
+  .guide-menu.is-shown {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .guide-menu_scrim {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(20, 47, 56, 0.35);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s;
+  }
+
+  .guide-menu.is-open .guide-menu_scrim {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .guide-menu_box {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--_primitives---colors--white, #fff);
+    border: 1px solid var(--_primitives---white-mix--h-deep-atlantic-80, #d0d5d7);
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 24px 0 rgba(20, 47, 56, 0.12);
+    transform: translateY(-0.5rem);
+    transition: transform 0.25s ease;
+  }
+
+  .guide-menu.is-shown .guide-menu_box {
+    transform: none;
+  }
+
+  .guide-menu_toggle {
+    display: flex;
+    width: 100%;
+    min-height: 3.375rem; /* Figma's 54px bar (its "+" glyph set the height) */
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0;
+    padding: 0.9375rem 1.125rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--_primitives---colors--h-deep-atlantic, #142f38);
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.14em;
+    text-align: left;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .guide-menu_toggle:focus-visible {
+    outline: 2px solid var(--_primitives---colors--h-deep-atlantic, #142f38);
+    outline-offset: -4px;
+    border-radius: 0.75rem;
+  }
+
+  .guide-menu_current {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
+  .guide-menu_current-number {
+    flex: none;
+    color: var(--_primitives---colors--h-lion, #c79853);
+  }
+
+  .guide-menu_current-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .guide-menu_heading {
+    display: none;
+  }
+
+  .guide-menu.is-open .guide-menu_current {
+    display: none;
+  }
+
+  .guide-menu.is-open .guide-menu_heading {
+    display: block;
+  }
+
+  .guide-menu_chevron {
+    display: block;
+    flex: none;
+    width: 0.875rem;
+    height: 0.875rem;
+    transition: transform 0.2s ease;
+  }
+
+  .guide-menu.is-open .guide-menu_chevron {
+    transform: rotate(180deg);
+  }
+
+  .guide-menu_panel {
+    max-height: calc(100vh - var(--guide-menu-top, 0px) - 6rem);
+    max-height: calc(100svh - var(--guide-menu-top, 0px) - 6rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: guide-menu-drop 0.2s ease;
+  }
+
+  .guide-menu_panel[hidden] {
+    display: none;
+  }
+
+  .guide-menu_list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .guide-menu_list > li {
+    margin: 0;
+    padding: 0; /* the site's li style adds 0.5rem on the left */
+  }
+
+  .guide-menu_link {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.75rem 1.125rem;
+    border-top: 1px solid var(--_primitives---white-mix--h-deep-atlantic-80, #d0d5d7);
+    color: var(--_primitives---colors--h-deep-atlantic, #142f38);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-decoration: none;
+  }
+
+  .guide-menu_link:hover,
+  .guide-menu_link.is-current {
+    background-color: var(--_primitives---white-mix--h-deep-atlantic-95, #f3f5f5);
+  }
+
+  .guide-menu_link:focus-visible {
+    outline: 2px solid var(--_primitives---colors--h-deep-atlantic, #142f38);
+    outline-offset: -2px;
+  }
+
+  .guide-menu_number {
+    flex: none;
+    min-width: 1.125rem;
+    color: var(--_primitives---colors--h-lion, #c79853);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .guide-menu_label {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .guide-menu_link.is-current .guide-menu_label {
+    font-weight: 700;
+  }
+
+  .guide-menu_arrow {
+    flex: none;
+    color: var(--_primitives---white-mix--h-deep-atlantic-20, #435960);
+  }
+}
+
+@keyframes guide-menu-drop {
+  from { opacity: 0; transform: translateY(-0.25rem); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide-menu,
+  .guide-menu_scrim,
+  .guide-menu_box,
+  .guide-menu_chevron {
+    transition: none;
+  }
+
+  .guide-menu_box {
+    transform: none;
+  }
+
+  .guide-menu_panel {
+    animation: none;
+  }
+}
