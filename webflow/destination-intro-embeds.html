@@ -9,8 +9,7 @@
 [data-destination-intro] [data-destination-section="visit"]:has(.w-dyn-bind-empty),
 [data-destination-intro] [data-destination-section="glance"]:has(.w-dyn-bind-empty),
 [data-destination-intro] [data-destination-section="about"]:has([data-destination-about].w-dyn-bind-empty){display:none}
-[data-destination-intro] .destination-intro_visit .button-group>a[href="#"],
-[data-destination-intro] .destination-intro_visit .button-group:not(:has(a[href]:not([href="#"]))){display:none}
+[data-destination-intro] .destination-intro_visit .button-group:empty{display:none}
 [data-destination-intro] [data-destination-formatted]>ul,
 [data-destination-intro] [data-destination-formatted]>ol{list-style:none;padding:0;margin:0;width:100%}
 [data-destination-intro] [data-destination-formatted]>ol{counter-reset:destination-glance var(--destination-start,0)}
