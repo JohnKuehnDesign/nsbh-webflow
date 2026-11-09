@@ -5,6 +5,9 @@
         ([data-merch-featured] [data-merch-id]): photo, name, price; Buy opens the Shopify product modal.
      3) On any other page (it sits in the R2 Footer), if the visitor already has a cart, loads the SDK only to show
         the cart toggle. No cart and no products: it does nothing and loads nothing.
+     4) Phone Merch CTA slider (<=767): the Polaroid group [data-merch-track] is a scroll-snap track styled in the
+        Designer; this keeps the indicator dots ([data-merch-dot] 1/2/3, class is-active) on the slide in view.
+        Runs without Shopify. Dots are aria-hidden; the slides read in DOM order (1, 2, 3).
      Styles are scoped by attribute, not Webflow classes. Place once per page; safe twice. -->
 <style>
 [data-shopify-id] { height: 100%; }
@@ -45,6 +48,14 @@
    Keep the window as the scroller: lock it in place (no jump, no background scroll) and reserve the scrollbar. */
 html.shopify-buy-modal-is-active { height: auto; overflow: hidden; scrollbar-gutter: stable; }
 body.shopify-buy-modal-is-active { height: auto; overflow: visible; }
+/* Phone Merch CTA slider: the Designer can't hide a scrollbar, so the track's is hidden here (swipe + dots). */
+@media (max-width: 767px) {
+  [data-merch-track] { scrollbar-width: none; }
+  [data-merch-track]::-webkit-scrollbar { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-merch-dot] { transition: none; }
+}
 </style>
 <script>
 (function () {
@@ -253,7 +264,39 @@ body.shopify-buy-modal-is-active { height: auto; overflow: visible; }
     document.head.appendChild(s);
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
-  else start();
+  // Phone slider dots: mark the slide nearest the track's snap start (the last one once the track is at its end).
+  // Positions come from offsetLeft, which ignores the Polaroids' tilt. When the track doesn't scroll (tablet,
+  // desktop) nothing changes; the dots are display none there anyway.
+  function initDots() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-merch-track]'), function (track) {
+      var dots = track.parentNode ? track.parentNode.querySelectorAll('[data-merch-dot]') : [];
+      var slides = track.querySelectorAll('[data-merch-polaroid]');
+      if (!dots.length || !slides.length) return;
+      function update() {
+        var max = track.scrollWidth - track.clientWidth;
+        if (max <= 0) return;
+        var x = track.scrollLeft;
+        var first = slides[0].offsetLeft;
+        var best = 0;
+        var gap = Infinity;
+        if (x >= max - 2) best = slides.length - 1;
+        else Array.prototype.forEach.call(slides, function (s, i) {
+          var d = Math.abs(s.offsetLeft - first - x);
+          if (d < gap) { gap = d; best = i; }
+        });
+        var n = slides[best].getAttribute('data-merch-polaroid');
+        Array.prototype.forEach.call(dots, function (d) {
+          d.classList.toggle('is-active', d.getAttribute('data-merch-dot') === n);
+        });
+      }
+      // Scroll events already arrive at most once per frame; three offsetLeft reads per event is cheap.
+      track.addEventListener('scroll', update, { passive: true });
+    });
+  }
+
+  function boot() { initDots(); start(); }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();
 </script>
