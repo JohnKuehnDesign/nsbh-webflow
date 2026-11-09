@@ -6,6 +6,30 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.22.0 — 2026-11-08
+
+### Added
+
+- PostHog, behind the same consent as GA4. `webflow/site-analytics.html` Block A has a
+  third script that replaces the plain PostHog snippet: PostHog loads only while
+  analytics is on. Decline (or Global Privacy Control) means it never loads; declining
+  mid-page opts it out (no more events or session replay) and removes its `ph_`
+  cookies and storage; Got it from Cookie Settings turns it back on. Session replay
+  masks form inputs.
+
+### Changed
+
+- `src/analytics/analytics.js`: sends `shop_click` (`link_type`, `shop_id`,
+  `shop_name`) to PostHog as well as GA4. GA4 events are unchanged; PostHog gets
+  `shop_click` only (its insights filter on `link_type`). Sent by beacon, since the
+  click may leave the page.
+
+### Unchanged
+
+- Every other file, `consent.js` included (head code keeps `@1.15.0`). To ship: swap
+  the PostHog snippet in Head code for the new script, and move the footer
+  `analytics.js` line to `@1.22.0`.
+
 ## v1.21.0 — 2026-11-08
 
 ### Added

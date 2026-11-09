@@ -16,8 +16,8 @@ number in the Webflow custom code is bumped by hand.
 | `webflow/head-code.html` | Copy-paste block for Page Settings → Inside `<head>` |
 | `webflow/footer-code.html` | Copy-paste block for Page Settings → Before `</body>` |
 | `src/consent/consent.js` | Opt-out analytics consent: the cookie banner, Decline, Cookie Settings, Global Privacy Control. Site-wide, top of head code |
-| `src/analytics/analytics.js` | GA4 click events for shop card buttons (`shop_click` + key events). Site-wide; sends nothing while analytics is off |
-| `webflow/site-analytics.html` | Copy-paste blocks for Site settings → Custom code: `consent.js` + gtag (head) and `analytics.js` (footer) |
+| `src/analytics/analytics.js` | Click events for shop card buttons: `shop_click` to GA4 (+ key events) and PostHog. Site-wide; sends nothing while analytics is off |
+| `webflow/site-analytics.html` | Copy-paste blocks for Site settings → Custom code: `consent.js` + gtag + PostHog (head) and `analytics.js` (footer) |
 | `src/nav/nav.js` | The R2 Nav: pill bar on scroll up, phone and tablet menu. Site-wide |
 | `webflow/site-nav.html` | Copy-paste line for Site settings → Custom code → Footer code: `nav.js` |
 | `src/seasonal/seasonal.js` | The R2 Seasonal Guides: opens the current season on scroll-in, hover/focus on desktop, chevron toggles on tablet and phone. Loaded by an embed inside the component |

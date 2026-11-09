@@ -13,7 +13,8 @@
      declines or their browser sends Global Privacy Control) and runs the
      nsbhConsent.on() callback now and on every change. On: gtag loads. Off:
      gtag never loads, or if it already has on this page, ga-disable stops it
-     sending and the _ga cookies are removed. PostHog hooks in the same way.
+     sending and the _ga cookies are removed. PostHog (third script) follows the
+     same callback: it loads only while analytics is on.
 
      consent.js must stay a plain script (no async/defer) above the callback.
 
@@ -40,10 +41,44 @@
       location.hostname.endsWith('.webflow.io') ? { debug_mode: true } : {});
   });
 </script>
+<script>
+  /* PostHog: the same rules as GA. It loads only while analytics is on, so a
+     visitor who declines or sends GPC never loads it. Declining mid-page opts it
+     out (stops events and session replay) and removes its ph_ cookies and storage.
+     Replaces the plain PostHog snippet: delete that one from Head code. */
+  nsbhConsent.on(function (granted) {
+    var ph = window.posthog;
+    if (!granted) {
+      if (ph && ph.opt_out_capturing) ph.opt_out_capturing();
+      // Stop it writing its ph_ cookie and storage back after they're cleared.
+      if (ph && ph.__loaded) ph.set_config({ disable_persistence: true });
+      nsbhConsent.clearCookies(/^ph_/);
+      [window.localStorage, window.sessionStorage].forEach(function (store) {
+        try {
+          Object.keys(store).forEach(function (k) { if (/^ph_/.test(k)) store.removeItem(k); });
+        } catch (e) { /* storage blocked: nothing stored */ }
+      });
+      return;
+    }
+    if (ph && ph.opt_in_capturing) {
+      if (ph.__loaded) ph.set_config({ disable_persistence: false });
+      return ph.opt_in_capturing();
+    }
+    !function(t,e){var o,n,p,r;e.__SV||(window.posthog && window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}p||((p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",p.onerror=function(){p=null},(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r));var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],Object.defineProperty(u,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e}}),Object.defineProperty(u.people,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(){return u.toString(1)+".people (stub)"}}),o="init capture register register_once register_for_session unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group identify setPersonProperties setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags resetGroups onFeatureFlags addFeatureFlagsHandler onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+    posthog.init('phc_Cj5AjF7KaJx2fnX4B5sPYDbA9ZFsbuWtFfPujeiUofpj', {
+      api_host: 'https://us.i.posthog.com',
+      defaults: '2026-08-30',
+      session_recording: { maskAllInputs: true },
+      // Someone who declined on an earlier page view and now turns it back on.
+      loaded: function (ph) { if (ph.has_opted_out_capturing()) ph.opt_in_capturing(); }
+    });
+  });
+</script>
 
 <!-- ============================================================================
      BLOCK B — Paste into: Site settings → Custom code → Footer code
-     Click events for shop card buttons (shop_click and the shop_order / shop_call / shop_website key events).
-     Sends nothing while analytics is off (no gtag, or ga-disable set).
+     Click events for shop card buttons: shop_click (GA4 and PostHog) and the GA4
+     shop_order / shop_call / shop_website key events. Sends nothing while
+     analytics is off (no gtag or ga-disable set; PostHog not loaded or opted out).
      ============================================================================ -->
-<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.15.0/src/analytics/analytics.js"></script>
+<script defer src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.22.0/src/analytics/analytics.js"></script>
