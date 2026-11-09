@@ -68,7 +68,16 @@
     posthog.init('phc_Cj5AjF7KaJx2fnX4B5sPYDbA9ZFsbuWtFfPujeiUofpj', {
       api_host: 'https://us.i.posthog.com',
       defaults: '2026-08-30',
-      session_recording: { maskAllInputs: true },
+      session_recording: {
+        maskAllInputs: true,
+        // The Map writes the visitor's own place into these two; replays show asterisks.
+        maskTextSelector: '[data-map-element="locate-status"], [data-map-element="search-status"]',
+        // Map lookups carry the searched address or coordinates in the URL: keep host + path only.
+        maskCapturedNetworkRequestFn: function (r) {
+          if (r.name && r.name.indexOf('openstreetmap.org') > -1) r.name = r.name.split('?')[0];
+          return r;
+        }
+      },
       // Someone who declined on an earlier page view and now turns it back on.
       loaded: function (ph) { if (ph.has_opted_out_capturing()) ph.opt_in_capturing(); }
     });
