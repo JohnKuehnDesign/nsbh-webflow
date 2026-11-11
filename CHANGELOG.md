@@ -6,6 +6,15 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.23.2 — 2026-11-11
+
+### Changed
+
+- Map shop chip: the name is back in the heading font over the muted town, and the
+  expand control is a full-height panel in the active tag chip colors. CSS only.
+
+To deploy: bump `map-embed.css` and `map-embed.js` on the map page together.
+
 ## v1.23.1 — 2026-11-11
 
 ### Changed

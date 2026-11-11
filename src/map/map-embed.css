@@ -371,10 +371,10 @@ html.cms-map-panel-open {
 
 .cms-map-chip {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  align-items: stretch;
   max-width: 100%;
-  padding: 0.625rem 0.625rem 0.625rem 1rem;
+  padding: 0;
+  overflow: hidden; /* keeps the expand panel inside the rounded corners */
   border: 1px solid #d0d5d7;
   border-radius: 0.5rem;
   background: #fff;
@@ -388,35 +388,42 @@ html.cms-map-panel-open {
 
 .cms-map-chip_text {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 0.125rem;
+  justify-content: center;
+  gap: 0.25rem;
   min-width: 0;
-  font-family: var(--_typography---font-styles--body, inherit);
+  padding: 0.75rem 1rem;
 }
 
-/* Same type as the Shops by region lists. */
 .cms-map-chip_name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  line-height: 1.4;
+  font-family: var(--_typography---font-styles--heading, inherit);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.15;
 }
 
+/* Same type as the town in the Shops by region lists. */
 .cms-map-chip_town {
   color: var(--_primitives---white-mix--h-deep-atlantic-20, #435960);
+  font-family: var(--_typography---font-styles--body, inherit);
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.5;
 }
 
-/* Matches the Search settings button. */
+/* Full-height expand panel, in the same colors as an active tag chip. */
 .cms-map-chip_icon {
   display: flex;
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border: 1px solid var(--_primitives---white-mix--h-deep-atlantic-80, #d0d5d7);
-  border-radius: 6px;
-  background: #fff;
+  width: 3.25rem;
+  border-left: 1px solid var(--_primitives---white-mix--h-harbor-blue-80, #d7e4e8);
+  background: var(--_primitives---white-mix--h-harbor-blue-90, #ebf2f4);
+}
+
+.cms-map-chip_icon svg {
+  width: 20px;
+  height: 20px;
 }
