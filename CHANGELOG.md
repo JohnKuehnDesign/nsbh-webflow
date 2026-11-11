@@ -6,6 +6,25 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.23.0 — 2026-11-11
+
+### Added
+
+- Map, 767px and below: a shop's popup is now a small chip (town, name, expand icon)
+  instead of the full card. The whole chip is a `[data-shop-card-open]` trigger, so
+  `shop-card.js` opens the full card in the same modal as the region lists and guide
+  chips. Things To Do keep their popup card. Popups rebuild when a rotation crosses
+  the breakpoint. The zoom buttons now only step aside for a full card.
+
+### Changed
+
+- Seasonal Guides, tablet and phone: tapping anywhere on a closed Live panel opens it.
+  An open panel still closes only from its chevron.
+
+To deploy: bump `map-embed.css` (map page head), `map-embed.js` (map page footer) and
+`seasonal.js` (hidden embed in the Seasonal Guides component). `shop-card.js` is
+unchanged and can stay on its current version.
+
 ## R2 Hero image anchor tester — 2026-11-08 (inline embed, no release tag)
 
 - Added `webflow/hero-anchor-test-embed.html`, made by the same script. When

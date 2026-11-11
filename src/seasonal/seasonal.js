@@ -12,8 +12,8 @@
 //     section's data-current, case-insensitive ("Fall" matches "fall").
 //   - Desktop (992px and up): hovering a panel, or tabbing into one, opens it instead.
 //     Moving the pointer out of the row goes back to the current season.
-//   - Tablet and phone: panels stack. The chevron button on a Live panel opens it (and
-//     closes the others); pressing it again closes it. aria-expanded follows.
+//   - Tablet and phone: panels stack. Tapping a closed Live panel, or its chevron,
+//     opens it (and closes the others); the chevron closes it. aria-expanded follows.
 //   - The open, closed and stacked styles live in the component's style embed; this
 //     script only moves is-open.
 //
@@ -73,6 +73,15 @@
       if (toggle) {
         toggle.addEventListener('click', function () {
           open(panel.classList.contains('is-open') ? null : panel);
+        });
+
+        // Tablet and phone: tapping anywhere on a closed Live panel opens it too. An
+        // open panel only closes from its chevron, so a stray tap while reading
+        // doesn't collapse it. Coming Soon panels hide their chevron and stay put.
+        panel.addEventListener('click', function (e) {
+          if (!stacked.matches || panel.classList.contains('is-open')) return;
+          if (toggle.offsetParent === null || e.target.closest('a, button')) return;
+          open(panel);
         });
       }
     });

@@ -473,6 +473,16 @@ function addMarkers(map, items, config) {
     });
   }
 
+  // Rotating a phone can cross the chip breakpoint, so each popup is rebuilt for the
+  // new width. Any open one closes first; the visitor taps the dot again.
+  CHIP_NARROW.addEventListener('change', () => {
+    for (const { popup, item } of byId.values()) {
+      if (item.el.dataset.mapKind === 'destination') continue;
+      if (popup.isOpen()) popup.remove();
+      popup.setHTML(buildPopupHtml(item.el, config));
+    }
+  });
+
   return byId;
 }
 
@@ -517,9 +527,54 @@ function openExclusive(markers, targetMarker) {
 // region lists and other pages, so the card is designed once.
 const shopCard = () => window.NSBHShopCard || null;
 
+// On phones a shop's popup is a small chip: town, name and an expand icon. The whole
+// chip is a [data-shop-card-open] trigger, so shop-card.js opens the full card in the
+// same modal the region lists and guide chips use. Things To Do keep their popup card.
+const CHIP_NARROW = window.matchMedia('(max-width: 767px)');
+const CHIP_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 15 6 6M15 9l6-6M21 16v5h-5M21 8V3h-5M3 16v5h5M3 21l6-6M3 8V3h5M9 9 3 3"/></svg>';
+
+function buildChipHtml(listItemEl) {
+  const d = listItemEl.dataset;
+  const name = (d.displayName || d.name || '').trim();
+  if (!shopCard() || !d.id || !name || !document.querySelector('[data-map-template="shop"]')) return null;
+
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'cms-map-chip';
+  chip.setAttribute('data-shop-card-open', d.id);
+  chip.setAttribute('aria-haspopup', 'dialog');
+  chip.setAttribute('aria-expanded', 'false');
+  const town = (d.townName || '').trim();
+  chip.setAttribute('aria-label', `${name}${town ? `, ${town}` : ''}: show details`);
+
+  const text = document.createElement('span');
+  text.className = 'cms-map-chip_text';
+  if (town) {
+    const townEl = document.createElement('span');
+    townEl.className = 'cms-map-chip_town';
+    townEl.textContent = town;
+    text.append(townEl);
+  }
+  const nameEl = document.createElement('span');
+  nameEl.className = 'cms-map-chip_name';
+  nameEl.textContent = name;
+  text.append(nameEl);
+
+  const icon = document.createElement('span');
+  icon.className = 'cms-map-chip_icon';
+  icon.innerHTML = CHIP_ICON;
+
+  chip.append(text, icon);
+  return chip.outerHTML;
+}
+
 // The popup is the shared card from shop-card.js. Without it (or without a
 // template on the page) the popup shows the place's name only.
 function buildPopupHtml(listItemEl, config) {
+  if (CHIP_NARROW.matches && listItemEl.dataset.mapKind !== 'destination') {
+    const chip = buildChipHtml(listItemEl);
+    if (chip) return chip;
+  }
   const html = shopCard()?.popupHtml(listItemEl, { premium: config.premiumSeal, tagPagePath: config.tagPagePath });
   if (html) return html;
   const name = document.createElement('div');

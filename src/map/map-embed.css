@@ -342,8 +342,68 @@ html.cms-map-panel-open {
     transition: opacity 120ms ease;
   }
 
-  [data-map-element="viewport"]:has(.maplibregl-popup) .maplibregl-ctrl-top-right {
+  [data-map-element="viewport"]:has(.maplibregl-popup .cms-map-popup-card) .maplibregl-ctrl-top-right {
     opacity: 0;
     pointer-events: none;
   }
+}
+
+/* ---- Shop chip on narrow maps ----
+   map-embed.js swaps a shop's popup for this chip at 767px and below. Tapping it
+   opens the full card in the shared modal. No close circle: tapping the map or
+   another dot dismisses it. */
+.maplibregl-popup:has(.cms-map-chip) .maplibregl-popup-close-button {
+  display: none;
+}
+
+.cms-map-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: min(18.5rem, 100%);
+  padding: 0.625rem 0.625rem 0.625rem 1rem;
+  border: 1px solid #d0d5d7;
+  border-radius: 0.5rem;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(20, 47, 56, 0.18);
+  color: var(--_primitives---colors--h-deep-atlantic, #142f38);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cms-map-chip_text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.cms-map-chip_town {
+  color: var(--_primitives---colors--h-harbor-blue-text, #2d6577);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.cms-map-chip_name {
+  font-family: var(--_typography---font-styles--heading, inherit);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.cms-map-chip_icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid #d0d5d7;
+  border-radius: 50%;
+  background: #fff;
 }
