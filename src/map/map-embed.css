@@ -136,9 +136,15 @@
    nudge overlaps the card edge so no hairline shows between them. */
 .maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
   position: relative;
-  z-index: 2;
-  top: -1px;
-  border-top-color: var(--map-popup-tip-color);
+  z-index: 10001; /* above the shop panel's own z-index */
+  top: -2px; /* past the card's 1px border, so no line shows across the caret */
+  /* Drawn with clip-path, not MapLibre's border triangle: border triangles snap
+     unevenly at fractional positions and read as lopsided. */
+  width: 20px;
+  height: 10px;
+  border: 0;
+  background: var(--map-popup-tip-color);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
 
 /* Close button: a small circle centred on the card's top-right corner, outside
@@ -356,11 +362,18 @@ html.cms-map-panel-open {
   display: none;
 }
 
+/* The popup holds to the chip's own limit, so a two-line name can't leave the chip
+   narrower than the popup and off center from the caret. MapLibre sets max-width
+   inline, hence !important. */
+.maplibregl-popup:has(.cms-map-chip) {
+  max-width: min(18.5rem, calc(100% - 2.5rem)) !important;
+}
+
 .cms-map-chip {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  max-width: min(18.5rem, 100%);
+  max-width: 100%;
   padding: 0.625rem 0.625rem 0.625rem 1rem;
   border: 1px solid #d0d5d7;
   border-radius: 0.5rem;
@@ -376,34 +389,34 @@ html.cms-map-panel-open {
 .cms-map-chip_text {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.125rem;
   min-width: 0;
+  font-family: var(--_typography---font-styles--body, inherit);
+}
+
+/* Same type as the Shops by region lists. */
+.cms-map-chip_name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .cms-map-chip_town {
-  color: var(--_primitives---colors--h-harbor-blue-text, #2d6577);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  line-height: 1.2;
-  text-transform: uppercase;
-}
-
-.cms-map-chip_name {
-  font-family: var(--_typography---font-styles--heading, inherit);
-  font-size: 0.9375rem;
+  color: var(--_primitives---white-mix--h-deep-atlantic-20, #435960);
+  font-size: 0.875rem;
   font-weight: 400;
-  line-height: 1.15;
+  line-height: 1.5;
 }
 
+/* Matches the Search settings button. */
 .cms-map-chip_icon {
   display: flex;
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid #d0d5d7;
-  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--_primitives---white-mix--h-deep-atlantic-80, #d0d5d7);
+  border-radius: 6px;
   background: #fff;
 }

@@ -6,6 +6,21 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.23.1 — 2026-11-11
+
+### Changed
+
+- Map shop chip: name first, town underneath in the Shops by region type, and a square
+  expand button matching the Search settings button.
+
+### Fixed
+
+- Popup caret: drawn with `clip-path` instead of a border triangle, and overlaps past
+  the card's border, so no line shows across it. Applies to every popup card.
+- A two-line name no longer leaves the chip off center from the caret.
+
+To deploy: bump `map-embed.css` (map page head) and `map-embed.js` (map page footer).
+
 ## v1.23.0 — 2026-11-11
 
 ### Added
