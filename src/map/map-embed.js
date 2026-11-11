@@ -527,44 +527,34 @@ function openExclusive(markers, targetMarker) {
 // region lists and other pages, so the card is designed once.
 const shopCard = () => window.NSBHShopCard || null;
 
-// On phones a shop's popup is a small chip: name, town and an expand icon. The whole
-// chip is a [data-shop-card-open] trigger, so shop-card.js opens the full card in the
-// same modal the region lists and guide chips use. Things To Do keep their popup card.
+// On phones a shop's popup is a small chip: name, town and an expand icon. It is a
+// clone of the [data-map-template="chip"] element, so its look is edited in Designer.
+// The whole chip is a [data-shop-card-open] trigger, so shop-card.js opens the full
+// card in the same modal the region lists and guide chips use. With no template on
+// the page the popup falls back to the full card. Things To Do keep their popup card.
 const CHIP_NARROW = window.matchMedia('(max-width: 767px)');
-const CHIP_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 15 6 6M15 9l6-6M21 16v5h-5M21 8V3h-5M3 16v5h5M3 21l6-6M3 8V3h5M9 9 3 3"/></svg>';
 
 function buildChipHtml(listItemEl) {
   const d = listItemEl.dataset;
   const name = (d.displayName || d.name || '').trim();
-  if (!shopCard() || !d.id || !name || !document.querySelector('[data-map-template="shop"]')) return null;
+  const from = document.querySelector('[data-map-template="chip"] [data-map-chip]');
+  if (!shopCard() || !d.id || !name || !from || !document.querySelector('[data-map-template="shop"]')) return null;
 
-  const chip = document.createElement('button');
-  chip.type = 'button';
-  chip.className = 'cms-map-chip';
+  const chip = from.cloneNode(true);
+  chip.removeAttribute('id');
+  chip.removeAttribute('data-map-chip');
+  chip.classList.add('cms-map-chip'); // hook for the popup rules in map-embed.css
   chip.setAttribute('data-shop-card-open', d.id);
   chip.setAttribute('aria-haspopup', 'dialog');
   chip.setAttribute('aria-expanded', 'false');
   const town = (d.townName || '').trim();
   chip.setAttribute('aria-label', `${name}${town ? `, ${town}` : ''}: show details`);
 
-  const text = document.createElement('span');
-  text.className = 'cms-map-chip_text';
-  const nameEl = document.createElement('span');
-  nameEl.className = 'cms-map-chip_name';
-  nameEl.textContent = name;
-  text.append(nameEl);
-  if (town) {
-    const townEl = document.createElement('span');
-    townEl.className = 'cms-map-chip_town';
-    townEl.textContent = town;
-    text.append(townEl);
+  for (const el of chip.querySelectorAll('[data-map-slot="name"]')) el.textContent = name;
+  for (const el of chip.querySelectorAll('[data-map-slot="town"]')) {
+    if (town) el.textContent = town; else el.remove();
   }
-
-  const icon = document.createElement('span');
-  icon.className = 'cms-map-chip_icon';
-  icon.innerHTML = CHIP_ICON;
-
-  chip.append(text, icon);
+  for (const el of chip.querySelectorAll('[data-map-slot]')) el.removeAttribute('data-map-slot');
   return chip.outerHTML;
 }
 

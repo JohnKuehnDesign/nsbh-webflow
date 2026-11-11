@@ -6,6 +6,19 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.23.4 — 2026-11-11
+
+### Changed
+
+- Map shop chip now clones a `[data-map-template="chip"]` element built in Webflow
+  (`map-chip_*` classes, `data-map-chip` on the button, `data-map-slot` name and town),
+  so its look is edited in Designer. With no template, the popup falls back to the full
+  card.
+- Map dots: `--map-marker-size` from 1rem to 1.5rem.
+
+To deploy: publish the template first, then bump `map-embed.css` and `map-embed.js`
+on the map page together.
+
 ## v1.23.3 — 2026-11-11
 
 ### Changed
