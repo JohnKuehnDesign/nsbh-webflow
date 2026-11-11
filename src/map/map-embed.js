@@ -268,8 +268,8 @@ function wireSettingsPanel() {
   const closeBtn = document.createElement('button');
   closeBtn.type = 'button';
   closeBtn.className = 'cms-map-panel-close';
-  closeBtn.setAttribute('aria-label', `Close ${label.toLowerCase()}`);
-  closeBtn.textContent = '\u00d7';
+  closeBtn.setAttribute('aria-label', `Done, close ${label.toLowerCase()}`);
+  closeBtn.textContent = 'Done';
   panel.insertBefore(closeBtn, panel.firstChild);
 
   opener.setAttribute('aria-haspopup', 'dialog');

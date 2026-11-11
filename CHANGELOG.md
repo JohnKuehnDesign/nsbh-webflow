@@ -6,6 +6,17 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.23.3 — 2026-11-11
+
+### Changed
+
+- Map popup close: floats just above the card's top right corner, matching the shop
+  modal's close (36px, 1px border, no shadow).
+- Search settings on tablet and phone: the close is now a small "Done" button, since
+  settings apply as they're tapped. The panel's large top right corner radius is gone.
+
+To deploy: bump `map-embed.css` and `map-embed.js` on the map page together.
+
 ## v1.23.2 — 2026-11-11
 
 ### Changed

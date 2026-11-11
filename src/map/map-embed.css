@@ -36,16 +36,17 @@
   --map-popup-tip-color: #fff; /* match the card's background */
 
   /* Close button (MapLibre injects it, so Designer can't reach it) */
-  --map-popup-close-size: 32px;
-  --map-popup-close-font-size: 24px;
-  /* Negative: the circle is centred on the card's top-right corner point, so it
-     sits in the cut-out of the rounded corner and clear of anything inside the
-     card (the premium badge). Half the size centres it; 0 puts it flush. */
-  --map-popup-close-inset: calc(var(--map-popup-close-size) / -2);
+  --map-popup-close-size: 2.25rem;
+  --map-popup-close-font-size: 1.25rem;
+  /* Floats just above the card's top-right corner, like the shop modal's close, so
+     it stays clear of anything inside the card (the premium badge). */
+  --map-popup-close-top: -2.5rem;
+  --map-popup-close-right: 0;
+  --map-popup-close-border: 1px solid var(--_primitives---white-mix--h-deep-atlantic-80, #d0d5d7);
   --map-popup-close-color: inherit;
   --map-popup-close-radius: 50%;
   --map-popup-close-bg: #fff;
-  --map-popup-close-shadow: 0 2px 6px rgba(20, 47, 56, 0.22);
+  --map-popup-close-shadow: none;
   --map-popup-close-hover-bg: #eef2f3;
 
 
@@ -147,18 +148,19 @@
   clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
 
-/* Close button: a small circle centred on the card's top-right corner, outside
-   the rounded corner, so it never overlaps content inside the card. Large enough
-   to be a comfortable tap target. z-index lifts it above the card: a card that
+/* Close button: a small circle floating just above the card's top-right corner, so
+   it never overlaps content inside the card. Large enough to be a comfortable tap
+   target. z-index lifts it above the card: a card that
    is positioned with its own z-index (the shop panel has z-index 1) would
    otherwise paint over it and swallow the click. */
 .maplibregl-popup-close-button {
   z-index: 2;
   width: var(--map-popup-close-size);
   height: var(--map-popup-close-size);
-  top: var(--map-popup-close-inset);
-  right: var(--map-popup-close-inset);
+  top: var(--map-popup-close-top);
+  right: var(--map-popup-close-right);
   padding: 0;
+  border: var(--map-popup-close-border);
   font-size: var(--map-popup-close-font-size);
   line-height: 1;
   border-radius: var(--map-popup-close-radius);
@@ -313,28 +315,41 @@ html.cms-map-panel-open {
     overflow-y: auto;
     padding: 1.75rem 1.25rem 1.25rem;
     background: var(--map-panel-bg, #fff); /* set on :root or the panel to override */
-    border-radius: 0.5rem 2rem 0.5rem 0.5rem;
+    border-radius: 0.5rem;
     box-shadow: 0 12px 28px 0 rgba(20, 47, 56, 0.18), 0 28px 56px 0 rgba(53, 121, 140, 0.24);
   }
 
+  /* A small button in the site's small primary style: settings apply as they are
+     tapped, so this just says you're finished. */
   [data-map-panel].is-open .cms-map-panel-close {
     display: flex;
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
+    top: 0.75rem;
+    right: 0.75rem;
     z-index: 1;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    padding: 0;
+    min-height: 2.25rem;
+    padding: 0 0.9rem;
     border: 0;
-    border-radius: 50%;
-    background: #eef2f3;
-    color: inherit;
-    font-size: 1.5rem;
+    border-bottom: 2px solid var(--_primitives---colors--h-lion, #c79853);
+    border-radius: 6px;
+    background: var(--_primitives---colors--h-deep-atlantic, #142f38);
+    color: #fff;
+    font-family: var(--_typography---font-styles--body, inherit);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
     line-height: 1;
+    text-transform: uppercase;
     cursor: pointer;
+  }
+}
+
+/* The narrowest phones: the heading and Done button can't share a line. */
+@media (max-width: 359px) {
+  [data-map-panel].is-open {
+    padding-top: 3.5rem;
   }
 }
 
