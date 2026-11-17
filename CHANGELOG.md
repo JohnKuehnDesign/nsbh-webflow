@@ -6,6 +6,20 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.24.0 — unreleased (2026-11-17)
+
+### Changed
+
+- places.js: finds the cards by `.places_list.w-dyn-items` (falls back to the first
+  `.w-dyn-items`), so a Regions Collection List in the same section no longer gets
+  taken for the cards. Same on the fetched pages.
+- places.js: rebuilds the phone `<select>` region options from the chips (order and
+  labels), keeping its "all" option. The Regions CMS Sort Order now drives both.
+
+To deploy: the native chip row (Regions Collection List, `data-places-filter` bound
+to Slug) must be in the Destinations Index, then bump the script embed there to
+`@1.24.0`. Publishing the chip row with `@1.19.1` breaks the filter.
+
 ## v1.23.4 — 2026-11-11
 
 ### Changed

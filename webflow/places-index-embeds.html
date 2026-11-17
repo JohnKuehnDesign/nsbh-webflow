@@ -5,35 +5,27 @@
 -->
 
 <!-- 1. Filter controls (visible embed, class places_controls-embed, inside places_filter-main after the Eyebrow) -->
+<!-- The desktop/tablet chips are native Webflow elements since 2026-11-17: a places_chips
+     row in places_filter-main with a static All button and a Regions Collection List
+     (sorted by Sort Order), each item a <button class="map-UI_chip-button"> with
+     data-places-filter bound to Region > Slug. Only the phone select lives here. -->
 <div class="places_controls">
-  <div class="places_chips" role="group" aria-label="Filter by region">
-    <button type="button" class="places_chip is-active" data-places-filter="all" aria-pressed="true">All</button>
-    <button type="button" class="places_chip" data-places-filter="cape-ann" aria-pressed="false">Cape Ann</button>
-    <button type="button" class="places_chip" data-places-filter="greater-boston" aria-pressed="false">Greater Boston</button>
-    <button type="button" class="places_chip" data-places-filter="merrimack-valley" aria-pressed="false">Merrimack Valley</button>
-    <button type="button" class="places_chip" data-places-filter="north-shore" aria-pressed="false">North Shore</button>
-    <button type="button" class="places_chip" data-places-filter="seacoast" aria-pressed="false">Seacoast</button>
-  </div>
   <select class="places_select" data-places-select aria-label="Filter by region">
     <option value="all">All regions</option>
-    <option value="cape-ann">Cape Ann</option>
     <option value="greater-boston">Greater Boston</option>
-    <option value="merrimack-valley">Merrimack Valley</option>
     <option value="north-shore">North Shore</option>
+    <option value="cape-ann">Cape Ann</option>
     <option value="seacoast">Seacoast</option>
+    <option value="merrimack-valley">Merrimack Valley</option>
   </select>
 </div>
 
 <!-- 2. Styles (visible embed, last child of places_component) -->
 <style>
-/* R2 Destinations Index (Figma 9897:583290). Chips and the phone select live in an embed so they are real <button>/<select>. (2026-11-03) */
+/* R2 Destinations Index (Figma 9897:583290). Chips are native (places_chips row, map-UI_chip-button + is-active, styled in the Designer like the Map). The phone select lives in an embed so it is a real <select>. (2026-11-17) */
 .places_filter-main > .eyebrow_component { width: auto; flex: 0 0 auto; } /* the Eyebrow root is width 100% (for the Rule styles); keep it inline with the chips */
 .places_controls { display: flex; align-items: center; }
-.places_chips { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
-.places_chip { display: inline-flex; align-items: center; margin: 0; padding: .625rem 1.125rem; border: 1px solid var(--_primitives---white-mix--h-harbor-blue-80, #d7e4e8); border-radius: 999px; background-color: #fff; color: var(--_primitives---colors--h-deep-atlantic, #142f38); font-family: inherit; font-size: .875rem; font-weight: 600; line-height: 1.2; cursor: pointer; transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease; }
-.places_chip:hover { border-color: var(--_primitives---colors--h-deep-atlantic, #142f38); }
-.places_chip:focus-visible, .places_select:focus-visible { outline: 2px solid var(--_primitives---colors--h-lion, #c79853); outline-offset: 2px; }
-.places_chip.is-active { background-color: var(--_primitives---colors--h-deep-atlantic, #142f38); border-color: var(--_primitives---colors--h-deep-atlantic, #142f38); color: #fff; }
+.places_chips [data-places-filter]:focus-visible, .places_select:focus-visible { outline: 2px solid var(--_primitives---colors--h-lion, #c79853); outline-offset: 2px; }
 .places_select { display: none; }
 [data-places] .w-pagination-wrapper { display: none; }
 [data-places] .w-dyn-item[hidden], [data-places] [data-places-more][hidden] { display: none !important; }
@@ -42,7 +34,6 @@
   .places_chips { display: none; }
   .places_select { display: block; width: 100%; height: 3rem; margin: 0; padding: 0 2.75rem 0 1rem; border: 1px solid var(--_primitives---white-mix--h-deep-atlantic-80, #d0d5d7); border-radius: .375rem; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23142f38' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 1rem center / .75rem .5rem; color: var(--_primitives---white-mix--h-deep-atlantic-20, #435960); font-family: inherit; font-size: .875rem; line-height: 1.5; -webkit-appearance: none; appearance: none; }
 }
-@media (prefers-reduced-motion: reduce) { .places_chip { transition: none; } }
 </style>
 
 <!-- 3. Script (hidden embed, class hide, last child of places_component) -->

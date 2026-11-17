@@ -22,8 +22,12 @@
 //
 // Page hooks (custom attributes, set in Webflow):
 //   [data-places]               The section (section_places).
-//   [data-places-filter="…"]    A chip button: "all" or a region slug. Inside the filter embed.
-//   [data-places-select]        The phone <select>; option values as the chips.
+//   [data-places-filter="…"]    A chip button: "all" (static) or a region slug, bound to
+//                               Region > Slug in a Regions Collection List (places_chips row).
+//   [data-places-select]        The phone <select> (filter embed). The script rebuilds its
+//                               region options from the chips, keeping the "all" option.
+//   .places_list                The class on the Destinations Collection List's items
+//                               element; the script uses it to find the cards.
 //   [data-places-count]         "30 destinations" text (hidden until every page is in).
 //   [data-places-more]          The wrapper around the "Show more destinations" R2 Button.
 //   [data-places-status]        "Showing 12 of 30" text (aria-live).
@@ -38,7 +42,9 @@
     if (root.hasAttribute('data-places-ready')) return;
     root.setAttribute('data-places-ready', '');
 
-    var list = root.querySelector('.w-dyn-items');
+    // The cards list is the one with class places_list. The section also holds the
+    // Regions Collection List that renders the chips, so "the first CMS list" is wrong.
+    var list = root.querySelector('.places_list.w-dyn-items') || root.querySelector('.w-dyn-items');
     if (!list) return;
     var wrapper = list.closest('.w-dyn-list') || list.parentElement;
 
@@ -59,6 +65,22 @@
     var more = moreWrap && (moreWrap.matches('a, button') ? moreWrap : moreWrap.querySelector('a, button'));
 
     var known = chips.map(function (c) { return c.getAttribute('data-places-filter'); });
+
+    // The phone select copies the chips (same order, same labels), so the CMS sort
+    // order of the Regions list drives both. Its "all" option stays as written.
+    if (select && chips.length) {
+      Array.prototype.slice.call(select.options).forEach(function (opt) {
+        if (opt.value !== 'all') select.removeChild(opt);
+      });
+      chips.forEach(function (chip) {
+        var value = chip.getAttribute('data-places-filter');
+        if (!value || value === 'all') return;
+        var opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = chip.textContent.trim();
+        select.appendChild(opt);
+      });
+    }
     var filter = 'all';
     var shown = step;
     var complete = !nextUrl;
@@ -94,7 +116,7 @@
           .then(function (html) {
             var doc = new DOMParser().parseFromString(html, 'text/html');
             var otherRoot = doc.querySelectorAll('[data-places]')[rootIndex];
-            var otherList = otherRoot && otherRoot.querySelector('.w-dyn-items');
+            var otherList = otherRoot && (otherRoot.querySelector('.places_list.w-dyn-items') || otherRoot.querySelector('.w-dyn-items'));
             if (!otherList) return null;
             Array.prototype.slice.call(otherList.children).forEach(function (item) {
               var node = document.importNode(item, true);
