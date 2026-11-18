@@ -15,8 +15,9 @@
 //                                         tags, tag, tag-icon, tag-name, directions,
 //                                         call, website, order, image, link, distance,
 //                                         distance-text, nearby. An empty value
-//                                         removes the slot. "order" shows only when
-//                                         the shop has no website.
+//                                         removes the slot. "website" and "order"
+//                                         are independent: each shows when its own
+//                                         field (Website, Order Link) is set.
 //   Shop data: an element carrying the shop's data-* attributes: data-id (slug),
 //   data-name, data-display-name, data-region-name, data-town-name, data-address,
 //   data-description, data-phone, data-website, data-order-link, data-google-map-link,
@@ -118,11 +119,11 @@
 
     if (kind === 'shop') {
       fillLink(card, 'directions', safeUrl(d.googleMapLink) || safeUrl(d.directionsLink));
-      // Visit Site when the shop has a website; otherwise the order button (a shop
-      // with only an online-ordering page); neither when both are empty.
-      const website = safeUrl(d.website);
-      fillLink(card, 'website', website);
-      fillLink(card, 'order', website ? null : safeUrl(d.orderLink));
+      // Visit site (a text link) follows Website; the Order now button follows Order
+      // Link alone, so a shop can show both, either or neither. A shop that wants its
+      // website as its order page gets the same URL pasted into Order Link.
+      fillLink(card, 'website', safeUrl(d.website));
+      fillLink(card, 'order', safeUrl(d.orderLink));
       const digits = (d.phone || '').replace(/[^\d+]/g, '');
       fillLink(card, 'call', digits ? `tel:${digits}` : null, false);
     } else {

@@ -6,6 +6,25 @@ the Webflow custom code is updated by hand.
 Note: jsDelivr strips the leading `v` from semver tags. Tag `v1.0.1` is served
 at `@1.0.1`.
 
+## v1.25.0 — 2026-11-18
+
+### Changed
+
+- shop-card.js: Order now follows the Order Link field alone. It used to show only
+  when the shop had no Website; now a shop with both shows Visit site and Order now,
+  and a shop with a Website and no Order Link shows no Order now. Agreed with the
+  client 2026-11-17. No CMS changes: a shop that wants its website as its order page
+  gets the same URL pasted into Order Link.
+- Shop card design (Webflow, not this repo): Visit site is a text link beside
+  Directions and Call now, in the component and the three inline copies
+  (Destinations, Regions, Log post). The inline templates' head code drops the rule
+  that hid Order now beside a real Visit site link; the empty-link rule stays.
+
+To deploy: publish the Designer changes and bump `shop-card.js` to `@1.25.0` on The
+Map, Fall Guide and Spring Guide (Before `</body>`). The bump and the publish go out
+together: the old script with the new design would still hide Order now for shops with
+a website.
+
 ## v1.24.0 — unreleased (2026-11-17)
 
 ### Changed

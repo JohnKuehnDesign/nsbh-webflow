@@ -397,10 +397,9 @@ card already exists in the published HTML or has to be built when someone clicks
 - **Static (no script): Destinations, Regions and Log post templates.** Each card is
   a real Collection List item with every field bound in Designer, so Webflow writes
   the finished card at publish time. The little logic they need is handled without
-  JavaScript: two attribute-only rules in each template's page head code hide links
-  bound to an empty field (`href="#"`) and hide Order now when Visit site has a real
-  link; tags are a nested Shop Tags Collection List; the Premium seal's visibility is
-  bound to Premium?; and `analytics.js` (site-wide) tracks clicks from the
+  JavaScript: one attribute-only rule in each template's page head code hides links
+  bound to an empty field (`href="#"`); tags are a nested Shop Tags Collection List;
+  the Premium seal's visibility is bound to Premium?; and `analytics.js` (site-wide) tracks clicks from the
   `data-track-*` attributes bound on the card, the same as script-built cards.
 
 ### Adding cards to a page (checklist)
@@ -446,11 +445,13 @@ map, so pages without a map can leave them off (the guides do). `data-directions
 is empty for almost every shop; the Directions button falls back to
 `data-google-map-link` (bound to Google Business Map Link).
 
-**Visit Site or Order.** The template holds both a Visit Site button
-(`data-map-slot="website"`) and an order button (`data-map-slot="order"`). A shop with
-a Website shows Visit Site only. A shop with no Website but an Order Link shows the
-order button instead. With neither, both are removed. A template without the order
-button behaves as before v1.13.0.
+**Visit site and Order now.** Since v1.25.0 the two are independent. Visit site
+(`data-map-slot="website"`) is a text link beside Directions and Call now, shown when
+the shop has a Website. Order now (`data-map-slot="order"`) is the big button, shown
+only when the shop has an Order Link, whether or not it also has a Website. A shop can
+show both, either or neither. A shop that wants its website as its order page gets
+the same URL pasted into Order Link (no code change). From v1.13.0 to v1.24.0 the
+order button showed only when Website was empty.
 
 Binding the attributes: in Designer, or through the Webflow MCP's element settings
 tool (`set_settings` with a CMS binding on the `attributes` key). Its `get_settings`
@@ -494,21 +495,24 @@ component's `shop-card-r2_*` classes and order, with the `is-inline` combo on
 4. `_note` (Short Description)
 5. `_tags` > nested Shop Tags list > `_tag` (icon in `map-UI_svg-embed` + Name)
 6. `_actions` > `_links` (Directions → Google Business Map Link, Call now → Phone
-   Number, as `_link`), then Visit site → Website and Order now → Order Link (both
-   `_button`). Order now must sit **directly after** Visit site.
+   Number, Visit site → Website, all `_link`), then Order now → Order Link
+   (`_button`). Same order as the component.
 
 Attributes: the card carries `data-track-card="shop"`, `data-track-id` (Slug) and
 `data-track-name` (Name); each link carries `data-track-link`
 (`directions`/`call`/`website`/`order`); Visit site and Order now also carry
 `data-shop-link` (`website`/`order`).
 
-Each template's page head code has the same two rules, attribute selectors only so a
-class rename can't break them:
+Each template's page head code has the same rule, an attribute selector only so a
+class rename can't break it. It hides any link bound to an empty field, so each of
+the three links and Order now shows only when its own field is set:
 
 ```html
 <style>[data-track-card="shop"] a[href="#"]{display:none}</style>
-<style>[data-track-card="shop"] a[data-shop-link="website"]:not([href="#"]) + a[data-shop-link="order"]{display:none}</style>
 ```
+
+Before v1.25.0 a second rule hid Order now whenever Visit site had a link (it needed
+Order now directly after Visit site). It was removed on 2026-11-18 with the new rule.
 
 **A design change to the shop card has to be made in four places:** the component
 (`shop-card-template_component`, which covers The Map and the guides) and, by hand,
@@ -519,8 +523,8 @@ it shows on inline cards automatically (nested list), but script-built cards rea
 tags from the tag pages (see "Tags: highlight and card tags").
 
 Known Designer-only gap: the head CSS doesn't run in the Designer, so there every
-inline card shows both buttons and any empty links, and the tag icons show as tall
-embed placeholders. Published pages are correct. Planned cleanup: conditional
+inline card shows all three links and Order now, even empty ones, and the tag icons
+show as tall embed placeholders. Published pages are correct. Planned cleanup: conditional
 visibility instead of the head CSS, and a fixed size on the icon embed.
 
 ---
