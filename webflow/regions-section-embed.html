@@ -1,12 +1,28 @@
 <!-- R2 Regions section: map embed (inside the "Regions Section" component, .regions_map).
      Loads the map-only SVG, and links the HTML legend rows to the map with CSS only:
      hovering or focusing a row dims the other regions, and a map region nudges its row's arrow.
+     Hovering or focusing a region (map or row) also dims the other rows' swatch, label and
+     arrow, so only the active region's label stays at full strength (2026-11-10).
      Pinned to a release tag; bump the version here when the SVG changes. -->
 <div class="regions_map-svg" data-region-map aria-busy="true"></div>
 <style>
   .regions_map-svg svg { display: block; width: 100%; height: auto; }
+  .regions_legend-link :is(.regions_swatch, .regions_legend-label) { transition: opacity 0.2s ease; }
+  .regions_legend-link .regions_legend-arrow { transition: transform 0.2s, opacity 0.2s ease; }
   .regions_legend-link:hover .regions_legend-arrow,
   .regions_legend-link:focus-visible .regions_legend-arrow { transform: translateX(0.25rem); }
+  @media (hover: hover) {
+    .regions_component:has(.rm-region--merrimack-valley:hover, .regions_legend-link[data-region="merrimack-valley"]:hover) .regions_legend-link:not([data-region="merrimack-valley"]) :is(.regions_swatch, .regions_legend-label, .regions_legend-arrow),
+    .regions_component:has(.rm-region--seacoast:hover, .regions_legend-link[data-region="seacoast"]:hover) .regions_legend-link:not([data-region="seacoast"]) :is(.regions_swatch, .regions_legend-label, .regions_legend-arrow),
+    .regions_component:has(.rm-region--cape-ann:hover, .regions_legend-link[data-region="cape-ann"]:hover) .regions_legend-link:not([data-region="cape-ann"]) :is(.regions_swatch, .regions_legend-label, .regions_legend-arrow),
+    .regions_component:has(.rm-region--north-shore:hover, .regions_legend-link[data-region="north-shore"]:hover) .regions_legend-link:not([data-region="north-shore"]) :is(.regions_swatch, .regions_legend-label, .regions_legend-arrow),
+    .regions_component:has(.rm-region--greater-boston:hover, .regions_legend-link[data-region="greater-boston"]:hover) .regions_legend-link:not([data-region="greater-boston"]) :is(.regions_swatch, .regions_legend-label, .regions_legend-arrow) { opacity: 0.4; }
+  }
+  .regions_component:has(.rm-region--merrimack-valley:focus-visible, .regions_legend-link[data-region="merrimack-valley"]:focus-visible) .regions_legend-link:not([data-region="merrimack-valley"]) :is(.regions_swatch, .regions_legend-label, .regions_legend-arrow),
+  .regions_component:has(.rm-region--seacoast:focus-visible, .regions_legend-link[data-region="seacoast"]:focus-visible) .regions_legend-link:not([data-region="seacoast"]) :is(.regions_swatch, .regions_legend-label, .regions_legend-arrow),
+  .regions_component:has(.rm-region--cape-ann:focus-visible, .regions_legend-link[data-region="cape-ann"]:focus-visible) .regions_legend-link:not([data-region="cape-ann"]) :is(.regions_swatch, .regions_legend-label, .regions_legend-arrow),
+  .regions_component:has(.rm-region--north-shore:focus-visible, .regions_legend-link[data-region="north-shore"]:focus-visible) .regions_legend-link:not([data-region="north-shore"]) :is(.regions_swatch, .regions_legend-label, .regions_legend-arrow),
+  .regions_component:has(.rm-region--greater-boston:focus-visible, .regions_legend-link[data-region="greater-boston"]:focus-visible) .regions_legend-link:not([data-region="greater-boston"]) :is(.regions_swatch, .regions_legend-label, .regions_legend-arrow) { opacity: 0.4; }
   @media (hover: hover) {
     .regions_component:has([data-region="merrimack-valley"]:hover) .rm-region:not(.rm-region--merrimack-valley),
     .regions_component:has([data-region="seacoast"]:hover) .rm-region:not(.rm-region--seacoast),
@@ -24,7 +40,7 @@
   .regions_component:has([data-region="cape-ann"]:focus-visible) .rm-region:not(.rm-region--cape-ann),
   .regions_component:has([data-region="north-shore"]:focus-visible) .rm-region:not(.rm-region--north-shore),
   .regions_component:has([data-region="greater-boston"]:focus-visible) .rm-region:not(.rm-region--greater-boston) { --rm-mix: var(--rm-dim); }
-  @media (prefers-reduced-motion: reduce) { .regions_legend-arrow { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { .regions_legend-arrow, .regions_legend-link :is(.regions_swatch, .regions_legend-label) { transition: none; } }
 </style>
 <script>
   document.querySelectorAll('[data-region-map]:not([data-loaded])').forEach(function (el) {

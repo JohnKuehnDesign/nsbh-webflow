@@ -1,0 +1,26 @@
+<script>
+/* Regions template, Beef shops section: writes "10 shops in 4 towns" into the
+   section head eyebrow, counted from the shop cards in this section.
+   Hooks: .region-shops_head .eyebrow_label (eyebrow text), .shop_list > .w-dyn-item
+   (one per shop), [data-shop-town] (the town text in each shop card).
+   Place this embed at the END of the section so the list is parsed first.
+   If anything is missing, the eyebrow keeps its fallback text ("Beef shops").
+   Source of truth: nsbh-webflow/webflow/region-shop-count-embed.html */
+(function () {
+  var me = document.currentScript;
+  var sec = me && me.closest('section');
+  if (!sec) return;
+  var label = sec.querySelector('.region-shops_head .eyebrow_label');
+  var items = sec.querySelectorAll('.shop_list > .w-dyn-item');
+  if (!label || !items.length) return;
+  var towns = {};
+  sec.querySelectorAll('[data-shop-town]').forEach(function (el) {
+    var name = el.textContent.trim().toLowerCase();
+    if (name) towns[name] = true;
+  });
+  var n = items.length;
+  var t = Object.keys(towns).length;
+  label.textContent = n + (n === 1 ? ' shop' : ' shops') +
+    (t ? ' in ' + t + (t === 1 ? ' town' : ' towns') : '');
+})();
+</script>

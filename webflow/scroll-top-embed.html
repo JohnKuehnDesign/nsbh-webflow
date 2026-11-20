@@ -1,0 +1,36 @@
+<script>
+/* Back-to-top button (R2 Footer, "Scroll to top" switch). Shows the button once the
+   visitor is 1.5 screens down (is-visible on .scroll-top_wrapper); a click scrolls to
+   the top (instant with Reduce Motion) and moves focus to the page's H1 so keyboard
+   and screen reader users land at the top too. The wrapper only renders when the
+   Footer's "Scroll to top" switch is on, so pages with it off load nothing here.
+   Styles: Webflow classes scroll-top_wrapper (+ is-visible), scroll-top_button,
+   scroll-top_icon. Source of truth: nsbh-webflow/webflow/scroll-top-embed.html */
+(function () {
+  var btn = document.querySelector('[data-scroll-top="button"]');
+  if (!btn || btn.getAttribute('data-ready')) return;
+  btn.setAttribute('data-ready', 'true');
+  var wrap = btn.closest('.scroll-top_wrapper') || btn;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (reduce.matches) wrap.style.transitionProperty = 'opacity, visibility';
+  var ticking = false;
+  function update() {
+    ticking = false;
+    wrap.classList.toggle('is-visible', window.scrollY > window.innerHeight * 1.5);
+  }
+  window.addEventListener('scroll', function () {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(update);
+  }, { passive: true });
+  update();
+  btn.addEventListener('click', function () {
+    window.scrollTo({ top: 0, behavior: reduce.matches ? 'auto' : 'smooth' });
+    var h1 = document.querySelector('h1');
+    if (h1) {
+      if (!h1.hasAttribute('tabindex')) h1.setAttribute('tabindex', '-1');
+      h1.focus({ preventScroll: true });
+    }
+  });
+})();
+</script>

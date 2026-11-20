@@ -1,0 +1,10 @@
+<style>
+/* Destinations template hero (2026-11-10). Two or more towns: show the region only, with the
+   Lion eyebrow dash in front (same size as the other R2 heroes' eyebrow_dash, 0.75rem x 1px).
+   The towns are named in the About text instead. One town keeps "REGION / TOWN".
+   Lives in its own embed next to the intro embed (destination-intro-embeds.html).
+   Source of truth: nsbh-webflow/webflow/destination-hero-towns-embed.html */
+.destination-hero_location:has(.destination-hero_towns>.w-dyn-item+.w-dyn-item) [data-location-divider],
+.destination-hero_location:has(.destination-hero_towns>.w-dyn-item+.w-dyn-item) .w-dyn-list{display:none}
+.destination-hero_location:has(.destination-hero_towns>.w-dyn-item+.w-dyn-item):before{content:"";flex-shrink:0;width:.75rem;height:1px;background-color:var(--_primitives---colors--h-lion)}
+</style>

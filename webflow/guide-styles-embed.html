@@ -1,0 +1,12 @@
+<!-- Guide Styles (Webflow component, group R2). One instance per seasonal guide page.
+     Loads faq.js for the Guide FAQ and holds the Spring 2027 calendar spacing
+     (scoped to #spring-2027, so it does nothing elsewhere).
+     The guide card styles now live on the Webflow classes (chips, labels, card media),
+     and the arrow, hover nudge and photo zoom are in Global Styles (2026-11-10).
+     Source of truth: nsbh-webflow/webflow/guide-styles-embed.html -->
+<style>
+#spring-2027 .guide_calendar-card .guide_flow { row-gap: 0; }
+#spring-2027 .guide-calendar_events { margin-top: 0; }
+#spring-2027 .fall-calendar_event .fall-calendar_link { align-self: flex-start; }
+</style>
+<script src="https://cdn.jsdelivr.net/gh/JohnKuehnDesign/nsbh-webflow@1.20.1/src/faq/faq.js" defer></script>
