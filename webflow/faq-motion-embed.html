@@ -1,0 +1,42 @@
+<style>
+/* NSBH FAQ easing (all [data-faq] sections: For Shop Owners, Fall and Spring guides, Log posts).
+   Install once in the site-wide Global Styles embed so every FAQ picks it up; no per-page copies.
+   faq.js builds each question as <details class="faq_item">; this eases the answer open and shut.
+
+   v2 (2026-11-20): grid-rows version. Animates grid-template-rows 0fr -> 1fr, which every current
+   browser can transition, instead of height to auto (interpolate-size is Chromium only). Needs
+   ::details-content so the closed answer stays laid out for the animation; browsers without it
+   skip the whole block and open instantly, as before. Closed answers stay hidden from screen
+   readers through visibility (switched after the close finishes).
+   Tested in Chrome on staging For Shop Owners with interpolate-size off: 107 -> 70px, no end snap. */
+@supports selector(::details-content) {
+  [data-faq] .faq_item::details-content {
+    display: grid;
+    grid-template-rows: 0fr;
+    overflow: hidden;
+    content-visibility: visible;
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      grid-template-rows .4s cubic-bezier(.22, 1, .36, 1),
+      opacity .3s ease,
+      visibility 0s linear .4s;
+  }
+  [data-faq] .faq_item[open]::details-content {
+    grid-template-rows: 1fr;
+    visibility: visible;
+    opacity: 1;
+    transition:
+      grid-template-rows .4s cubic-bezier(.22, 1, .36, 1),
+      opacity .3s ease,
+      visibility 0s;
+  }
+  /* The answer is the one grid row. Its gap moves to the first child as a margin, inside the
+     clipped answer, so a closed row really reaches 0 (padding or an outer margin would stay). */
+  [data-faq] .faq_item .faq_answer { min-height: 0; overflow: hidden; margin-top: 0; padding-top: 0; }
+  [data-faq] .faq_item .faq_answer > :first-child { margin-top: .75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-faq] .faq_item::details-content { transition: none; }
+}
+</style>
